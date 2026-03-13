@@ -1,0 +1,32 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+    "setuptools",
+]
+
+[project]
+name = "sphinx-literalizer"
+description = "Sphinx extension for literalizer — convert JSON to native language literals"
+readme = "README.md"
+keywords = ["sphinx", "extension", "literalizer", "json", "literal"]
+license = "MIT"
+authors = [
+    { name = "Adam Dangoor", email = "adamdangoor@gmail.com" },
+]
+requires-python = ">=3.12"
+dependencies = [
+    "literalizer",
+    "sphinx>=7.0",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Sphinx :: Extension",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+urls.Source = "https://github.com/adamtheturtle/sphinx-literalizer"
+
+[tool.setuptools.packages.find]
+where = ["src"]
