@@ -130,7 +130,7 @@ repos:
 
       - id: shfmt
         name: shfmt
-        entry: shfmt --write --space-redirects --indent=4
+        entry: uv run --extra=dev shfmt --write --space-redirects --indent=4
         language: python
         types_or: [shell]
         additional_dependencies: [uv==0.9.5]
@@ -161,6 +161,7 @@ repos:
         entry: uv run --extra=dev doccmd --no-write-to-file --language=python --command="mypy"
         language: python
         types_or: [markdown, rst]
+        additional_dependencies: [uv==0.9.5]
 
       - id: check-manifest
         name: check-manifest
@@ -186,6 +187,7 @@ repos:
           --command="pyright"
         language: python
         types_or: [markdown, rst]
+        additional_dependencies: [uv==0.9.5]
 
       - id: pyright-verifytypes
         name: pyright-verifytypes
@@ -246,7 +248,7 @@ repos:
         entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
           --command="vulture"
         language: python
-        types_or: [python]
+        types_or: [markdown, rst]
         pass_filenames: false
         additional_dependencies: [uv==0.9.5]
         stages: [pre-commit]
@@ -283,6 +285,7 @@ repos:
         language: python
         stages: [manual]
         types_or: [markdown, rst]
+        additional_dependencies: [uv==0.9.5]
 
       - id: ruff-check-fix
         name: Ruff check fix
@@ -380,7 +383,7 @@ repos:
         additional_dependencies: [uv==0.9.5]
 
       - id: yamlfix
-        name: pyproject-fmt
+        name: yamlfix
         entry: uv run --extra=dev yamlfix
         language: python
         types_or: [yaml]
