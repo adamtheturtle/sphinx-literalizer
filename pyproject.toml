@@ -28,5 +28,20 @@ classifiers = [
 ]
 urls.Source = "https://github.com/adamtheturtle/sphinx-literalizer"
 
+[project.optional-dependencies]
+dev = [
+    "mypy[faster-cache]==1.19.1",
+    "mypy-strict-kwargs==2026.1.12",
+]
+
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.mypy]
+strict = true
+files = [ "." ]
+exclude = [ "build" ]
+plugins = [
+    "mypy_strict_kwargs",
+]
+follow_untyped_imports = true
