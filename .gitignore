@@ -29,3 +29,6 @@ htmlcov/
 
 # Ruff
 .ruff_cache/
+
+# Docs build
+docs/build/
