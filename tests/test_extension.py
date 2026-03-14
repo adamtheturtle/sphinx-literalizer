@@ -28,7 +28,7 @@ def test_boolean_array_python(
         ====
 
         .. literalizer:: data.json
-           :language: py
+           :language: python
     """
         )
     )
@@ -48,7 +48,7 @@ def test_boolean_array_python(
         Test
         ====
 
-        .. code-block:: py
+        .. code-block:: python
 
            True,
            False,
@@ -85,7 +85,7 @@ def test_array_of_arrays_typescript(
         ====
 
         .. literalizer:: data.json
-           :language: ts
+           :language: typescript
     """
         )
     )
@@ -105,7 +105,7 @@ def test_array_of_arrays_typescript(
         Test
         ====
 
-        .. code-block:: ts
+        .. code-block:: typescript
 
            ["a", 1.0],
     """
@@ -138,7 +138,7 @@ def test_prefix_spaces(
         ====
 
         .. literalizer:: data.json
-           :language: py
+           :language: python
            :prefix: 4
     """
         )
@@ -161,7 +161,7 @@ def test_prefix_spaces(
         ====
 
         .. literalinclude:: expected.py
-           :language: py
+           :language: python
     """
         )
     )
@@ -247,7 +247,7 @@ def test_wrap_adds_brackets(
         ====
 
         .. literalizer:: data.json
-           :language: py
+           :language: python
            :wrap:
     """
         )
@@ -268,7 +268,7 @@ def test_wrap_adds_brackets(
         Test
         ====
 
-        .. code-block:: py
+        .. code-block:: python
 
            [
                1,
@@ -304,7 +304,7 @@ def test_no_wrap_by_default(
         ====
 
         .. literalizer:: data.json
-           :language: py
+           :language: python
     """
         )
     )
@@ -324,7 +324,7 @@ def test_no_wrap_by_default(
         Test
         ====
 
-        .. code-block:: py
+        .. code-block:: python
 
            1,
            2,
