@@ -350,11 +350,15 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.3.13"
+version = "2026.3.14"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/d7/78/ec5bbeb49ba57751c6e7f16a61d28aaa540000165501cd29b02ca396f99e/literalizer-2026.3.13.tar.gz", hash = "sha256:217d2c8e1825dabd45c57e8674fdd39b92b350a00de1bb6ab21be51793162b3c", size = 13350, upload-time = "2026-03-13T19:15:13.522Z" }
+dependencies = [
+    { name = "beartype" },
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/16/ea/6f523e513c4b334f4c82b8a2a75933b9a94df7cad9b03481c2a51ae98610/literalizer-2026.3.14.tar.gz", hash = "sha256:9ab2f0f66d1cd9ec61ec1ac3bbce9c0eac7985726fa3f7866ffe46aa516f7d31", size = 20636, upload-time = "2026-03-14T13:27:11.596Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5d/92/5df953564721d9e4cb273c588543c592b0ed25ac894dd727bdee076b3b6b/literalizer-2026.3.13-py3-none-any.whl", hash = "sha256:4cedca3e071daca78635622ef9107f7ca73c3ba390eb1b5c43c4890835067ec8", size = 5458, upload-time = "2026-03-13T19:15:12.122Z" },
+    { url = "https://files.pythonhosted.org/packages/1d/4a/aefa04297574fadb22a119556ca51015bfc2c8a6af6254c8a1dc0d915f9f/literalizer-2026.3.14-py3-none-any.whl", hash = "sha256:f5c108fc1143347d56d1bc58d05655d956cbc46480b726eeebe69f6682fc97fe", size = 6762, upload-time = "2026-03-14T13:27:10.092Z" },
 ]
 
 [[package]]
