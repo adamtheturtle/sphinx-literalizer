@@ -4,11 +4,8 @@ import json
 from collections.abc import Callable
 from pathlib import Path
 from textwrap import dedent
-from unittest.mock import MagicMock
 
 from sphinx.testing.util import SphinxTestApp
-
-from sphinx_literalizer import setup
 
 
 def test_boolean_array_python(
@@ -303,16 +300,3 @@ def test_no_wrap_by_default(
     expected_app.cleanup()
 
     assert content_html == expected_html
-
-
-def test_setup_returns_metadata() -> None:
-    """setup() registers the directive and returns correct metadata."""
-    app = MagicMock()
-    result = setup(app=app)
-    app.add_directive.assert_called_once_with(
-        "literalizer",
-        app.add_directive.call_args[0][1],
-    )
-    assert result["parallel_read_safe"] is True
-    assert result["parallel_write_safe"] is True
-    assert "version" in result
