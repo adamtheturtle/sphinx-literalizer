@@ -864,7 +864,7 @@ requires-dist = [
     { name = "beartype", marker = "extra == 'dev'", specifier = "==0.22.9" },
     { name = "check-wheel-contents", marker = "extra == 'release'", specifier = "==0.6.3" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
-    { name = "literalizer" },
+    { name = "literalizer", specifier = ">=2026.3.14" },
     { name = "prek", marker = "extra == 'dev'", specifier = "==0.3.5" },
     { name = "pyproject-fmt", marker = "extra == 'dev'", specifier = "==2.18.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==9.0.2" },
