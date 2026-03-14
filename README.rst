@@ -37,7 +37,7 @@ Then use the ``literalizer`` directive in your ``.rst`` files:
 .. code-block:: rst
 
    .. literalizer:: path/to/data.json
-      :language: py
+      :language: python
       :wrap:
 
 This reads the JSON file and renders its contents as a native Python literal
