@@ -24,13 +24,17 @@ def test_boolean_array_python(
         json.dumps([True, False, True]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(dedent(text="""\
+    source_file.write_text(
+        dedent(
+            text="""\
         Test
         ====
 
         .. literalizer:: data.json
            :language: py
-    """))
+    """
+        )
+    )
 
     app = make_app(
         srcdir=source_directory,
@@ -41,7 +45,9 @@ def test_boolean_array_python(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(dedent(text="""\
+    source_file.write_text(
+        dedent(
+            text="""\
         Test
         ====
 
@@ -50,7 +56,9 @@ def test_boolean_array_python(
            True,
            False,
            True,
-    """))
+    """
+        )
+    )
     expected_app = make_app(srcdir=source_directory)
     expected_app.build()
     assert expected_app.statuscode == 0
@@ -73,13 +81,17 @@ def test_array_of_arrays_typescript(
         json.dumps([["a", 1.0]]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(dedent(text="""\
+    source_file.write_text(
+        dedent(
+            text="""\
         Test
         ====
 
         .. literalizer:: data.json
            :language: ts
-    """))
+    """
+        )
+    )
 
     app = make_app(
         srcdir=source_directory,
@@ -90,14 +102,18 @@ def test_array_of_arrays_typescript(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(dedent(text="""\
+    source_file.write_text(
+        dedent(
+            text="""\
         Test
         ====
 
         .. code-block:: ts
 
            ["a", 1.0],
-    """))
+    """
+        )
+    )
     expected_app = make_app(srcdir=source_directory)
     expected_app.build()
     assert expected_app.statuscode == 0
@@ -117,14 +133,18 @@ def test_prefix_spaces(
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
     (source_directory / "data.json").write_text(json.dumps([1]))
-    (source_directory / "index.rst").write_text(dedent(text="""\
+    (source_directory / "index.rst").write_text(
+        dedent(
+            text="""\
         Test
         ====
 
         .. literalizer:: data.json
            :language: py
            :prefix: 4
-    """))
+    """
+        )
+    )
 
     app = make_app(
         srcdir=source_directory,
@@ -148,7 +168,9 @@ def test_prefix_tabs(
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
     (source_directory / "data.json").write_text(json.dumps([1]))
-    (source_directory / "index.rst").write_text(dedent(text="""\
+    (source_directory / "index.rst").write_text(
+        dedent(
+            text="""\
         Test
         ====
 
@@ -156,7 +178,9 @@ def test_prefix_tabs(
            :language: go
            :prefix: 2
            :prefix-char: tabs
-    """))
+    """
+        )
+    )
 
     app = make_app(
         srcdir=source_directory,
@@ -181,14 +205,18 @@ def test_wrap_adds_brackets(
     (source_directory / "conf.py").touch()
     (source_directory / "data.json").write_text(json.dumps([1, 2]))
     source_file = source_directory / "index.rst"
-    source_file.write_text(dedent(text="""\
+    source_file.write_text(
+        dedent(
+            text="""\
         Test
         ====
 
         .. literalizer:: data.json
            :language: py
            :wrap:
-    """))
+    """
+        )
+    )
 
     app = make_app(
         srcdir=source_directory,
@@ -199,7 +227,9 @@ def test_wrap_adds_brackets(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(dedent(text="""\
+    source_file.write_text(
+        dedent(
+            text="""\
         Test
         ====
 
@@ -209,7 +239,9 @@ def test_wrap_adds_brackets(
                1,
                2,
            ]
-    """))
+    """
+        )
+    )
     expected_app = make_app(srcdir=source_directory)
     expected_app.build()
     assert expected_app.statuscode == 0
@@ -230,13 +262,17 @@ def test_no_wrap_by_default(
     (source_directory / "conf.py").touch()
     (source_directory / "data.json").write_text(json.dumps([1, 2]))
     source_file = source_directory / "index.rst"
-    source_file.write_text(dedent(text="""\
+    source_file.write_text(
+        dedent(
+            text="""\
         Test
         ====
 
         .. literalizer:: data.json
            :language: py
-    """))
+    """
+        )
+    )
 
     app = make_app(
         srcdir=source_directory,
@@ -247,7 +283,9 @@ def test_no_wrap_by_default(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(dedent(text="""\
+    source_file.write_text(
+        dedent(
+            text="""\
         Test
         ====
 
@@ -255,7 +293,9 @@ def test_no_wrap_by_default(
 
            1,
            2,
-    """))
+    """
+        )
+    )
     expected_app = make_app(srcdir=source_directory)
     expected_app.build()
     assert expected_app.statuscode == 0
