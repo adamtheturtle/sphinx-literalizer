@@ -91,7 +91,7 @@ class LiteralizerDirective(SphinxDirective):
             wrap=wrap,
         )
 
-        node = nodes.literal_block(text=text, source=rel_path)
+        node = nodes.literal_block(text, text, source=rel_path)
         node["language"] = language_name
         self.add_name(node=node)
         return [node]
