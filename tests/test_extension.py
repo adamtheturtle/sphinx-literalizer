@@ -92,9 +92,9 @@ def test_prefix_spaces(
         directive_options="   :language: py\n   :prefix: 4",
     )
     (text,) = blocks
-    for line in text.splitlines():
-        if line.strip():
-            assert line.startswith("    ")
+    assert all(
+        line.startswith("    ") for line in text.splitlines()
+    )
 
 
 def test_prefix_tabs(
@@ -110,9 +110,9 @@ def test_prefix_tabs(
         directive_options="   :language: go\n   :prefix: 2\n   :prefix-char: tabs",
     )
     (text,) = blocks
-    for line in text.splitlines():
-        if line.strip():
-            assert line.startswith("\t\t")
+    assert all(
+        line.startswith("\t\t") for line in text.splitlines()
+    )
 
 
 def test_wrap_adds_brackets(
