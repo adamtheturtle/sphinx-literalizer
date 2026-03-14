@@ -13,6 +13,7 @@ from docutils.parsers.rst import directives
 from literalizer import convert_json_to_native_literal
 from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
+from sphinx.util.typing import ExtensionMetadata
 
 
 class LiteralizerDirective(SphinxDirective):
@@ -67,7 +68,7 @@ class LiteralizerDirective(SphinxDirective):
         return [node]
 
 
-def setup(app: Sphinx) -> dict[str, object]:
+def setup(app: Sphinx) -> ExtensionMetadata:
     """Register the extension with Sphinx."""
     app.add_directive("literalizer", LiteralizerDirective)
     return {
