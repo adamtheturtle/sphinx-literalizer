@@ -1,17 +1,32 @@
-"""Tests for the Sphinx extension."""
+"""Integration tests for the Sphinx extension."""
 
-import sphinx_literalizer
-from sphinx_literalizer import setup
+from collections.abc import Callable
+from pathlib import Path
 
-
-def test_setup_returns_version() -> None:
-    """setup() returns a dict with version and parallel flags."""
-    result = setup(app=None)  # type: ignore[arg-type]
-    assert result["version"] == "0.1.0"
-    assert result["parallel_read_safe"] is True
-    assert result["parallel_write_safe"] is True
+from sphinx.testing.util import SphinxTestApp
 
 
-def test_extension_can_be_imported() -> None:
-    """Extension module can be imported."""
-    assert hasattr(sphinx_literalizer, "setup")
+def test_build_documentation_with_extension(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """With the extension enabled, Sphinx can build HTML documentation."""
+    srcdir = tmp_path / "src"
+    srcdir.mkdir()
+    (srcdir / "conf.py").write_text(
+        "extensions = ['sphinx_literalizer']\n",
+    )
+    (srcdir / "index.rst").write_text(
+        "Test\n====\n\nHello, world.\n",
+    )
+    app = make_app(
+        srcdir=srcdir,
+        builddir=tmp_path / "build",
+        buildername="html",
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    index_html = (tmp_path / "build" / "html" / "index.html").read_text()
+    assert "Hello, world" in index_html
