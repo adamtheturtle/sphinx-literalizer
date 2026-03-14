@@ -91,6 +91,8 @@ class LiteralizerDirective(SphinxDirective):
             wrap=wrap,
         )
 
+        # First positional arg sets rawsource; Sphinx requires
+        # rawsource == astext() for syntax highlighting to apply.
         node = nodes.literal_block(text, text, source=rel_path)
         node["language"] = language_name
         self.add_name(node=node)
