@@ -1,5 +1,6 @@
 """Integration tests for the Sphinx extension."""
 
+import textwrap
 from collections.abc import Callable
 from pathlib import Path
 
@@ -18,7 +19,14 @@ def test_build_documentation_with_extension(
         "extensions = ['sphinx_literalizer']\n",
     )
     (srcdir / "index.rst").write_text(
-        "Test\n====\n\nHello, world.\n",
+        textwrap.dedent(
+            """
+            Test
+            ====
+
+            Hello, world.
+            """
+        ).strip(),
     )
     app = make_app(
         srcdir=srcdir,
@@ -28,5 +36,6 @@ def test_build_documentation_with_extension(
     )
     app.build()
     assert app.statuscode == 0
+    assert not app.warning.getvalue()
     index_html = (tmp_path / "build" / "html" / "index.html").read_text()
     assert "Hello, world" in index_html
