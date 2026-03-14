@@ -10,7 +10,6 @@ from typing import ClassVar
 
 from docutils import nodes
 from docutils.parsers.rst import directives
-from literalizer import convert_json_to_native_literal
 from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
 
@@ -38,6 +37,8 @@ class LiteralizerDirective(SphinxDirective):
 
     def run(self) -> list[nodes.Node]:
         """Read the JSON file and produce a literal block."""
+        from literalizer import convert_json_to_native_literal
+
         env = self.state.document.settings.env
         rel_path = self.arguments[0]
         source_dir = Path(env.srcdir)
