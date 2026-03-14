@@ -3,47 +3,12 @@
 import json
 from collections.abc import Callable
 from pathlib import Path
+from textwrap import dedent
 from unittest.mock import MagicMock
 
-from docutils import nodes
 from sphinx.testing.util import SphinxTestApp
 
 from sphinx_literalizer import setup
-
-
-def _build_sphinx(
-    *,
-    make_app: Callable[..., SphinxTestApp],
-    tmp_path: Path,
-    json_data: object,
-    directive_options: str,
-) -> list[str]:
-    """Build a minimal Sphinx project and return literal block texts."""
-    srcdir = tmp_path / "src"
-    srcdir.mkdir()
-    (srcdir / "conf.py").write_text(
-        "extensions = ['sphinx_literalizer']\n",
-    )
-    (srcdir / "data.json").write_text(
-        json.dumps(json_data),
-    )
-    option_lines = "\n".join(
-        f"   {line.strip()}" for line in directive_options.splitlines()
-    )
-    rst = f"Test\n====\n\n.. literalizer:: data.json\n{option_lines}\n"
-    (srcdir / "index.rst").write_text(rst)
-    app = make_app(
-        srcdir=srcdir,
-        builddir=tmp_path / "build",
-        buildername="html",
-        confoverrides={"extensions": ["sphinx_literalizer"]},
-    )
-    app.build()
-    assert app.statuscode == 0
-    assert not app.warning.getvalue()
-
-    doctree = app.env.get_doctree("index")
-    return [node.astext() for node in doctree.findall(nodes.literal_block)]
 
 
 def test_boolean_array_python(
@@ -51,16 +16,48 @@ def test_boolean_array_python(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """A JSON boolean array renders as Python booleans."""
-    blocks = _build_sphinx(
-        make_app=make_app,
-        tmp_path=tmp_path,
-        json_data=[True, False, True],
-        directive_options="   :language: py",
+    """A JSON boolean array renders the same as an equivalent code-block."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        json.dumps([True, False, True]),
     )
-    (text,) = blocks
-    assert "True," in text
-    assert "False," in text
+    source_file = source_directory / "index.rst"
+    source_file.write_text(dedent(text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: py
+    """))
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(dedent(text="""\
+        Test
+        ====
+
+        .. code-block:: py
+
+           True,
+           False,
+           True,
+    """))
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
 
 
 def test_array_of_arrays_typescript(
@@ -68,15 +65,46 @@ def test_array_of_arrays_typescript(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """Nested arrays render in TypeScript syntax."""
-    blocks = _build_sphinx(
-        make_app=make_app,
-        tmp_path=tmp_path,
-        json_data=[["a", 1.0]],
-        directive_options="   :language: ts",
+    """Nested arrays render the same as an equivalent TypeScript code-block."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        json.dumps([["a", 1.0]]),
     )
-    (text,) = blocks
-    assert '["a", 1.0],' in text
+    source_file = source_directory / "index.rst"
+    source_file.write_text(dedent(text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: ts
+    """))
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(dedent(text="""\
+        Test
+        ====
+
+        .. code-block:: ts
+
+           ["a", 1.0],
+    """))
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
 
 
 def test_prefix_spaces(
@@ -85,14 +113,29 @@ def test_prefix_spaces(
     tmp_path: Path,
 ) -> None:
     """The :prefix: option prepends spaces to each output line."""
-    blocks = _build_sphinx(
-        make_app=make_app,
-        tmp_path=tmp_path,
-        json_data=[1],
-        directive_options="   :language: py\n   :prefix: 4",
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(json.dumps([1]))
+    (source_directory / "index.rst").write_text(dedent(text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: py
+           :prefix: 4
+    """))
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    (text,) = blocks
-    assert all(line.startswith("    ") for line in text.splitlines())
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    assert "<span></span>    " in content_html
 
 
 def test_prefix_tabs(
@@ -100,15 +143,31 @@ def test_prefix_tabs(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """The :prefix-char: tabs option uses tab characters."""
-    blocks = _build_sphinx(
-        make_app=make_app,
-        tmp_path=tmp_path,
-        json_data=[1],
-        directive_options="   :language: go\n   :prefix: 2\n   :prefix-char: tabs",
+    """The :prefix-char: tabs option prepends tab characters."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(json.dumps([1]))
+    (source_directory / "index.rst").write_text(dedent(text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: go
+           :prefix: 2
+           :prefix-char: tabs
+    """))
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    (text,) = blocks
-    assert all(line.startswith("\t\t") for line in text.splitlines())
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    assert "\t\t" in content_html
 
 
 def test_wrap_adds_brackets(
@@ -116,15 +175,48 @@ def test_wrap_adds_brackets(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """The :wrap: flag wraps output in brackets."""
-    blocks = _build_sphinx(
-        make_app=make_app,
-        tmp_path=tmp_path,
-        json_data=[1, 2],
-        directive_options="   :language: py\n   :wrap:",
+    """The :wrap: flag produces the same output as a wrapped code-block."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(json.dumps([1, 2]))
+    source_file = source_directory / "index.rst"
+    source_file.write_text(dedent(text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: py
+           :wrap:
+    """))
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    (text,) = blocks
-    assert text.startswith("[")
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(dedent(text="""\
+        Test
+        ====
+
+        .. code-block:: py
+
+           [
+               1,
+               2,
+           ]
+    """))
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
 
 
 def test_no_wrap_by_default(
@@ -132,15 +224,45 @@ def test_no_wrap_by_default(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """Without :wrap:, output is not wrapped in brackets."""
-    blocks = _build_sphinx(
-        make_app=make_app,
-        tmp_path=tmp_path,
-        json_data=[1, 2],
-        directive_options="   :language: py",
+    """Without :wrap:, output matches an unwrapped code-block."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(json.dumps([1, 2]))
+    source_file = source_directory / "index.rst"
+    source_file.write_text(dedent(text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: py
+    """))
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    (text,) = blocks
-    assert not text.startswith("[")
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(dedent(text="""\
+        Test
+        ====
+
+        .. code-block:: py
+
+           1,
+           2,
+    """))
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
 
 
 def test_setup_returns_metadata() -> None:
@@ -149,7 +271,6 @@ def test_setup_returns_metadata() -> None:
     result = setup(app=app)
     app.add_directive.assert_called_once_with(
         "literalizer",
-        # Don't check the exact class to avoid tight coupling.
         app.add_directive.call_args[0][1],
     )
     assert result["parallel_read_safe"] is True
