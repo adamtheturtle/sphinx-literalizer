@@ -40,9 +40,10 @@ Directive options
 ~~~~~~~~~~~~~~~~~
 
 ``:language:`` (required)
-   Target language file extension.
-   Supported values: ``py``, ``ts``, ``js``, ``go``, ``cpp``, ``cs``,
-   ``rb``, ``java``, ``kt``.
+   Target language name or common alias.
+   Supported values: ``python`` / ``py``, ``typescript`` / ``ts``,
+   ``javascript`` / ``js``, ``go``, ``cpp``, ``csharp``, ``ruby`` / ``rb``,
+   ``java``, ``kotlin``.
 
 ``:prefix:`` (optional)
    Number of whitespace characters to prepend to each output line.

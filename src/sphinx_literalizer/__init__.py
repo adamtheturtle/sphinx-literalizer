@@ -10,10 +10,38 @@ from typing import ClassVar
 
 from docutils import nodes
 from docutils.parsers.rst import directives
-from literalizer import convert_json_to_native_literal
+from literalizer import (
+    CPP,
+    CSHARP,
+    GO,
+    JAVA,
+    JAVASCRIPT,
+    KOTLIN,
+    PYTHON,
+    RUBY,
+    TYPESCRIPT,
+    Language,
+    literalize,
+)
 from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
+
+_LANGUAGES: dict[str, Language] = {
+    "cpp": CPP,
+    "csharp": CSHARP,
+    "go": GO,
+    "java": JAVA,
+    "javascript": JAVASCRIPT,
+    "js": JAVASCRIPT,
+    "kotlin": KOTLIN,
+    "py": PYTHON,
+    "python": PYTHON,
+    "rb": RUBY,
+    "ruby": RUBY,
+    "ts": TYPESCRIPT,
+    "typescript": TYPESCRIPT,
+}
 
 
 class LiteralizerDirective(SphinxDirective):
@@ -48,22 +76,23 @@ class LiteralizerDirective(SphinxDirective):
 
         data = json.loads(json_path.read_text(encoding="utf-8"))
 
-        language: str = self.options["language"]
+        language_name: str = self.options["language"]
+        language_spec = _LANGUAGES[language_name]
         prefix_count: int = self.options.get("prefix", 0)
         prefix_char_name: str = self.options.get("prefix-char", "spaces")
         prefix_char = "\t" if prefix_char_name == "tabs" else " "
         prefix = prefix_char * prefix_count
         wrap: bool = "wrap" in self.options
 
-        text = convert_json_to_native_literal(
+        text = literalize(
             data=data,
-            language=language,
+            language=language_spec,
             prefix=prefix,
             wrap=wrap,
         )
 
         node = nodes.literal_block(text=text, source=rel_path)
-        node["language"] = language
+        node["language"] = language_name
         self.add_name(node=node)
         return [node]
 
