@@ -31,7 +31,7 @@ Then use the ``literalizer`` directive in your ``.rst`` files:
 .. code-block:: rst
 
    .. literalizer:: path/to/data.json
-      :language: py
+      :language: python
 
 This reads the JSON file and renders its contents as a native Python literal
 in a code block.
@@ -40,10 +40,9 @@ Directive options
 ~~~~~~~~~~~~~~~~~
 
 ``:language:`` (required)
-   Target language name or common alias.
-   Supported values: ``python`` / ``py``, ``typescript`` / ``ts``,
-   ``javascript`` / ``js``, ``go``, ``cpp``, ``csharp``, ``ruby`` / ``rb``,
-   ``java``, ``kotlin``.
+   Target language name (Pygments language name).
+   Supported values: ``python``, ``typescript``, ``javascript``, ``go``,
+   ``cpp``, ``csharp``, ``ruby``, ``java``, ``kotlin``.
 
 ``:prefix:`` (optional)
    Number of whitespace characters to prepend to each output line.
@@ -70,7 +69,7 @@ The directive:
 .. code-block:: rst
 
    .. literalizer:: data.json
-      :language: py
+      :language: python
       :wrap:
 
 renders as a code block containing:

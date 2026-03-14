@@ -33,13 +33,9 @@ _LANGUAGES: dict[str, Language] = {
     "go": GO,
     "java": JAVA,
     "javascript": JAVASCRIPT,
-    "js": JAVASCRIPT,
     "kotlin": KOTLIN,
-    "py": PYTHON,
     "python": PYTHON,
-    "rb": RUBY,
     "ruby": RUBY,
-    "ts": TYPESCRIPT,
     "typescript": TYPESCRIPT,
 }
 
@@ -50,7 +46,7 @@ class LiteralizerDirective(SphinxDirective):
     Usage::
 
         .. literalizer:: path/to/data.json
-           :language: py
+           :language: python
            :prefix: 8
            :prefix-char: spaces
            :wrap:
