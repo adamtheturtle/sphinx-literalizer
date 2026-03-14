@@ -43,10 +43,7 @@ def _build_sphinx(
     assert not app.warning.getvalue()
 
     doctree = app.env.get_doctree("index")
-    return [
-        node.astext()
-        for node in doctree.findall(nodes.literal_block)
-    ]
+    return [node.astext() for node in doctree.findall(nodes.literal_block)]
 
 
 def test_boolean_array_python(
