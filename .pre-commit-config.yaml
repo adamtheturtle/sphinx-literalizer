@@ -28,6 +28,7 @@ repos:
       - id: check-merge-conflict
         stages: [pre-commit]
       - id: check-shebang-scripts-are-executable
+        exclude: ^docs/source/conf\.py$
         stages: [pre-commit]
       - id: check-symlinks
         stages: [pre-commit]
