@@ -23,7 +23,7 @@ Requires Python |minimum-python-version|\+.
 Usage
 -----
 
-Add to your Sphinx :file:`conf.py`:
+Add to your Sphinx ``conf.py``:
 
 .. code-block:: python
 
