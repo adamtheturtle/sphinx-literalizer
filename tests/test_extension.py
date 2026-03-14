@@ -130,7 +130,8 @@ def test_prefix_spaces(
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
     (source_directory / "data.json").write_text(json.dumps([1]))
-    (source_directory / "index.rst").write_text(
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
         dedent(
             text="""\
         Test
@@ -152,7 +153,25 @@ def test_prefix_spaces(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    assert "<span></span>    " in content_html
+    (source_directory / "expected.py").write_text("    1,\n")
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalinclude:: expected.py
+           :language: py
+    """
+        )
+    )
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
 
 
 def test_prefix_tabs(
@@ -165,7 +184,8 @@ def test_prefix_tabs(
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
     (source_directory / "data.json").write_text(json.dumps([1]))
-    (source_directory / "index.rst").write_text(
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
         dedent(
             text="""\
         Test
@@ -188,7 +208,25 @@ def test_prefix_tabs(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    assert "\t\t" in content_html
+    (source_directory / "expected.go").write_text("\t\t1,\n")
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalinclude:: expected.go
+           :language: go
+    """
+        )
+    )
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
 
 
 def test_wrap_adds_brackets(
