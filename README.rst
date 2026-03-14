@@ -32,6 +32,16 @@ Add to your Sphinx :file:`conf.py`:
        "sphinx_literalizer",
    ]
 
+Then use the ``literalizer`` directive in your ``.rst`` files:
+
+.. code-block:: rst
+
+   .. literalizer:: path/to/data.json
+      :language: py
+      :wrap:
+
+This reads the JSON file and renders its contents as a native Python literal
+in a code block.
 
 Full documentation
 ------------------

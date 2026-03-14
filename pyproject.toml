@@ -78,9 +78,6 @@ lint.ignore = [
     "D212",
     "ISC001",
 ]
-lint.per-file-ignores."src/sphinx_literalizer/__init__.py" = [
-    "ARG001",
-]
 lint.per-file-ignores."tests/test_*.py" = [
     "D103",
     "D205",

@@ -26,6 +26,63 @@ Add to your Sphinx :file:`conf.py`:
        "sphinx_literalizer",
    ]
 
+Then use the ``literalizer`` directive in your ``.rst`` files:
+
+.. code-block:: rst
+
+   .. literalizer:: path/to/data.json
+      :language: py
+
+This reads the JSON file and renders its contents as a native Python literal
+in a code block.
+
+Directive options
+~~~~~~~~~~~~~~~~~
+
+``:language:`` (required)
+   Target language file extension.
+   Supported values: ``py``, ``ts``, ``js``, ``go``, ``cpp``, ``cs``,
+   ``rb``, ``java``, ``kt``.
+
+``:prefix:`` (optional)
+   Number of whitespace characters to prepend to each output line.
+   Defaults to ``0``.
+
+``:prefix-char:`` (optional)
+   Type of whitespace for the prefix: ``spaces`` (default) or ``tabs``.
+
+``:wrap:`` (optional flag)
+   Wrap the output in language-appropriate delimiters
+   (``[`` … ``]`` for arrays, ``{`` … ``}`` for dicts).
+
+Example
+~~~~~~~
+
+Given a file ``data.json`` containing:
+
+.. code-block:: json
+
+   [true, false, 42, "hello"]
+
+The directive:
+
+.. code-block:: rst
+
+   .. literalizer:: data.json
+      :language: py
+      :wrap:
+
+renders as a code block containing:
+
+.. code-block:: python
+
+   [
+   True,
+   False,
+   42,
+   "hello",
+   ]
+
 
 Reference
 ---------
