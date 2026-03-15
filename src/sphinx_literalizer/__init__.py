@@ -100,9 +100,7 @@ class LiteralizerDirective(SphinxDirective):
         "prefix": directives.nonnegative_int,
         "prefix-char": lambda x: directives.choice(x, ("spaces", "tabs")),
         "wrap": directives.flag,
-        "date-format": lambda x: directives.choice(
-            x, tuple(_DATE_FORMATS)
-        ),
+        "date-format": lambda x: directives.choice(x, tuple(_DATE_FORMATS)),
     }
 
     def run(self) -> list[nodes.Node]:
@@ -118,9 +116,7 @@ class LiteralizerDirective(SphinxDirective):
         language_spec: LanguageSpec = _LANGUAGES[language_name]
         date_format_name: str | None = self.options.get("date-format")
         if date_format_name is not None:
-            format_date, format_datetime = _DATE_FORMATS[
-                date_format_name
-            ]
+            format_date, format_datetime = _DATE_FORMATS[date_format_name]
             language_spec = dataclasses.replace(
                 language_spec,
                 format_date=format_date,
