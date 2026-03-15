@@ -41,9 +41,7 @@ def _apply_date_format(
     if isinstance(data, datetime.date):
         return data.strftime(date_format)
     if isinstance(data, Mapping):
-        return {
-            k: _apply_date_format(v, date_format) for k, v in data.items()
-        }
+        return {k: _apply_date_format(v, date_format) for k, v in data.items()}
     if isinstance(data, Sequence) and not isinstance(data, str):
         return [_apply_date_format(item, date_format) for item in data]
     return data
