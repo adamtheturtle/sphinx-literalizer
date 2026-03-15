@@ -55,6 +55,35 @@ Directive options
    Wrap the output in language-appropriate delimiters
    (``[`` … ``]`` for arrays, ``{`` … ``}`` for dicts).
 
+``:date-format:`` (optional)
+   How to render YAML dates and datetimes.  Defaults to ``iso``
+   (quoted ISO 8601 strings).  Supported values:
+
+   ``iso``
+      Quoted ISO 8601 string (e.g. ``"2024-01-15"``).
+   ``python``
+      Python constructor (e.g. ``datetime.date(2024, 1, 15)``).
+   ``epoch``
+      Seconds since Unix epoch for datetimes; ISO for dates.
+   ``java-instant``
+      ``LocalDate.of(...)`` for dates, ``Instant.parse(...)`` for
+      datetimes.
+   ``java-zoned``
+      ``LocalDate.of(...)`` for dates, ``ZonedDateTime.of(...)`` for
+      datetimes.
+   ``ruby``
+      ``Date.new(...)`` / ``Time.new(...)``.
+   ``javascript``
+      ``new Date(...)``.
+   ``csharp``
+      ``new DateOnly(...)`` / ``new DateTime(...)``.
+   ``go``
+      ``time.Date(...)``.
+   ``kotlin``
+      ``LocalDate.of(...)`` / ``LocalDateTime.of(...)``.
+   ``cpp``
+      ``std::chrono`` types.
+
 Example
 ~~~~~~~
 

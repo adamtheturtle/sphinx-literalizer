@@ -314,10 +314,10 @@ def test_wrap_adds_brackets(
 
         .. code-block:: python
 
-           [
+           (
                1,
                2,
-           ]
+           )
     """
         )
     )
@@ -379,6 +379,179 @@ def test_yaml_file_python(
            True,
            False,
            True,
+    """
+        )
+    )
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
+
+
+def test_date_format_python(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :date-format: python option renders dates as constructors."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text(
+        dedent("""\
+            - 2024-01-15
+        """)
+    )
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.yaml
+           :language: python
+           :date-format: python
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. code-block:: python
+
+           datetime.date(2024, 1, 15),
+    """
+        )
+    )
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
+
+
+def test_date_format_iso_default(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Without :date-format:, dates render as ISO strings (the default)."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text(
+        dedent("""\
+            - 2024-01-15
+        """)
+    )
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.yaml
+           :language: python
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. code-block:: python
+
+           "2024-01-15",
+    """
+        )
+    )
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
+
+
+def test_date_format_java_instant(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :date-format: java-instant option renders dates for Java."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text(
+        dedent("""\
+            - 2024-01-15
+        """)
+    )
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.yaml
+           :language: java
+           :date-format: java-instant
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. code-block:: java
+
+           LocalDate.of(2024, 1, 15)
     """
         )
     )
