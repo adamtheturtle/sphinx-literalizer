@@ -48,9 +48,7 @@ def test_source_attribute_is_absolute(
     literal_blocks = list(doctree.findall(nodes.literal_block))
     assert len(literal_blocks) == 1
     source = literal_blocks[0]["source"]
-    assert Path(source).is_absolute(), (
-        f"Expected an absolute path for 'source', got: {source!r}"
-    )
+    assert Path(source).is_absolute()
     app.cleanup()
 
 
