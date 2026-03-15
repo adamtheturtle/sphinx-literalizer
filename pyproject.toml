@@ -33,7 +33,7 @@ dynamic = [
     "version",
 ]
 dependencies = [
-    "literalizer>=2026.3.14",
+    "literalizer @ git+https://github.com/adamtheturtle/literalizer.git",
     "sphinx>=7.0",
 ]
 optional-dependencies.dev = [

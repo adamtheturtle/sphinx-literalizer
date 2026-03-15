@@ -350,15 +350,11 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.3.14"
-source = { registry = "https://pypi.org/simple" }
+version = "2026.3.14.post19+g0d754ebf4"
+source = { git = "https://github.com/adamtheturtle/literalizer.git#0d754ebf4cd4479c93248fe14ae956037c8e13b0" }
 dependencies = [
     { name = "beartype" },
-    { name = "pyyaml" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/16/ea/6f523e513c4b334f4c82b8a2a75933b9a94df7cad9b03481c2a51ae98610/literalizer-2026.3.14.tar.gz", hash = "sha256:9ab2f0f66d1cd9ec61ec1ac3bbce9c0eac7985726fa3f7866ffe46aa516f7d31", size = 20636, upload-time = "2026-03-14T13:27:11.596Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1d/4a/aefa04297574fadb22a119556ca51015bfc2c8a6af6254c8a1dc0d915f9f/literalizer-2026.3.14-py3-none-any.whl", hash = "sha256:f5c108fc1143347d56d1bc58d05655d956cbc46480b726eeebe69f6682fc97fe", size = 6762, upload-time = "2026-03-14T13:27:10.092Z" },
+    { name = "ruamel-yaml" },
 ]
 
 [[package]]
@@ -739,6 +735,15 @@ wheels = [
 ]
 
 [[package]]
+name = "ruamel-yaml"
+version = "0.19.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/c7/3b/ebda527b56beb90cb7652cb1c7e4f91f48649fbcd8d2eb2fb6e77cd3329b/ruamel_yaml-0.19.1.tar.gz", hash = "sha256:53eb66cd27849eff968ebf8f0bf61f46cdac2da1d1f3576dd4ccee9b25c31993", size = 142709, upload-time = "2026-01-02T16:50:31.84Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b8/0c/51f6841f1d84f404f92463fc2b1ba0da357ca1e3db6b7fbda26956c3b82a/ruamel_yaml-0.19.1-py3-none-any.whl", hash = "sha256:27592957fedf6e0b62f281e96effd28043345e0e66001f97683aa9a40c667c93", size = 118102, upload-time = "2026-01-02T16:50:29.201Z" },
+]
+
+[[package]]
 name = "ruff"
 version = "0.15.6"
 source = { registry = "https://pypi.org/simple" }
@@ -864,7 +869,7 @@ requires-dist = [
     { name = "beartype", marker = "extra == 'dev'", specifier = "==0.22.9" },
     { name = "check-wheel-contents", marker = "extra == 'release'", specifier = "==0.6.3" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
-    { name = "literalizer", specifier = ">=2026.3.14" },
+    { name = "literalizer", git = "https://github.com/adamtheturtle/literalizer.git" },
     { name = "prek", marker = "extra == 'dev'", specifier = "==0.3.5" },
     { name = "pyproject-fmt", marker = "extra == 'dev'", specifier = "==2.18.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==9.0.2" },
