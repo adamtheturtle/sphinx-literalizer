@@ -63,53 +63,53 @@ _LANGUAGES: dict[str, LanguageSpec] = {
 
 
 @dataclasses.dataclass(frozen=True)
-class _DateFormatPair:
+class _DateFormat:
     format_date: Callable[[datetime.date], str]
     format_datetime: Callable[[datetime.datetime], str]
 
 
-_DATE_FORMATS: dict[str, _DateFormatPair] = {
-    "iso": _DateFormatPair(
+_DATE_FORMATS: dict[str, _DateFormat] = {
+    "iso": _DateFormat(
         format_date=format_date_iso,
         format_datetime=format_datetime_iso,
     ),
-    "python": _DateFormatPair(
+    "python": _DateFormat(
         format_date=format_date_python,
         format_datetime=format_datetime_python,
     ),
-    "epoch": _DateFormatPair(
+    "epoch": _DateFormat(
         format_date=format_date_iso,
         format_datetime=format_datetime_epoch,
     ),
-    "java-instant": _DateFormatPair(
+    "java-instant": _DateFormat(
         format_date=format_date_java,
         format_datetime=format_datetime_java_instant,
     ),
-    "java-zoned": _DateFormatPair(
+    "java-zoned": _DateFormat(
         format_date=format_date_java,
         format_datetime=format_datetime_java_zoned,
     ),
-    "ruby": _DateFormatPair(
+    "ruby": _DateFormat(
         format_date=format_date_ruby,
         format_datetime=format_datetime_ruby,
     ),
-    "javascript": _DateFormatPair(
+    "javascript": _DateFormat(
         format_date=format_date_js,
         format_datetime=format_datetime_js,
     ),
-    "csharp": _DateFormatPair(
+    "csharp": _DateFormat(
         format_date=format_date_csharp,
         format_datetime=format_datetime_csharp,
     ),
-    "go": _DateFormatPair(
+    "go": _DateFormat(
         format_date=format_date_go,
         format_datetime=format_datetime_go,
     ),
-    "kotlin": _DateFormatPair(
+    "kotlin": _DateFormat(
         format_date=format_date_kotlin,
         format_datetime=format_datetime_kotlin,
     ),
-    "cpp": _DateFormatPair(
+    "cpp": _DateFormat(
         format_date=format_date_cpp,
         format_datetime=format_datetime_cpp,
     ),

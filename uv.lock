@@ -350,11 +350,15 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.3.14.post19+g0d754ebf4"
-source = { git = "https://github.com/adamtheturtle/literalizer.git#0d754ebf4cd4479c93248fe14ae956037c8e13b0" }
+version = "2026.3.15"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
     { name = "ruamel-yaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/46/af/44ea1f28e1479140d7f773f7780f05de6e56ec2e923a4fb0259281b34cda/literalizer-2026.3.15.tar.gz", hash = "sha256:73427934f29fed0561337e5038c1fcba6238d35e21b4b1c001df6b19e1beada3", size = 32802, upload-time = "2026-03-15T14:22:06.731Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/72/89/b486c02e4c97e0906a441d4aa220effb413912db3c6826151820cf9e6b78/literalizer-2026.3.15-py3-none-any.whl", hash = "sha256:51e3794714d42851e0efde6df4942cdea249805b2cd5bee3e5f265774dc1e6c2", size = 9474, upload-time = "2026-03-15T14:22:05.616Z" },
 ]
 
 [[package]]
@@ -869,7 +873,7 @@ requires-dist = [
     { name = "beartype", marker = "extra == 'dev'", specifier = "==0.22.9" },
     { name = "check-wheel-contents", marker = "extra == 'release'", specifier = "==0.6.3" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
-    { name = "literalizer", git = "https://github.com/adamtheturtle/literalizer.git" },
+    { name = "literalizer", specifier = ">=2026.3.15" },
     { name = "prek", marker = "extra == 'dev'", specifier = "==0.3.5" },
     { name = "pyproject-fmt", marker = "extra == 'dev'", specifier = "==2.18.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==9.0.2" },

@@ -314,10 +314,10 @@ def test_wrap_adds_brackets(
 
         .. code-block:: python
 
-           [
+           (
                1,
                2,
-           ]
+           )
     """
         )
     )
@@ -551,7 +551,7 @@ def test_date_format_java_instant(
 
         .. code-block:: java
 
-           LocalDate.of(2024, 1, 15),
+           LocalDate.of(2024, 1, 15)
     """
         )
     )
