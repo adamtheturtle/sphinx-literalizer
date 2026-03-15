@@ -4,7 +4,6 @@ Provides the ``literalizer`` directive, which reads a JSON file and
 renders it as a native language literal block.
 """
 
-import json
 from pathlib import Path
 from typing import ClassVar
 
@@ -21,7 +20,7 @@ from literalizer import (
     RUBY,
     TYPESCRIPT,
     Language,
-    literalize,
+    literalize_yaml,
 )
 from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
@@ -62,15 +61,13 @@ class LiteralizerDirective(SphinxDirective):
     }
 
     def run(self) -> list[nodes.Node]:
-        """Read the JSON file and produce a literal block."""
+        """Read the data file and produce a literal block."""
         env = self.state.document.settings.env
         rel_path = self.arguments[0]
         source_dir = Path(env.srcdir)
-        json_path = (source_dir / rel_path).resolve()
+        data_path = (source_dir / rel_path).resolve()
 
-        env.note_dependency(str(json_path))
-
-        data = json.loads(json_path.read_text(encoding="utf-8"))
+        env.note_dependency(str(data_path))
 
         language_name: str = self.options["language"]
         language_spec = _LANGUAGES[language_name]
@@ -80,8 +77,10 @@ class LiteralizerDirective(SphinxDirective):
         prefix = prefix_char * prefix_count
         wrap: bool = "wrap" in self.options
 
-        text = literalize(
-            data=data,
+        # YAML is a superset of JSON, so literalize_yaml handles both
+        # .yaml/.yml files and .json files without any format detection.
+        text = literalize_yaml(
+            yaml_string=data_path.read_text(encoding="utf-8"),
             language=language_spec,
             prefix=prefix,
             wrap=wrap,
@@ -93,7 +92,7 @@ class LiteralizerDirective(SphinxDirective):
         # Sphinx's built-in LiteralInclude directive, which also stores an
         # absolute path so that downstream code can rely on it without having
         # to resolve relative→absolute itself.
-        node = nodes.literal_block(text, text, source=str(json_path))
+        node = nodes.literal_block(text, text, source=str(data_path))
         node["language"] = language_name
         self.add_name(node=node)
         return [node]
