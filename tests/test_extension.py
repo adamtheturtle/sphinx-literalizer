@@ -5,7 +5,51 @@ from collections.abc import Callable
 from pathlib import Path
 from textwrap import dedent
 
+from docutils import nodes
 from sphinx.testing.util import SphinxTestApp
+
+
+def test_source_attribute_is_absolute(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The literal_block node's source attribute is an absolute path.
+
+    This matches Sphinx's built-in LiteralInclude behaviour, which sets
+    ``source`` to an absolute path via ``env.relfn2path()``.  Code that
+    inspects doctree nodes can therefore rely on the path being absolute
+    without needing its own relative→absolute resolution step.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(json.dumps([1]))
+    (source_directory / "index.rst").write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree("index")
+    literal_blocks = list(doctree.findall(nodes.literal_block))
+    (literal_block,) = literal_blocks
+    source = literal_block["source"]
+    assert Path(source).is_absolute()
+    app.cleanup()
 
 
 def test_boolean_array_python(
