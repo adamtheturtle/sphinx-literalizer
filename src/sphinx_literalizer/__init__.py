@@ -61,6 +61,7 @@ _LANGUAGES: dict[str, LanguageSpec] = {
     "typescript": TYPESCRIPT,
 }
 
+
 @dataclasses.dataclass(frozen=True)
 class _DateFormatPair:
     format_date: Callable[[datetime.date], str]
