@@ -4,9 +4,12 @@ Provides the ``literalizer`` directive, which reads a JSON file and
 renders it as a native language literal block.
 """
 
+import datetime
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar
 
+import yaml
 from docutils import nodes
 from docutils.parsers.rst import directives
 from literalizer import (
@@ -20,11 +23,31 @@ from literalizer import (
     RUBY,
     TYPESCRIPT,
     Language,
+    literalize,
     literalize_yaml,
 )
 from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
+
+
+def _apply_date_format(
+    data: Any,  # noqa: ANN401
+    date_format: str,
+) -> Any:  # noqa: ANN401
+    """Recursively replace date/datetime objects with formatted strings."""
+    if isinstance(data, datetime.datetime):
+        return data.strftime(date_format)
+    if isinstance(data, datetime.date):
+        return data.strftime(date_format)
+    if isinstance(data, Mapping):
+        return {
+            k: _apply_date_format(v, date_format) for k, v in data.items()
+        }
+    if isinstance(data, Sequence) and not isinstance(data, str):
+        return [_apply_date_format(item, date_format) for item in data]
+    return data
+
 
 _LANGUAGES: dict[str, Language] = {
     "cpp": CPP,
@@ -58,6 +81,7 @@ class LiteralizerDirective(SphinxDirective):
         "prefix": directives.nonnegative_int,
         "prefix-char": lambda x: directives.choice(x, ("spaces", "tabs")),
         "wrap": directives.flag,
+        "date-format": directives.unchanged,
     }
 
     def run(self) -> list[nodes.Node]:
@@ -76,15 +100,31 @@ class LiteralizerDirective(SphinxDirective):
         prefix_char = "\t" if prefix_char_name == "tabs" else " "
         prefix = prefix_char * prefix_count
         wrap: bool = "wrap" in self.options
+        date_format: str | None = self.options.get("date-format")
 
-        # YAML is a superset of JSON, so literalize_yaml handles both
-        # .yaml/.yml files and .json files without any format detection.
-        text = literalize_yaml(
-            yaml_string=data_path.read_text(encoding="utf-8"),
-            language=language_spec,
-            prefix=prefix,
-            wrap=wrap,
-        )
+        yaml_string = data_path.read_text(encoding="utf-8")
+
+        if date_format is not None:
+            # Parse YAML, apply the custom date format, then literalize the
+            # pre-processed data so that dates appear as formatted strings
+            # rather than ISO-8601 values.
+            raw_data = yaml.safe_load(stream=yaml_string)
+            processed = _apply_date_format(raw_data, date_format)
+            text = literalize(
+                data=processed,
+                language=language_spec,
+                prefix=prefix,
+                wrap=wrap,
+            )
+        else:
+            # YAML is a superset of JSON, so literalize_yaml handles both
+            # .yaml/.yml files and .json files without any format detection.
+            text = literalize_yaml(
+                yaml_string=yaml_string,
+                language=language_spec,
+                prefix=prefix,
+                wrap=wrap,
+            )
 
         # First positional arg sets rawsource; Sphinx requires
         # rawsource == astext() for syntax highlighting to apply.

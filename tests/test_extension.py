@@ -443,3 +443,110 @@ def test_no_wrap_by_default(
     expected_app.cleanup()
 
     assert content_html == expected_html
+
+
+def test_date_format_option(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :date-format: option formats dates using the given strftime string."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text("- 2026-03-15\n")
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.yaml
+           :language: python
+           :date-format: %d/%m/%Y
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. code-block:: python
+
+           "15/03/2026",
+    """
+        )
+    )
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
+
+
+def test_date_format_default_is_isoformat(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Without :date-format:, dates are formatted as ISO 8601 strings."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text("- 2026-03-15\n")
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.yaml
+           :language: python
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. code-block:: python
+
+           "2026-03-15",
+    """
+        )
+    )
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
