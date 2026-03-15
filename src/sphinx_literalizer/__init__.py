@@ -61,23 +61,57 @@ _LANGUAGES: dict[str, LanguageSpec] = {
     "typescript": TYPESCRIPT,
 }
 
-_DateFormatPair = tuple[
-    Callable[[datetime.date], str],
-    Callable[[datetime.datetime], str],
-]
+@dataclasses.dataclass(frozen=True)
+class _DateFormatPair:
+    format_date: Callable[[datetime.date], str]
+    format_datetime: Callable[[datetime.datetime], str]
+
 
 _DATE_FORMATS: dict[str, _DateFormatPair] = {
-    "iso": (format_date_iso, format_datetime_iso),
-    "python": (format_date_python, format_datetime_python),
-    "epoch": (format_date_iso, format_datetime_epoch),
-    "java-instant": (format_date_java, format_datetime_java_instant),
-    "java-zoned": (format_date_java, format_datetime_java_zoned),
-    "ruby": (format_date_ruby, format_datetime_ruby),
-    "javascript": (format_date_js, format_datetime_js),
-    "csharp": (format_date_csharp, format_datetime_csharp),
-    "go": (format_date_go, format_datetime_go),
-    "kotlin": (format_date_kotlin, format_datetime_kotlin),
-    "cpp": (format_date_cpp, format_datetime_cpp),
+    "iso": _DateFormatPair(
+        format_date=format_date_iso,
+        format_datetime=format_datetime_iso,
+    ),
+    "python": _DateFormatPair(
+        format_date=format_date_python,
+        format_datetime=format_datetime_python,
+    ),
+    "epoch": _DateFormatPair(
+        format_date=format_date_iso,
+        format_datetime=format_datetime_epoch,
+    ),
+    "java-instant": _DateFormatPair(
+        format_date=format_date_java,
+        format_datetime=format_datetime_java_instant,
+    ),
+    "java-zoned": _DateFormatPair(
+        format_date=format_date_java,
+        format_datetime=format_datetime_java_zoned,
+    ),
+    "ruby": _DateFormatPair(
+        format_date=format_date_ruby,
+        format_datetime=format_datetime_ruby,
+    ),
+    "javascript": _DateFormatPair(
+        format_date=format_date_js,
+        format_datetime=format_datetime_js,
+    ),
+    "csharp": _DateFormatPair(
+        format_date=format_date_csharp,
+        format_datetime=format_datetime_csharp,
+    ),
+    "go": _DateFormatPair(
+        format_date=format_date_go,
+        format_datetime=format_datetime_go,
+    ),
+    "kotlin": _DateFormatPair(
+        format_date=format_date_kotlin,
+        format_datetime=format_datetime_kotlin,
+    ),
+    "cpp": _DateFormatPair(
+        format_date=format_date_cpp,
+        format_datetime=format_datetime_cpp,
+    ),
 }
 
 
@@ -116,11 +150,11 @@ class LiteralizerDirective(SphinxDirective):
         language_spec: LanguageSpec = _LANGUAGES[language_name]
         date_format_name: str | None = self.options.get("date-format")
         if date_format_name is not None:
-            format_date, format_datetime = _DATE_FORMATS[date_format_name]
+            date_format_pair = _DATE_FORMATS[date_format_name]
             language_spec = dataclasses.replace(
                 language_spec,
-                format_date=format_date,
-                format_datetime=format_datetime,
+                format_date=date_format_pair.format_date,
+                format_datetime=date_format_pair.format_datetime,
             )
         prefix_count: int = self.options.get("prefix", 0)
         prefix_char_name: str = self.options.get("prefix-char", "spaces")
