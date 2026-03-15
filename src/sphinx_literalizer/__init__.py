@@ -89,7 +89,11 @@ class LiteralizerDirective(SphinxDirective):
 
         # First positional arg sets rawsource; Sphinx requires
         # rawsource == astext() for syntax highlighting to apply.
-        node = nodes.literal_block(text, text, source=rel_path)
+        # Use the absolute path for `source` to match the behaviour of
+        # Sphinx's built-in LiteralInclude directive, which also stores an
+        # absolute path so that downstream code can rely on it without having
+        # to resolve relative→absolute itself.
+        node = nodes.literal_block(text, text, source=str(json_path))
         node["language"] = language_name
         self.add_name(node=node)
         return [node]
