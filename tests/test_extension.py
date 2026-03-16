@@ -564,6 +564,172 @@ def test_date_format_java_instant(
     assert content_html == expected_html
 
 
+def test_swift_language(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A JSON array renders correctly for the swift language."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(json.dumps([1, 2]))
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: swift
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. code-block:: swift
+
+           1,
+           2,
+    """
+        )
+    )
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
+
+
+def test_php_language(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A JSON array renders correctly for the php language."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(json.dumps([1, 2]))
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: php
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. code-block:: php
+
+           1,
+           2,
+    """
+        )
+    )
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
+
+
+def test_variable_name_python(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :variable-name: option wraps output in a variable declaration."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(json.dumps([1, 2]))
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :wrap:
+           :variable-name: my_list
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(
+        dedent(
+            text="""\
+        Test
+        ====
+
+        .. code-block:: python
+
+           my_list = (
+               1,
+               2,
+           )
+    """
+        )
+    )
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
+
+
 def test_no_wrap_by_default(
     *,
     make_app: Callable[..., SphinxTestApp],

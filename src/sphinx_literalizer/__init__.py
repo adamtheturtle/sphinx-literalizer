@@ -19,8 +19,10 @@ from literalizer import (
     JAVA,
     JAVASCRIPT,
     KOTLIN,
+    PHP,
     PYTHON,
     RUBY,
+    SWIFT,
     TYPESCRIPT,
     LanguageSpec,
     format_date_cpp,
@@ -30,6 +32,7 @@ from literalizer import (
     format_date_java,
     format_date_js,
     format_date_kotlin,
+    format_date_php,
     format_date_python,
     format_date_ruby,
     format_datetime_cpp,
@@ -41,6 +44,7 @@ from literalizer import (
     format_datetime_java_zoned,
     format_datetime_js,
     format_datetime_kotlin,
+    format_datetime_php,
     format_datetime_python,
     format_datetime_ruby,
     literalize_yaml,
@@ -56,8 +60,10 @@ _LANGUAGES: dict[str, LanguageSpec] = {
     "java": JAVA,
     "javascript": JAVASCRIPT,
     "kotlin": KOTLIN,
+    "php": PHP,
     "python": PYTHON,
     "ruby": RUBY,
+    "swift": SWIFT,
     "typescript": TYPESCRIPT,
 }
 
@@ -113,6 +119,10 @@ _DATE_FORMATS: dict[str, _DateFormat] = {
         format_date=format_date_cpp,
         format_datetime=format_datetime_cpp,
     ),
+    "php": _DateFormat(
+        format_date=format_date_php,
+        format_datetime=format_datetime_php,
+    ),
 }
 
 
@@ -136,6 +146,7 @@ class LiteralizerDirective(SphinxDirective):
         "prefix-char": lambda x: directives.choice(x, ("spaces", "tabs")),
         "wrap": directives.flag,
         "date-format": lambda x: directives.choice(x, tuple(_DATE_FORMATS)),
+        "variable-name": directives.unchanged,
     }
 
     def run(self) -> list[nodes.Node]:
@@ -162,6 +173,7 @@ class LiteralizerDirective(SphinxDirective):
         prefix_char = "\t" if prefix_char_name == "tabs" else " "
         prefix = prefix_char * prefix_count
         wrap: bool = "wrap" in self.options
+        variable_name: str | None = self.options.get("variable-name")
 
         # YAML is a superset of JSON, so literalize_yaml handles both
         # .yaml/.yml files and .json files without any format detection.
@@ -170,6 +182,7 @@ class LiteralizerDirective(SphinxDirective):
             language=language_spec,
             prefix=prefix,
             wrap=wrap,
+            variable_name=variable_name,
         )
 
         # First positional arg sets rawsource; Sphinx requires
