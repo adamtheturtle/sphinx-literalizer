@@ -6,6 +6,7 @@ renders it as a native language literal block.
 
 import dataclasses
 import datetime
+import functools
 from collections.abc import Callable
 from pathlib import Path
 from typing import ClassVar
@@ -143,9 +144,15 @@ class LiteralizerDirective(SphinxDirective):
     option_spec: ClassVar[dict[str, object]] = {
         "language": directives.unchanged_required,
         "prefix": directives.nonnegative_int,
-        "prefix-char": lambda x: directives.choice(x, ("spaces", "tabs")),
+        "prefix-char": functools.partial(
+            directives.choice,
+            values=("spaces", "tabs"),
+        ),
         "wrap": directives.flag,
-        "date-format": lambda x: directives.choice(x, tuple(_DATE_FORMATS)),
+        "date-format": functools.partial(
+            directives.choice,
+            values=tuple(_DATE_FORMATS),
+        ),
         "variable-name": directives.unchanged,
     }
 
