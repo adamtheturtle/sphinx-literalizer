@@ -4,6 +4,8 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.3.16.1``.
+
 2026.03.16
 ----------
 
