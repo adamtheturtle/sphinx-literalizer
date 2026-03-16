@@ -350,15 +350,15 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.3.16"
+version = "2026.3.16.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
     { name = "ruamel-yaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ed/8d/13ad3a36c548cee113ffe978677aa5a5f12e43130d1c8c59f9ca5e2900cd/literalizer-2026.3.16.tar.gz", hash = "sha256:b5829b7415e386a1c131428b77604b10598f1fd1a2b471902f4e56ce57fc4c5e", size = 48774, upload-time = "2026-03-16T08:16:06.315Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4b/1a/dea81d67f24eeead399a8fc32a9be8585d69b5cfcd133f5ea9f9b87d015c/literalizer-2026.3.16.1.tar.gz", hash = "sha256:a4c54a263c6f22a0c147af885ae1506b9142f760870fc3884694306787e2effc", size = 65169, upload-time = "2026-03-16T11:50:14.201Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d0/ca/1a7ff808815070238d3d8f8b13935d3c96f021803a176b77ab7ece498fb9/literalizer-2026.3.16-py3-none-any.whl", hash = "sha256:e1ce1b9028fd112aac2952bfdfbd1fec07e9b83dbda06487c2f121cedf047610", size = 13669, upload-time = "2026-03-16T08:16:05.043Z" },
+    { url = "https://files.pythonhosted.org/packages/82/6b/f4bbe03b0a0f2516f5e8125322c9b144ba8afdb1c92adbf4b4ddb369608f/literalizer-2026.3.16.1-py3-none-any.whl", hash = "sha256:2d53fce180a9f15c834e99a34f30b6d2aed20795b87961f117207927d29de177", size = 15596, upload-time = "2026-03-16T11:50:12.55Z" },
 ]
 
 [[package]]
@@ -873,7 +873,7 @@ requires-dist = [
     { name = "beartype", marker = "extra == 'dev'", specifier = "==0.22.9" },
     { name = "check-wheel-contents", marker = "extra == 'release'", specifier = "==0.6.3" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
-    { name = "literalizer", specifier = ">=2026.3.16" },
+    { name = "literalizer", specifier = ">=2026.3.16.1" },
     { name = "prek", marker = "extra == 'dev'", specifier = "==0.3.5" },
     { name = "pyproject-fmt", marker = "extra == 'dev'", specifier = "==2.18.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==9.0.2" },
