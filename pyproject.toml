@@ -33,12 +33,14 @@ dynamic = [
     "version",
 ]
 dependencies = [
-    "literalizer>=2026.3.16.1",
+    "literalizer>=2026.3.16.2",
     "sphinx>=7.0",
 ]
 optional-dependencies.dev = [
     "beartype==0.22.9",
     "furo==2025.12.19",
+    "mypy==1.19.1",
+    "types-docutils==0.22.3.20260316",
     "prek==0.3.5",
     "pyproject-fmt==2.18.1",
     "pytest==9.0.2",
@@ -106,3 +108,4 @@ report.exclude_also = [
     "if TYPE_CHECKING:",
 ]
 report.show_missing = true
+

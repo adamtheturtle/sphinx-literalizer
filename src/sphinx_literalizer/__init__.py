@@ -8,23 +8,12 @@ import dataclasses
 import datetime
 from collections.abc import Callable
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from docutils import nodes
 from docutils.parsers.rst import directives
-from literalizer import (
-    CPP,
-    CSHARP,
-    GO,
-    JAVA,
-    JAVASCRIPT,
-    KOTLIN,
-    PHP,
-    PYTHON,
-    RUBY,
-    SWIFT,
-    TYPESCRIPT,
-    LanguageSpec,
+from literalizer import LanguageSpec, literalize_yaml
+from literalizer.formatters import (
     format_date_cpp,
     format_date_csharp,
     format_date_go,
@@ -47,7 +36,19 @@ from literalizer import (
     format_datetime_php,
     format_datetime_python,
     format_datetime_ruby,
-    literalize_yaml,
+)
+from literalizer.languages import (
+    CPP,
+    CSHARP,
+    GO,
+    JAVA,
+    JAVASCRIPT,
+    KOTLIN,
+    PHP,
+    PYTHON,
+    RUBY,
+    SWIFT,
+    TYPESCRIPT,
 )
 from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
@@ -140,7 +141,7 @@ class LiteralizerDirective(SphinxDirective):
 
     required_arguments = 1
     has_content = False
-    option_spec: ClassVar[dict[str, object]] = {
+    option_spec: ClassVar[dict[str, Callable[[str], Any]]] = {
         "language": directives.unchanged_required,
         "prefix": directives.nonnegative_int,
         "prefix-char": lambda x: directives.choice(x, ("spaces", "tabs")),
