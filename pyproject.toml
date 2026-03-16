@@ -33,12 +33,13 @@ dynamic = [
     "version",
 ]
 dependencies = [
-    "literalizer>=2026.3.16.1",
+    "literalizer>=2026.3.16.2",
     "sphinx>=7.0",
 ]
 optional-dependencies.dev = [
     "beartype==0.22.9",
     "furo==2025.12.19",
+    "mypy==1.19.1",
     "prek==0.3.5",
     "pyproject-fmt==2.18.1",
     "pytest==9.0.2",
@@ -48,6 +49,7 @@ optional-dependencies.dev = [
     "sphinx-copybutton==0.5.2",
     "sphinx-pyproject==0.3.0",
     "sphinx-substitution-extensions==2026.1.12",
+    "types-docutils==0.22.3.20260316",
 ]
 optional-dependencies.release = [
     "check-wheel-contents==0.6.3",
