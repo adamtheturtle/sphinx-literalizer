@@ -37,19 +37,37 @@ dependencies = [
     "sphinx>=7.0",
 ]
 optional-dependencies.dev = [
+    "actionlint-py==1.7.11.24",
     "beartype==0.22.9",
+    "check-manifest==0.51",
+    "deptry==0.24.0",
+    "doc8==2.0.0",
+    "doccmd==2026.3.2",
     "furo==2025.12.19",
+    "interrogate==1.7.0",
     "mypy==1.19.1",
     "prek==0.3.5",
+    "pydocstringformatter==0.7.5",
     "pyproject-fmt==2.18.1",
+    "pyrefly==0.56.0",
+    "pyright==1.1.408",
+    "pyroma==5.0.1",
     "pytest==9.0.2",
     "pytest-cov==7.0.0",
     "ruff==0.15.6",
+    "shellcheck-py==0.11.0.1",
+    "shfmt-py==3.12.0.2",
     "sphinx==9.1.0",
     "sphinx-copybutton==0.5.2",
+    "sphinx-lint==1.0.2",
     "sphinx-pyproject==0.3.0",
     "sphinx-substitution-extensions==2026.1.12",
+    "sphinxcontrib-spelling==8.0.2",
+    "ty==0.0.23",
     "types-docutils==0.22.3.20260316",
+    "vulture==2.15",
+    "yamlfix==1.19.1",
+    "zizmor==1.23.1",
 ]
 optional-dependencies.release = [
     "check-wheel-contents==0.6.3",
@@ -108,3 +126,114 @@ report.exclude_also = [
     "if TYPE_CHECKING:",
 ]
 report.show_missing = true
+
+[tool.mypy]
+strict = true
+files = ["."]
+exclude = [
+    "build",
+]
+follow_untyped_imports = true
+
+[tool.check-manifest]
+ignore = [
+    ".pre-commit-config.yaml",
+    ".vscode/*.json",
+    "conftest.py",
+    "CHANGELOG.rst",
+    "CODE_OF_CONDUCT.rst",
+    "CONTRIBUTING.rst",
+    "LICENSE",
+    "Makefile",
+    "ci",
+    "ci/**",
+    "docs",
+    "docs/**",
+    ".git_archival.txt",
+    "spelling_private_dict.txt",
+    "tests",
+    "tests/**",
+    "zizmor.yml",
+]
+
+[tool.deptry]
+pep621_dev_dependency_groups = [
+    "dev",
+    "release",
+]
+
+[tool.doc8]
+max_line_length = 2000
+ignore_path = [
+    "./.eggs",
+    "./docs/build",
+    "./docs/build/spelling/output.txt",
+    "./node_modules",
+    "./src/*.egg-info/",
+    "./src/*/_setuptools_scm_version.txt",
+]
+
+[tool.interrogate]
+fail-under = 100
+omit-covered-files = true
+verbose = 2
+
+[tool.pydocstringformatter]
+write = true
+split-summary-body = false
+max-line-length = 75
+linewrap-full-docstring = true
+
+[tool.pyrefly]
+project_excludes = [
+    "build",
+]
+
+[tool.pyright]
+enableTypeIgnoreComments = false
+exclude = [
+    ".venv",
+]
+reportUnnecessaryTypeIgnoreComment = true
+typeCheckingMode = "strict"
+
+[tool.ty]
+analysis.respect-type-ignore-comments = false
+terminal.error-on-warning = true
+
+[tool.vulture]
+ignore_names = [
+    # Sphinx
+    "autoclass_content",
+    "autodoc_member_order",
+    "copybutton_exclude",
+    "extensions",
+    "html_show_copyright",
+    "html_show_sourcelink",
+    "html_show_sphinx",
+    "html_theme",
+    "html_theme_options",
+    "html_title",
+    "htmlhelp_basename",
+    "intersphinx_mapping",
+    "language",
+    "linkcheck_ignore",
+    "linkcheck_retries",
+    "master_doc",
+    "nitpicky",
+    "project_copyright",
+    "pygments_style",
+    "rst_prolog",
+    "source_suffix",
+    "spelling_word_list_filename",
+    "templates_path",
+    "warning_is_error",
+]
+exclude = [
+    ".venv",
+    "build",
+]
+
+[tool.yamlfix]
+section_whitelines = 1
+whitelines = 1
