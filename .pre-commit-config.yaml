@@ -14,7 +14,6 @@ ci:
     - mypy
     - mypy-docs
     - pydocstringformatter
-    - pylint
     - pyproject-fmt-fix
     - pyrefly
     - pyrefly-docs
@@ -264,23 +263,6 @@ repos:
         pass_filenames: false
         additional_dependencies: [uv==0.9.5]
         stages: [pre-commit]
-
-      - id: pylint
-        name: pylint
-        entry: uv run --extra=dev -m pylint *.py src/ tests/ docs/
-        language: python
-        stages: [manual]
-        pass_filenames: false
-        additional_dependencies: [uv==0.9.5]
-
-      - id: pylint-docs
-        name: pylint-docs
-        entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
-          --command="pylint"
-        language: python
-        stages: [manual]
-        types_or: [markdown, rst]
-        additional_dependencies: [uv==0.9.5]
 
       - id: ruff-check-fix
         name: Ruff check fix
