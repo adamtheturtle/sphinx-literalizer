@@ -71,6 +71,8 @@ _LANGUAGES: dict[str, LanguageSpec] = {
 
 @dataclasses.dataclass(frozen=True)
 class _DateFormat:
+    """Date formatting functions for a specific date format."""
+
     format_date: Callable[[datetime.date], str]
     format_datetime: Callable[[datetime.datetime], str]
 
@@ -141,7 +143,7 @@ class LiteralizerDirective(SphinxDirective):
 
     required_arguments = 1
     has_content = False
-    option_spec: ClassVar[dict[str, Callable[[str], Any]]] = {
+    option_spec: ClassVar[dict[str, Callable[[str], Any]]] = {  # pyright: ignore[reportIncompatibleVariableOverride]
         "language": directives.unchanged_required,
         "prefix": directives.nonnegative_int,
         "prefix-char": lambda x: directives.choice(x, ("spaces", "tabs")),

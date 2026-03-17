@@ -1469,6 +1469,7 @@ wheels = [
 name = "sphinx-literalizer"
 source = { editable = "." }
 dependencies = [
+    { name = "docutils" },
     { name = "literalizer" },
     { name = "sphinx" },
 ]
@@ -1520,6 +1521,7 @@ requires-dist = [
     { name = "deptry", marker = "extra == 'dev'", specifier = "==0.24.0" },
     { name = "doc8", marker = "extra == 'dev'", specifier = "==2.0.0" },
     { name = "doccmd", marker = "extra == 'dev'", specifier = "==2026.3.2" },
+    { name = "docutils" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
     { name = "interrogate", marker = "extra == 'dev'", specifier = "==1.7.0" },
     { name = "literalizer", specifier = ">=2026.3.16.2" },

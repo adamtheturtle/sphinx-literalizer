@@ -33,6 +33,7 @@ dynamic = [
     "version",
 ]
 dependencies = [
+    "docutils",
     "literalizer>=2026.3.16.2",
     "sphinx>=7.0",
 ]
@@ -98,6 +99,18 @@ lint.ignore = [
     "D212",
     "ISC001",
 ]
+lint.per-file-ignores."**/doccmd_*.py" = [
+    # Allow standalone expressions (e.g. showing a list value in docs).
+    "B018",
+    # Allow missing module docstrings in generated doccmd files.
+    "D100",
+    # Allow our chosen docstring line-style
+    "D200",
+    # Allow commented-out example output in documentation code blocks.
+    "ERA001",
+    # Allow asserts in docs.
+    "S101",
+]
 lint.per-file-ignores."tests/test_*.py" = [
     "D103",
     "D205",
@@ -111,33 +124,10 @@ lint.unfixable = [
 lint.mccabe.max-complexity = 12
 lint.pydocstyle.convention = "google"
 
-[tool.pyproject-fmt]
-indent = 4
-keep_full_version = true
-max_supported_python = "3.14"
-
-[tool.pytest]
-ini_options.xfail_strict = true
-ini_options.log_cli = true
-
-[tool.coverage]
-run.branch = true
-report.exclude_also = [
-    "if TYPE_CHECKING:",
-]
-report.show_missing = true
-
-[tool.mypy]
-strict = true
-files = ["."]
-exclude = [
-    "build",
-]
-follow_untyped_imports = true
-
 [tool.check-manifest]
 ignore = [
     ".pre-commit-config.yaml",
+    "uv.lock",
     ".vscode/*.json",
     "conftest.py",
     "CHANGELOG.rst",
@@ -162,6 +152,48 @@ pep621_dev_dependency_groups = [
     "release",
 ]
 
+[tool.pyproject-fmt]
+indent = 4
+keep_full_version = true
+max_supported_python = "3.14"
+
+[tool.pytest]
+ini_options.xfail_strict = true
+ini_options.log_cli = true
+
+[tool.coverage]
+run.branch = true
+report.exclude_also = [
+    "if TYPE_CHECKING:",
+]
+report.show_missing = true
+
+[tool.mypy]
+strict = true
+files = [ "." ]
+exclude = [
+    "build",
+]
+follow_untyped_imports = true
+
+[tool.pyrefly]
+project_excludes = [
+    "build",
+]
+
+[tool.pyright]
+enableTypeIgnoreComments = false
+exclude = [
+    ".venv",
+]
+reportUnusedExpression = "none"
+reportUnnecessaryTypeIgnoreComment = true
+typeCheckingMode = "strict"
+
+[tool.ty]
+analysis.respect-type-ignore-comments = false
+terminal.error-on-warning = true
+
 [tool.doc8]
 max_line_length = 2000
 ignore_path = [
@@ -184,25 +216,18 @@ split-summary-body = false
 max-line-length = 75
 linewrap-full-docstring = true
 
-[tool.pyrefly]
-project_excludes = [
-    "build",
-]
-
-[tool.pyright]
-enableTypeIgnoreComments = false
-exclude = [
-    ".venv",
-]
-reportUnnecessaryTypeIgnoreComment = true
-typeCheckingMode = "strict"
-
-[tool.ty]
-analysis.respect-type-ignore-comments = false
-terminal.error-on-warning = true
-
 [tool.vulture]
 ignore_names = [
+    # pytest configuration
+    "pytest_collection_modifyitems",
+    "pytest_plugins",
+    # pytest fixtures - we name fixtures like this for this purpose
+    "fixture_*",
+    # Sphinx directive attributes and methods
+    "has_content",
+    "option_spec",
+    "required_arguments",
+    "run",
     # Sphinx
     "autoclass_content",
     "autodoc_member_order",

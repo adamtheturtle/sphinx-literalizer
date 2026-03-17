@@ -106,10 +106,10 @@ renders as a code block containing:
 .. code-block:: python
 
    [
-   True,
-   False,
-   42,
-   "hello",
+       True,
+       False,
+       42,
+       "hello",
    ]
 
 
