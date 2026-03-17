@@ -41,8 +41,9 @@ Directive options
 
 ``:language:`` (required)
    Target language name (Pygments language name).
-   Supported values: ``python``, ``typescript``, ``javascript``, ``go``,
-   ``cpp``, ``csharp``, ``ruby``, ``java``, ``kotlin``.
+   Supported values: ``cpp``, ``csharp``, ``dart``, ``go``, ``java``,
+   ``javascript``, ``julia``, ``kotlin``, ``php``, ``python``, ``ruby``,
+   ``swift``, ``typescript``.
 
 ``:prefix:`` (optional)
    Number of whitespace characters to prepend to each output line.
@@ -83,6 +84,20 @@ Directive options
       ``LocalDate.of(...)`` / ``LocalDateTime.of(...)``.
    ``cpp``
       ``std::chrono`` types.
+   ``dart``
+      ``DateTime.parse(...)`` for dates and datetimes.
+   ``julia``
+      ``Date(...)`` / ``DateTime(...)`` constructors.
+
+``:variable-name:`` (optional)
+   Wrap the output in a variable declaration or assignment using the given
+   name.  Use with ``:wrap:`` to include the collection delimiters.
+
+``:existing-variable:`` (optional flag)
+   When combined with ``:variable-name:``, produce an assignment to an
+   existing variable (e.g. ``x = ...``) instead of a new variable
+   declaration (e.g. ``final x = ...`` in Dart).  Has no effect without
+   ``:variable-name:``.
 
 Example
 ~~~~~~~
