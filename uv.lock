@@ -595,15 +595,15 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.3.16.2"
+version = "2026.3.17.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
     { name = "ruamel-yaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e1/59/35501a85e13e3da0d7befa35dd6bfe50f657ffb156ea108925c9db40039a/literalizer-2026.3.16.2.tar.gz", hash = "sha256:e10fe8a1672cb955d2a29c7b64af992e8a4b5f8543508bf22721982727afd062", size = 65321, upload-time = "2026-03-16T13:34:08.349Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/92/2b/8a7763ccfb280614f4db3e645032652b78cbaa33f9d6d055c3a6c39604c0/literalizer-2026.3.17.1.tar.gz", hash = "sha256:db4b4380cc6cf5657988446741f3dfd02d0f0e1bca6e32d1091c16c822296734", size = 70387, upload-time = "2026-03-17T12:01:49.857Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/34/69/e9886b53a35d4840fa5ffc2d47fad5bd01dba1ffcb0ad0ef31dfebb3a4ad/literalizer-2026.3.16.2-py3-none-any.whl", hash = "sha256:691f1a380e1ac6ef0098fba9f312b1865ff487a0f0ac88213144df7b5969ee18", size = 17754, upload-time = "2026-03-16T13:34:06.68Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/cb/4c54b6b9627679127ffe2aea6b8ef7a977d8f2a2dd5098a3e4cfbfd042be/literalizer-2026.3.17.1-py3-none-any.whl", hash = "sha256:44e36ab7734af5d72fa6601903728098fdf49907faed9c7f62f2fb7497403b75", size = 18626, upload-time = "2026-03-17T12:01:48.457Z" },
 ]
 
 [[package]]
@@ -1538,7 +1538,7 @@ requires-dist = [
     { name = "docutils" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
     { name = "interrogate", marker = "extra == 'dev'", specifier = "==1.7.0" },
-    { name = "literalizer", specifier = ">=2026.3.16.2" },
+    { name = "literalizer", specifier = ">=2026.3.17.1" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "==1.19.1" },
     { name = "mypy-strict-kwargs", marker = "extra == 'dev'", specifier = "==2026.1.12" },
     { name = "prek", marker = "extra == 'dev'", specifier = "==0.3.6" },

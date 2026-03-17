@@ -16,22 +16,26 @@ from literalizer import LanguageSpec, literalize_yaml
 from literalizer.formatters import (
     format_date_cpp,
     format_date_csharp,
+    format_date_dart,
     format_date_go,
     format_date_iso,
     format_date_java,
     format_date_js,
+    format_date_julia,
     format_date_kotlin,
     format_date_php,
     format_date_python,
     format_date_ruby,
     format_datetime_cpp,
     format_datetime_csharp,
+    format_datetime_dart,
     format_datetime_epoch,
     format_datetime_go,
     format_datetime_iso,
     format_datetime_java_instant,
     format_datetime_java_zoned,
     format_datetime_js,
+    format_datetime_julia,
     format_datetime_kotlin,
     format_datetime_php,
     format_datetime_python,
@@ -40,9 +44,11 @@ from literalizer.formatters import (
 from literalizer.languages import (
     CPP,
     CSHARP,
+    DART,
     GO,
     JAVA,
     JAVASCRIPT,
+    JULIA,
     KOTLIN,
     PHP,
     PYTHON,
@@ -57,9 +63,11 @@ from sphinx.util.typing import ExtensionMetadata
 _LANGUAGES: dict[str, LanguageSpec] = {
     "cpp": CPP,
     "csharp": CSHARP,
+    "dart": DART,
     "go": GO,
     "java": JAVA,
     "javascript": JAVASCRIPT,
+    "julia": JULIA,
     "kotlin": KOTLIN,
     "php": PHP,
     "python": PYTHON,
@@ -78,9 +86,17 @@ class _DateFormat:
 
 
 _DATE_FORMATS: dict[str, _DateFormat] = {
+    "dart": _DateFormat(
+        format_date=format_date_dart,
+        format_datetime=format_datetime_dart,
+    ),
     "iso": _DateFormat(
         format_date=format_date_iso,
         format_datetime=format_datetime_iso,
+    ),
+    "julia": _DateFormat(
+        format_date=format_date_julia,
+        format_datetime=format_datetime_julia,
     ),
     "python": _DateFormat(
         format_date=format_date_python,
@@ -139,6 +155,8 @@ class LiteralizerDirective(SphinxDirective):
            :prefix: 8
            :prefix-char: spaces
            :wrap:
+           :variable-name: my_var
+           :existing-variable:
     """
 
     required_arguments = 1
@@ -156,6 +174,7 @@ class LiteralizerDirective(SphinxDirective):
             values=tuple(_DATE_FORMATS),
         ),
         "variable-name": directives.unchanged,
+        "existing-variable": directives.flag,
     }
 
     def run(self) -> list[nodes.Node]:
@@ -183,6 +202,7 @@ class LiteralizerDirective(SphinxDirective):
         prefix = prefix_char * prefix_count
         wrap: bool = "wrap" in self.options
         variable_name: str | None = self.options.get("variable-name")
+        existing_variable: bool = "existing-variable" in self.options
 
         # YAML is a superset of JSON, so literalize_yaml handles both
         # .yaml/.yml files and .json files without any format detection.
@@ -192,6 +212,7 @@ class LiteralizerDirective(SphinxDirective):
             prefix=prefix,
             wrap=wrap,
             variable_name=variable_name,
+            new_variable=not existing_variable,
         )
 
         # First positional arg sets rawsource; Sphinx requires
