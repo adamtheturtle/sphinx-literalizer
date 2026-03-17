@@ -47,9 +47,9 @@ optional-dependencies.dev = [
     "furo==2025.12.19",
     "interrogate==1.7.0",
     "mypy==1.19.1",
-    "prek==0.3.5",
+    "prek==0.3.6",
     "pydocstringformatter==0.7.5",
-    "pyproject-fmt==2.18.1",
+    "pyproject-fmt==2.19.0",
     "pyrefly==0.56.0",
     "pyright==1.1.408",
     "pyroma==5.0.1",
@@ -157,17 +157,6 @@ indent = 4
 keep_full_version = true
 max_supported_python = "3.14"
 
-[tool.pytest]
-ini_options.xfail_strict = true
-ini_options.log_cli = true
-
-[tool.coverage]
-run.branch = true
-report.exclude_also = [
-    "if TYPE_CHECKING:",
-]
-report.show_missing = true
-
 [tool.mypy]
 strict = true
 files = [ "." ]
@@ -192,6 +181,17 @@ typeCheckingMode = "strict"
 [tool.ty]
 analysis.respect-type-ignore-comments = false
 terminal.error-on-warning = true
+
+[tool.pytest]
+ini_options.xfail_strict = true
+ini_options.log_cli = true
+
+[tool.coverage]
+run.branch = true
+report.exclude_also = [
+    "if TYPE_CHECKING:",
+]
+report.show_missing = true
 
 [tool.doc8]
 max_line_length = 2000
