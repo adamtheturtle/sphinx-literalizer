@@ -41,7 +41,7 @@ optional-dependencies.dev = [
     "furo==2025.12.19",
     "mypy==1.19.1",
     "prek==0.3.6",
-    "pyproject-fmt==2.18.1",
+    "pyproject-fmt==2.19.0",
     "pytest==9.0.2",
     "pytest-cov==7.0.0",
     "ruff==0.15.6",
