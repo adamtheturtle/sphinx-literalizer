@@ -24,9 +24,9 @@ def test_source_attribute_is_absolute(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(json.dumps([1]))
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
     (source_directory / "index.rst").write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -44,8 +44,8 @@ def test_source_attribute_is_absolute(
     app.build()
     assert app.statuscode == 0
 
-    doctree = app.env.get_doctree("index")
-    literal_blocks = list(doctree.findall(nodes.literal_block))
+    doctree = app.env.get_doctree(docname="index")
+    literal_blocks = list(doctree.findall(condition=nodes.literal_block))
     (literal_block,) = literal_blocks
     source = literal_block["source"]
     assert Path(source).is_absolute()
@@ -64,11 +64,11 @@ def test_boolean_array_python(
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
     (source_directory / "data.json").write_text(
-        json.dumps([True, False, True]),
+        data=json.dumps(obj=[True, False, True]),
     )
     source_file = source_directory / "index.rst"
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -89,7 +89,7 @@ def test_boolean_array_python(
     app.cleanup()
 
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -123,11 +123,11 @@ def test_array_of_arrays_typescript(
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
     (source_directory / "data.json").write_text(
-        json.dumps([["a", 1.0]]),
+        data=json.dumps(obj=[["a", 1.0]]),
     )
     source_file = source_directory / "index.rst"
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -148,7 +148,7 @@ def test_array_of_arrays_typescript(
     app.cleanup()
 
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -177,10 +177,10 @@ def test_prefix_spaces(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(json.dumps([1]))
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
     source_file = source_directory / "index.rst"
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -201,9 +201,9 @@ def test_prefix_spaces(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    (source_directory / "expected.py").write_text("    1,\n")
+    (source_directory / "expected.py").write_text(data="    1,\n")
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -231,10 +231,10 @@ def test_prefix_tabs(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(json.dumps([1]))
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
     source_file = source_directory / "index.rst"
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -256,9 +256,9 @@ def test_prefix_tabs(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    (source_directory / "expected.go").write_text("\t\t1,\n")
+    (source_directory / "expected.go").write_text(data="\t\t1,\n")
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -288,10 +288,10 @@ def test_wrap_adds_brackets(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(json.dumps([1, 2]))
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
     source_file = source_directory / "index.rst"
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -313,7 +313,7 @@ def test_wrap_adds_brackets(
     app.cleanup()
 
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -346,15 +346,17 @@ def test_yaml_file_python(
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
     (source_directory / "data.yaml").write_text(
-        dedent("""\
+        data=dedent(
+            text="""\
             - true
             - false
             - true
-        """)
+        """
+        )
     )
     source_file = source_directory / "index.rst"
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -375,7 +377,7 @@ def test_yaml_file_python(
     app.cleanup()
 
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -407,13 +409,15 @@ def test_date_format_python(
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
     (source_directory / "data.yaml").write_text(
-        dedent("""\
+        data=dedent(
+            text="""\
             - 2024-01-15
-        """)
+        """
+        )
     )
     source_file = source_directory / "index.rst"
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -435,7 +439,7 @@ def test_date_format_python(
     app.cleanup()
 
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -467,13 +471,15 @@ def test_date_format_iso_default(
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
     (source_directory / "data.yaml").write_text(
-        dedent("""\
+        data=dedent(
+            text="""\
             - 2024-01-15
-        """)
+        """
+        )
     )
     source_file = source_directory / "index.rst"
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -494,7 +500,7 @@ def test_date_format_iso_default(
     app.cleanup()
 
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -524,13 +530,15 @@ def test_date_format_java_instant(
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
     (source_directory / "data.yaml").write_text(
-        dedent("""\
+        data=dedent(
+            text="""\
             - 2024-01-15
-        """)
+        """
+        )
     )
     source_file = source_directory / "index.rst"
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -552,7 +560,7 @@ def test_date_format_java_instant(
     app.cleanup()
 
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -581,10 +589,10 @@ def test_swift_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(json.dumps([1, 2]))
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
     source_file = source_directory / "index.rst"
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -605,7 +613,7 @@ def test_swift_language(
     app.cleanup()
 
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -635,10 +643,10 @@ def test_php_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(json.dumps([1, 2]))
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
     source_file = source_directory / "index.rst"
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -659,7 +667,7 @@ def test_php_language(
     app.cleanup()
 
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -691,10 +699,10 @@ def test_variable_name_python(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(json.dumps([1, 2]))
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
     source_file = source_directory / "index.rst"
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -717,7 +725,7 @@ def test_variable_name_python(
     app.cleanup()
 
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -749,10 +757,10 @@ def test_no_wrap_by_default(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(json.dumps([1, 2]))
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
     source_file = source_directory / "index.rst"
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====
@@ -773,7 +781,7 @@ def test_no_wrap_by_default(
     app.cleanup()
 
     source_file.write_text(
-        dedent(
+        data=dedent(
             text="""\
         Test
         ====

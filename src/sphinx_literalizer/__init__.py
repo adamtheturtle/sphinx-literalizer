@@ -146,9 +146,15 @@ class LiteralizerDirective(SphinxDirective):
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
         "language": directives.unchanged_required,
         "prefix": directives.nonnegative_int,
-        "prefix-char": lambda x: directives.choice(x, ("spaces", "tabs")),
+        "prefix-char": lambda x: directives.choice(
+            argument=x,
+            values=("spaces", "tabs"),
+        ),
         "wrap": directives.flag,
-        "date-format": lambda x: directives.choice(x, tuple(_DATE_FORMATS)),
+        "date-format": lambda x: directives.choice(
+            argument=x,
+            values=tuple(_DATE_FORMATS),
+        ),
         "variable-name": directives.unchanged,
     }
 
@@ -159,7 +165,7 @@ class LiteralizerDirective(SphinxDirective):
         source_dir = Path(env.srcdir)
         data_path = (source_dir / rel_path).resolve()
 
-        env.note_dependency(str(data_path))
+        env.note_dependency(str(object=data_path))
 
         language_name: str = self.options["language"]
         language_spec: LanguageSpec = _LANGUAGES[language_name]
@@ -194,7 +200,11 @@ class LiteralizerDirective(SphinxDirective):
         # Sphinx's built-in LiteralInclude directive, which also stores an
         # absolute path so that downstream code can rely on it without having
         # to resolve relative→absolute itself.
-        node = nodes.literal_block(text, text, source=str(data_path))
+        node = nodes.literal_block(
+            text,
+            text,
+            source=str(object=data_path),
+        )
         node["language"] = language_name
         self.add_name(node=node)
         return [node]
@@ -202,7 +212,7 @@ class LiteralizerDirective(SphinxDirective):
 
 def setup(app: Sphinx) -> ExtensionMetadata:
     """Register the extension with Sphinx."""
-    app.add_directive("literalizer", LiteralizerDirective)
+    app.add_directive(name="literalizer", cls=LiteralizerDirective)
     return {
         "version": "0.1.0",
         "parallel_read_safe": True,
