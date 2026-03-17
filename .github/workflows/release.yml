@@ -16,16 +16,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
-        # zizmor: ignore[artipacked]
         with:
           token: ${{ secrets.RELEASE_PAT }}
           fetch-depth: 0
 
       - name: Install uv
-        # zizmor: ignore[cache-poisoning]
         uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78  # v7
         with:
-          enable-cache: false
+          enable-cache: true
           cache-dependency-glob: '**/pyproject.toml'
 
       - name: Calver calculate version
@@ -40,10 +38,8 @@ jobs:
       - name: Get the changelog underline
         id: changelog_underline
         run: |
-          underline="$(echo "${STEPS_CALVER_OUTPUTS_RELEASE}" | tr -c '\n' '-')"
+          underline="$(echo "${{ steps.calver.outputs.release }}" | tr -c '\n' '-')"
           echo "underline=${underline}" >> "$GITHUB_OUTPUT"
-        env:
-          STEPS_CALVER_OUTPUTS_RELEASE: ${{ steps.calver.outputs.release }}
 
       - name: Update changelog
         uses: jacobtomlinson/gha-find-replace@2ff30f644d2e0078fc028beb9193f5ff0dcad39e  # v3
@@ -59,7 +55,6 @@ jobs:
           regex: false
 
       - uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9  # v7
-        # zizmor: ignore[artipacked]
         id: commit
         with:
           commit_message: Bump CHANGELOG
@@ -75,7 +70,7 @@ jobs:
           tag_prefix: ''
           commit_sha: ${{ steps.commit.outputs.commit_hash }}
 
-      - name: Create a GitHub release  # zizmor: ignore[superfluous-actions]
+      - name: Create a GitHub release
         uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd  # v1
         with:
           tag: ${{ steps.tag_version.outputs.new_tag }}
@@ -84,14 +79,11 @@ jobs:
           body: ${{ steps.tag_version.outputs.changelog }}
 
       - name: Build a binary wheel and a source tarball
-        # zizmor: ignore[artipacked]
         run: |
           git fetch --tags
-          git checkout "${STEPS_TAG_VERSION_OUTPUTS_NEW_TAG}"
+          git checkout ${{ steps.tag_version.outputs.new_tag }}
           uv build --sdist --wheel --out-dir dist/
           uv run --extra=release check-wheel-contents dist/*.whl
-        env:
-          STEPS_TAG_VERSION_OUTPUTS_NEW_TAG: ${{ steps.tag_version.outputs.new_tag }}
 
       - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e  # release/v1

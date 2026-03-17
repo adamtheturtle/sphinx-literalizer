@@ -179,7 +179,7 @@ repos:
         name: pyright-docs
         stages: [pre-push]
         entry: uv run --extra=dev doccmd --no-write-to-file --example-workers 0 --language=python
-          --command="pyright"
+          --skip-marker pyright --command="pyright"
         language: python
         types_or: [markdown, rst]
         additional_dependencies: [uv==0.9.5]

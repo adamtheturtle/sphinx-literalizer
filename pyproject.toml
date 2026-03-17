@@ -186,7 +186,6 @@ enableTypeIgnoreComments = false
 exclude = [
     ".venv",
 ]
-reportUnusedExpression = "none"
 reportUnnecessaryTypeIgnoreComment = true
 typeCheckingMode = "strict"
 

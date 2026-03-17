@@ -1,7 +1,7 @@
 Changelog
+Pygments
 datetimes
 dicts
 literalizer
-Pygments
 validator
 whitespace

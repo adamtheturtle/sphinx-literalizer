@@ -103,6 +103,8 @@ The directive:
 
 renders as a code block containing:
 
+.. skip doccmd[pyright]: next
+
 .. code-block:: python
 
    [
