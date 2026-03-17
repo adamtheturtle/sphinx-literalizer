@@ -41,9 +41,9 @@ Directive options
 
 ``:language:`` (required)
    Target language name (Pygments language name).
-   Supported values: ``cpp``, ``csharp``, ``dart``, ``go``, ``java``,
-   ``javascript``, ``julia``, ``kotlin``, ``php``, ``python``, ``ruby``,
-   ``swift``, ``typescript``.
+   Supported values: ``clojure``, ``cpp``, ``csharp``, ``dart``, ``go``,
+   ``java``, ``javascript``, ``julia``, ``kotlin``, ``php``, ``python``,
+   ``r``, ``ruby``, ``scala``, ``swift``, ``typescript``.
 
 ``:prefix:`` (optional)
    Number of whitespace characters to prepend to each output line.
@@ -88,6 +88,8 @@ Directive options
       ``DateTime.parse(...)`` for dates and datetimes.
    ``julia``
       ``Date(...)`` / ``DateTime(...)`` constructors.
+   ``r``
+      ``as.Date(...)`` / ``as.POSIXct(...)`` calls.
 
 ``:variable-name:`` (optional)
    Wrap the output in a variable declaration or assignment using the given

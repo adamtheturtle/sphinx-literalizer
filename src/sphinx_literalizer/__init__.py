@@ -25,6 +25,7 @@ from literalizer.formatters import (
     format_date_kotlin,
     format_date_php,
     format_date_python,
+    format_date_r,
     format_date_ruby,
     format_datetime_cpp,
     format_datetime_csharp,
@@ -39,9 +40,11 @@ from literalizer.formatters import (
     format_datetime_kotlin,
     format_datetime_php,
     format_datetime_python,
+    format_datetime_r,
     format_datetime_ruby,
 )
 from literalizer.languages import (
+    CLOJURE,
     CPP,
     CSHARP,
     DART,
@@ -53,14 +56,17 @@ from literalizer.languages import (
     PHP,
     PYTHON,
     RUBY,
+    SCALA,
     SWIFT,
     TYPESCRIPT,
+    R,
 )
 from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
 
 _LANGUAGES: dict[str, LanguageSpec] = {
+    "clojure": CLOJURE,
     "cpp": CPP,
     "csharp": CSHARP,
     "dart": DART,
@@ -71,7 +77,9 @@ _LANGUAGES: dict[str, LanguageSpec] = {
     "kotlin": KOTLIN,
     "php": PHP,
     "python": PYTHON,
+    "r": R,
     "ruby": RUBY,
+    "scala": SCALA,
     "swift": SWIFT,
     "typescript": TYPESCRIPT,
 }
@@ -141,6 +149,10 @@ _DATE_FORMATS: dict[str, _DateFormat] = {
     "php": _DateFormat(
         format_date=format_date_php,
         format_datetime=format_datetime_php,
+    ),
+    "r": _DateFormat(
+        format_date=format_date_r,
+        format_datetime=format_datetime_r,
     ),
 }
 
