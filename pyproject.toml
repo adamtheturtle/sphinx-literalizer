@@ -126,6 +126,7 @@ lint.pydocstyle.convention = "google"
 
 [tool.check-manifest]
 ignore = [
+    ".gitattributes",
     ".pre-commit-config.yaml",
     "uv.lock",
     ".vscode/*.json",
