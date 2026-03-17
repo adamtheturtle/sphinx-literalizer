@@ -143,7 +143,7 @@ class LiteralizerDirective(SphinxDirective):
 
     required_arguments = 1
     has_content = False
-    option_spec: ClassVar[dict[str, Callable[[str], Any]]] = {  # pyright: ignore[reportIncompatibleVariableOverride]
+    option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
         "language": directives.unchanged_required,
         "prefix": directives.nonnegative_int,
         "prefix-char": lambda x: directives.choice(x, ("spaces", "tabs")),
