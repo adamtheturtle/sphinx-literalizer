@@ -20,7 +20,10 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "sphinx_substitution_extensions",
+    "sphinxcontrib.spelling",
 ]
+
+spelling_word_list_filename = "../../spelling_private_dict.txt"
 
 templates_path = ["_templates"]
 

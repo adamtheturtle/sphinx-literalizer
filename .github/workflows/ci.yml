@@ -31,7 +31,8 @@ jobs:
           cache-dependency-glob: '**/pyproject.toml'
 
       - name: Run tests
-        run: uv run --extra=dev pytest -s -vvv --cov-fail-under 100 --cov=src/ --cov=tests .
+        run: uv run --extra=dev pytest -s -vvv --cov-fail-under 100 --cov=src/ --cov=tests
+          .
         env:
           UV_PYTHON: ${{ matrix.python-version }}
 

@@ -57,7 +57,9 @@ def test_boolean_array_python(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """A JSON boolean array renders the same as an equivalent code-block."""
+    """A JSON boolean array renders the same as an equivalent code-
+    block.
+    """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -114,7 +116,9 @@ def test_array_of_arrays_typescript(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """Nested arrays render the same as an equivalent TypeScript code-block."""
+    """Nested arrays render the same as an equivalent TypeScript code-
+    block.
+    """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -278,7 +282,9 @@ def test_wrap_adds_brackets(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """The :wrap: flag produces the same output as a wrapped code-block."""
+    """The :wrap: flag produces the same output as a wrapped code-
+    block.
+    """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -454,7 +460,9 @@ def test_date_format_iso_default(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """Without :date-format:, dates render as ISO strings (the default)."""
+    """Without :date-format:, dates render as ISO strings (the
+    default).
+    """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -677,7 +685,9 @@ def test_variable_name_python(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """The :variable-name: option wraps output in a variable declaration."""
+    """The :variable-name: option wraps output in a variable
+    declaration.
+    """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()

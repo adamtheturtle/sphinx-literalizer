@@ -103,13 +103,15 @@ The directive:
 
 renders as a code block containing:
 
+.. skip doccmd[pyright]: next
+
 .. code-block:: python
 
    [
-   True,
-   False,
-   42,
-   "hello",
+       True,
+       False,
+       42,
+       "hello",
    ]
 
 
