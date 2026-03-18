@@ -1,4 +1,6 @@
 Changelog
+Lua
+OCaml
 Pygments
 datetimes
 dicts
