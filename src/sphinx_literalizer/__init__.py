@@ -4,156 +4,109 @@ Provides the ``literalizer`` directive, which reads a JSON file and
 renders it as a native language literal block.
 """
 
-import dataclasses
-import datetime
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, ClassVar
 
 from docutils import nodes
 from docutils.parsers.rst import directives
-from literalizer import LanguageSpec, literalize_yaml
-from literalizer.formatters import (
-    format_date_cpp,
-    format_date_csharp,
-    format_date_dart,
-    format_date_go,
-    format_date_iso,
-    format_date_java,
-    format_date_js,
-    format_date_julia,
-    format_date_kotlin,
-    format_date_php,
-    format_date_python,
-    format_date_r,
-    format_date_ruby,
-    format_datetime_cpp,
-    format_datetime_csharp,
-    format_datetime_dart,
-    format_datetime_epoch,
-    format_datetime_go,
-    format_datetime_iso,
-    format_datetime_java_instant,
-    format_datetime_java_zoned,
-    format_datetime_js,
-    format_datetime_julia,
-    format_datetime_kotlin,
-    format_datetime_php,
-    format_datetime_python,
-    format_datetime_r,
-    format_datetime_ruby,
-)
+from literalizer import Language, literalize_yaml
 from literalizer.languages import (
-    CLOJURE,
-    CPP,
-    CSHARP,
-    DART,
-    GO,
-    JAVA,
-    JAVASCRIPT,
-    JULIA,
-    KOTLIN,
-    PHP,
-    PYTHON,
-    RUBY,
-    SCALA,
-    SWIFT,
-    TYPESCRIPT,
+    Ada,
+    Bash,
+    C,
+    Clojure,
+    Cpp,
+    Crystal,
+    CSharp,
+    D,
+    Dart,
+    Elixir,
+    Erlang,
+    FSharp,
+    Go,
+    Groovy,
+    Haskell,
+    Java,
+    JavaScript,
+    Julia,
+    Kotlin,
+    Lua,
+    Matlab,
+    Nim,
+    OCaml,
+    Occam,
+    Perl,
+    Php,
+    PowerShell,
+    Python,
     R,
+    Ruby,
+    Rust,
+    Scala,
+    Swift,
+    TypeScript,
+    Zig,
 )
 from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
 
-_LANGUAGES: dict[str, LanguageSpec] = {
-    "clojure": CLOJURE,
-    "cpp": CPP,
-    "csharp": CSHARP,
-    "dart": DART,
-    "go": GO,
-    "java": JAVA,
-    "javascript": JAVASCRIPT,
-    "julia": JULIA,
-    "kotlin": KOTLIN,
-    "php": PHP,
-    "python": PYTHON,
+_LANGUAGE_TYPES: dict[str, Any] = {
+    "ada": Ada,
+    "bash": Bash,
+    "c": C,
+    "clojure": Clojure,
+    "cpp": Cpp,
+    "crystal": Crystal,
+    "csharp": CSharp,
+    "d": D,
+    "dart": Dart,
+    "elixir": Elixir,
+    "erlang": Erlang,
+    "fsharp": FSharp,
+    "go": Go,
+    "groovy": Groovy,
+    "haskell": Haskell,
+    "java": Java,
+    "javascript": JavaScript,
+    "julia": Julia,
+    "kotlin": Kotlin,
+    "lua": Lua,
+    "matlab": Matlab,
+    "nim": Nim,
+    "ocaml": OCaml,
+    "occam": Occam,
+    "perl": Perl,
+    "php": Php,
+    "powershell": PowerShell,
+    "python": Python,
     "r": R,
-    "ruby": RUBY,
-    "scala": SCALA,
-    "swift": SWIFT,
-    "typescript": TYPESCRIPT,
+    "ruby": Ruby,
+    "rust": Rust,
+    "scala": Scala,
+    "swift": Swift,
+    "typescript": TypeScript,
+    "zig": Zig,
 }
 
-
-@dataclasses.dataclass(frozen=True)
-class _DateFormat:
-    """Date formatting functions for a specific date format."""
-
-    format_date: Callable[[datetime.date], str]
-    format_datetime: Callable[[datetime.datetime], str]
-
-
-_DATE_FORMATS: dict[str, _DateFormat] = {
-    "dart": _DateFormat(
-        format_date=format_date_dart,
-        format_datetime=format_datetime_dart,
-    ),
-    "iso": _DateFormat(
-        format_date=format_date_iso,
-        format_datetime=format_datetime_iso,
-    ),
-    "julia": _DateFormat(
-        format_date=format_date_julia,
-        format_datetime=format_datetime_julia,
-    ),
-    "python": _DateFormat(
-        format_date=format_date_python,
-        format_datetime=format_datetime_python,
-    ),
-    "epoch": _DateFormat(
-        format_date=format_date_iso,
-        format_datetime=format_datetime_epoch,
-    ),
-    "java-instant": _DateFormat(
-        format_date=format_date_java,
-        format_datetime=format_datetime_java_instant,
-    ),
-    "java-zoned": _DateFormat(
-        format_date=format_date_java,
-        format_datetime=format_datetime_java_zoned,
-    ),
-    "ruby": _DateFormat(
-        format_date=format_date_ruby,
-        format_datetime=format_datetime_ruby,
-    ),
-    "javascript": _DateFormat(
-        format_date=format_date_js,
-        format_datetime=format_datetime_js,
-    ),
-    "csharp": _DateFormat(
-        format_date=format_date_csharp,
-        format_datetime=format_datetime_csharp,
-    ),
-    "go": _DateFormat(
-        format_date=format_date_go,
-        format_datetime=format_datetime_go,
-    ),
-    "kotlin": _DateFormat(
-        format_date=format_date_kotlin,
-        format_datetime=format_datetime_kotlin,
-    ),
-    "cpp": _DateFormat(
-        format_date=format_date_cpp,
-        format_datetime=format_datetime_cpp,
-    ),
-    "php": _DateFormat(
-        format_date=format_date_php,
-        format_datetime=format_datetime_php,
-    ),
-    "r": _DateFormat(
-        format_date=format_date_r,
-        format_datetime=format_datetime_r,
-    ),
+_DATE_FORMAT_KWARGS: dict[str, dict[str, str]] = {
+    "cpp": {"date_format": "cpp", "datetime_format": "cpp"},
+    "csharp": {"date_format": "csharp", "datetime_format": "csharp"},
+    "dart": {"date_format": "dart", "datetime_format": "dart"},
+    "epoch": {"datetime_format": "epoch"},
+    "go": {"date_format": "go", "datetime_format": "go"},
+    "iso": {},
+    "java-instant": {"date_format": "java", "datetime_format": "instant"},
+    "java-zoned": {"date_format": "java", "datetime_format": "zoned"},
+    "javascript": {"date_format": "js", "datetime_format": "js"},
+    "julia": {"date_format": "julia", "datetime_format": "julia"},
+    "kotlin": {"date_format": "kotlin", "datetime_format": "kotlin"},
+    "python": {"date_format": "python", "datetime_format": "python"},
+    "r": {"date_format": "r", "datetime_format": "r"},
+    "ruby": {"date_format": "ruby", "datetime_format": "ruby"},
+    "rust": {"date_format": "rust", "datetime_format": "rust"},
+    "typescript": {"date_format": "js", "datetime_format": "js"},
 }
 
 
@@ -183,7 +136,7 @@ class LiteralizerDirective(SphinxDirective):
         "wrap": directives.flag,
         "date-format": lambda x: directives.choice(
             argument=x,
-            values=tuple(_DATE_FORMATS),
+            values=tuple(_DATE_FORMAT_KWARGS),
         ),
         "variable-name": directives.unchanged,
         "existing-variable": directives.flag,
@@ -199,15 +152,14 @@ class LiteralizerDirective(SphinxDirective):
         env.note_dependency(str(object=data_path))
 
         language_name: str = self.options["language"]
-        language_spec: LanguageSpec = _LANGUAGES[language_name]
         date_format_name: str | None = self.options.get("date-format")
         if date_format_name is not None:
-            date_format_pair = _DATE_FORMATS[date_format_name]
-            language_spec = dataclasses.replace(
-                language_spec,
-                format_date=date_format_pair.format_date,
-                format_datetime=date_format_pair.format_datetime,
-            )
+            date_format_kwargs = _DATE_FORMAT_KWARGS[date_format_name]
+        else:
+            date_format_kwargs = {}
+        language_spec: Language = _LANGUAGE_TYPES[language_name](
+            **date_format_kwargs
+        )
         prefix_count: int = self.options.get("prefix", 0)
         prefix_char_name: str = self.options.get("prefix-char", "spaces")
         prefix_char = "\t" if prefix_char_name == "tabs" else " "
