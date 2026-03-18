@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.03.18
+----------
+
+
 - Bumped ``literalizer`` to ``2026.3.18``.
 - Added support for Ada, Bash, C, Crystal, D, Elixir, Erlang, F#, Groovy,
   Haskell, Lua, MATLAB, Nim, OCaml, Occam, Perl, PowerShell, Rust, and Zig
