@@ -4,6 +4,16 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.3.18``.
+- Added support for Ada, Bash, C, Crystal, D, Elixir, Erlang, F#, Groovy,
+  Haskell, Lua, MATLAB, Nim, OCaml, Occam, Perl, PowerShell, Rust, and Zig
+  languages.
+- Added ``rust`` date format
+  (``NaiveDate::from_ymd_opt(...)`` / ``NaiveDateTime::new(...)``).
+- Added ``typescript`` date format alias (same as ``javascript``).
+- Removed ``php`` date format (PHP uses ISO dates by default; the option
+  had no effect).
+
 2026.03.17.1
 ------------
 
