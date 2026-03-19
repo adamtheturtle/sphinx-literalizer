@@ -52,6 +52,11 @@ Directive options
 ``:prefix-char:`` (optional)
    Type of whitespace for the prefix: ``spaces`` (default) or ``tabs``.
 
+``:indent:`` (optional)
+   Number of whitespace characters used for indentation inside wrapped
+   delimiters.  Uses the same character type as ``:prefix-char:``.
+   Defaults to ``4``.
+
 ``:wrap:`` (optional flag)
    Wrap the output in language-appropriate delimiters
    (``[`` … ``]`` for arrays, ``{`` … ``}`` for dicts).
