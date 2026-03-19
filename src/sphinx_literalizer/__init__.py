@@ -119,6 +119,7 @@ class LiteralizerDirective(SphinxDirective):
            :language: python
            :prefix: 8
            :prefix-char: spaces
+           :indent: 4
            :wrap:
            :variable-name: my_var
            :existing-variable:
@@ -133,6 +134,7 @@ class LiteralizerDirective(SphinxDirective):
             argument=x,
             values=("spaces", "tabs"),
         ),
+        "indent": directives.nonnegative_int,
         "wrap": directives.flag,
         "date-format": lambda x: directives.choice(
             argument=x,
@@ -163,7 +165,9 @@ class LiteralizerDirective(SphinxDirective):
         prefix_count: int = self.options.get("prefix", 0)
         prefix_char_name: str = self.options.get("prefix-char", "spaces")
         prefix_char = "\t" if prefix_char_name == "tabs" else " "
-        prefix = prefix_char * prefix_count
+        line_prefix = prefix_char * prefix_count
+        indent_count: int = self.options.get("indent", 4)
+        indent = prefix_char * indent_count
         wrap: bool = "wrap" in self.options
         variable_name: str | None = self.options.get("variable-name")
         existing_variable: bool = "existing-variable" in self.options
@@ -173,7 +177,8 @@ class LiteralizerDirective(SphinxDirective):
         text = literalize_yaml(
             yaml_string=data_path.read_text(encoding="utf-8"),
             language=language_spec,
-            prefix=prefix,
+            line_prefix=line_prefix,
+            indent=indent,
             wrap=wrap,
             variable_name=variable_name,
             new_variable=not existing_variable,
