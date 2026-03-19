@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.03.19
+----------
+
+
 - Bumped ``literalizer`` to ``2026.3.19``.
 - Added ``:indent:`` directive option for controlling indentation inside
   wrapped delimiters independently of the line prefix.
