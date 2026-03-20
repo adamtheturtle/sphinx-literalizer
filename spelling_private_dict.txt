@@ -1,9 +1,12 @@
 Changelog
+Fortran
 Lua
 Mojo
 Nim
+Norg
 OCaml
 Pygments
+Vec
 Zig
 datetimes
 dicts
