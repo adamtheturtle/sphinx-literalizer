@@ -5,6 +5,7 @@ Mojo
 Nim
 Norg
 OCaml
+ObjectiveC
 Pygments
 Vec
 Zig

@@ -42,6 +42,7 @@ from literalizer.languages import (
     Mojo,
     Nim,
     Norg,
+    ObjectiveC,
     OCaml,
     Occam,
     Perl,
@@ -93,6 +94,7 @@ _LANGUAGE_TYPES: dict[str, type[Language]] = {
     "mojo": Mojo,
     "nim": Nim,
     "norg": Norg,
+    "objective-c": ObjectiveC,
     "ocaml": OCaml,
     "occam": Occam,
     "perl": Perl,
@@ -182,6 +184,55 @@ _DATE_FORMATS: dict[str, _DateFormats] = {
     ),
 }
 
+_DEFAULT_SEQUENCE_FORMATS: dict[str, object] = {
+    "ada": Ada.SequenceFormat.LIST,
+    "bash": Bash.SequenceFormat.ARRAY,
+    "c": C.SequenceFormat.ARRAY,
+    "clojure": Clojure.SequenceFormat.VECTOR,
+    "cobol": Cobol.SequenceFormat.SEQUENCE,
+    "common-lisp": CommonLisp.SequenceFormat.LIST,
+    "cpp": Cpp.SequenceFormat.INITIALIZER_LIST,
+    "crystal": Crystal.SequenceFormat.ARRAY,
+    "csharp": CSharp.SequenceFormat.ARRAY,
+    "d": D.SequenceFormat.ARRAY,
+    "dart": Dart.SequenceFormat.LIST,
+    "elixir": Elixir.SequenceFormat.LIST,
+    "erlang": Erlang.SequenceFormat.LIST,
+    "fortran": Fortran.SequenceFormat.LIST,
+    "fsharp": FSharp.SequenceFormat.LIST,
+    "go": Go.SequenceFormat.SLICE,
+    "groovy": Groovy.SequenceFormat.LIST,
+    "haskell": Haskell.SequenceFormat.LIST,
+    "hcl": Hcl.SequenceFormat.LIST,
+    "java": Java.SequenceFormat.ARRAY,
+    "javascript": JavaScript.SequenceFormat.ARRAY,
+    "julia": Julia.SequenceFormat.ARRAY,
+    "kotlin": Kotlin.SequenceFormat.LIST,
+    "lua": Lua.SequenceFormat.TABLE,
+    "matlab": Matlab.SequenceFormat.CELL_ARRAY,
+    "mojo": Mojo.SequenceFormat.LIST,
+    "nim": Nim.SequenceFormat.ARRAY,
+    "norg": Norg.SequenceFormat.ARRAY,
+    "objective-c": ObjectiveC.SequenceFormat.ARRAY,
+    "ocaml": OCaml.SequenceFormat.LIST,
+    "occam": Occam.SequenceFormat.LIST,
+    "perl": Perl.SequenceFormat.ARRAY,
+    "php": Php.SequenceFormat.ARRAY,
+    "powershell": PowerShell.SequenceFormat.ARRAY,
+    "python": Python.SequenceFormat.TUPLE,
+    "r": R.SequenceFormat.LIST,
+    "racket": Racket.SequenceFormat.LIST,
+    "ruby": Ruby.SequenceFormat.ARRAY,
+    "rust": Rust.SequenceFormat.VEC,
+    "scala": Scala.SequenceFormat.LIST,
+    "swift": Swift.SequenceFormat.ARRAY,
+    "toml": Toml.SequenceFormat.ARRAY,
+    "typescript": TypeScript.SequenceFormat.ARRAY,
+    "visual-basic": VisualBasic.SequenceFormat.ARRAY,
+    "yaml": Yaml.SequenceFormat.SEQUENCE,
+    "zig": Zig.SequenceFormat.ARRAY,
+}
+
 _SEQUENCE_FORMATS: dict[tuple[str, str], object] = {
     ("crystal", "array"): Crystal.SequenceFormat.ARRAY,
     ("crystal", "tuple"): Crystal.SequenceFormat.TUPLE,
@@ -193,6 +244,7 @@ _SEQUENCE_FORMATS: dict[tuple[str, str], object] = {
     ("julia", "tuple"): Julia.SequenceFormat.TUPLE,
     ("python", "list"): Python.SequenceFormat.LIST,
     ("python", "tuple"): Python.SequenceFormat.TUPLE,
+    ("rust", "array"): Rust.SequenceFormat.ARRAY,
     ("rust", "tuple"): Rust.SequenceFormat.TUPLE,
     ("rust", "vec"): Rust.SequenceFormat.VEC,
 }
@@ -303,10 +355,13 @@ class LiteralizerDirective(SphinxDirective):
 
         seq_fmt: str | None = self.options.get("sequence-format")
         if seq_fmt is not None:
-            constructor = partial(
-                constructor,
-                sequence_format=_SEQUENCE_FORMATS[(language_name, seq_fmt)],
-            )
+            sequence_format = _SEQUENCE_FORMATS[(language_name, seq_fmt)]
+        else:
+            sequence_format = _DEFAULT_SEQUENCE_FORMATS[language_name]
+        constructor = partial(
+            constructor,
+            sequence_format=sequence_format,
+        )
 
         set_fmt: str | None = self.options.get("set-format")
         if set_fmt is not None:

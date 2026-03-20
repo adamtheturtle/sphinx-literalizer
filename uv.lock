@@ -605,16 +605,16 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.3.20.1"
+version = "2026.3.20.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
     { name = "json-to-schema" },
     { name = "ruamel-yaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f3/a2/8638f383a2eaac8a9d3092c46f60b051684032f458954a00e9bbb46c850f/literalizer-2026.3.20.1.tar.gz", hash = "sha256:616cdd1dc002394a01496f59ada8167e2764917f97cb7fa03c3e936d3de04afd", size = 391549, upload-time = "2026-03-20T12:38:05.647Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/69/38/b74747348d465060b9d522be44f01a1ea6623ebf7666d5942b9ec8d871d8/literalizer-2026.3.20.2.tar.gz", hash = "sha256:934525ad324ade3ca430230c0d08c0fea37bef8cdfe2a20d4d819c848cf46f80", size = 415744, upload-time = "2026-03-20T17:45:26.81Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e2/80/71c7c81192f0d1bed0cd29877b809a7ead3e881595e6cf090206092b6fbc/literalizer-2026.3.20.1-py3-none-any.whl", hash = "sha256:61967644308f3c4e2dc42b73ca2d0e4a93ed8609ac69fc33b5ea7dfb4a1bfdce", size = 88696, upload-time = "2026-03-20T12:38:03.887Z" },
+    { url = "https://files.pythonhosted.org/packages/34/da/8ffd462c49aa036e31e6d8c0b937d2e113ee66c998c756dc02f2cd411659/literalizer-2026.3.20.2-py3-none-any.whl", hash = "sha256:1fc1a66d187bc3cfc876a2e98994b6d1bdef39e7280e2e8bc6d8aa7ce21a44a1", size = 94265, upload-time = "2026-03-20T17:45:25.171Z" },
 ]
 
 [[package]]
@@ -1549,7 +1549,7 @@ requires-dist = [
     { name = "docutils" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
     { name = "interrogate", marker = "extra == 'dev'", specifier = "==1.7.0" },
-    { name = "literalizer", specifier = "==2026.3.20.1" },
+    { name = "literalizer", specifier = "==2026.3.20.2" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "==1.19.1" },
     { name = "mypy-strict-kwargs", marker = "extra == 'dev'", specifier = "==2026.1.12" },
     { name = "prek", marker = "extra == 'dev'", specifier = "==0.3.6" },

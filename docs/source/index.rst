@@ -45,8 +45,8 @@ Directive options
    ``common-lisp``, ``cpp``, ``crystal``, ``csharp``, ``d``, ``dart``,
    ``elixir``, ``erlang``, ``fortran``, ``fsharp``, ``go``, ``groovy``,
    ``haskell``, ``hcl``, ``java``, ``javascript``, ``julia``, ``kotlin``,
-   ``lua``, ``matlab``, ``mojo``, ``nim``, ``norg``, ``ocaml``, ``occam``,
-   ``perl``, ``php``,
+   ``lua``, ``matlab``, ``mojo``, ``nim``, ``norg``, ``objective-c``,
+   ``ocaml``, ``occam``, ``perl``, ``php``,
    ``powershell``, ``python``, ``r``, ``racket``, ``ruby``, ``rust``,
    ``scala``, ``swift``, ``toml``, ``typescript``, ``visual-basic``,
    ``yaml``, ``zig``.
@@ -113,8 +113,8 @@ Directive options
       List delimiters.  Available for Elixir (default), Erlang (default),
       and Python.
    ``array``
-      Array delimiters.  Available for Crystal (default) and Julia
-      (default).
+      Array delimiters.  Available for Crystal (default), Julia
+      (default), and Rust.
    ``vec``
       Vec macro (``vec![...]``).  Available for Rust (default).
 

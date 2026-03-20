@@ -4,6 +4,13 @@ Changelog
 Next
 ----
 
+
+- Bumped ``literalizer`` to ``2026.3.20.2``.
+- Added support for Objective-C language.
+- Added ``array`` sequence format option for Rust.
+- The ``sequence_format`` field is now always passed to the language
+  constructor.
+
 2026.03.20
 ----------
 
