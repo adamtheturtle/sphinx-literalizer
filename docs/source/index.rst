@@ -45,8 +45,8 @@ Directive options
    ``common-lisp``, ``cpp``, ``crystal``, ``csharp``, ``d``, ``dart``,
    ``elixir``, ``erlang``, ``fortran``, ``fsharp``, ``go``, ``groovy``,
    ``haskell``, ``hcl``, ``java``, ``javascript``, ``julia``, ``kotlin``,
-   ``lua``, ``matlab``, ``mojo``, ``nim``, ``norg``, ``ocaml``, ``occam``,
-   ``perl``, ``php``,
+   ``lua``, ``matlab``, ``mojo``, ``nim``, ``norg``, ``objective-c``,
+   ``ocaml``, ``occam``, ``perl``, ``php``,
    ``powershell``, ``python``, ``r``, ``racket``, ``ruby``, ``rust``,
    ``scala``, ``swift``, ``toml``, ``typescript``, ``visual-basic``,
    ``yaml``, ``zig``.
@@ -106,17 +106,30 @@ Directive options
    How to render sequences (arrays/lists).  Not all values are valid for
    every language.  Supported values:
 
+   ``array``
+      Array delimiters.  Available for Crystal (default), Julia (default),
+      Rust, and many other languages.
+   ``cell_array``
+      Cell array delimiters.  Available for MATLAB (default).
+   ``initializer_list``
+      Initializer list.  Available for C++ (default).
+   ``list``
+      List delimiters.  Available for Elixir (default), Erlang (default),
+      Python, and many other languages.
+   ``sequence``
+      Sequence delimiters.  Available for COBOL (default) and YAML
+      (default).
+   ``slice``
+      Slice delimiters.  Available for Go (default).
+   ``table``
+      Table delimiters.  Available for Lua (default).
    ``tuple``
       Tuple delimiters.  Available for Crystal, Elixir, Erlang, Julia,
       Python (default for Python), and Rust.
-   ``list``
-      List delimiters.  Available for Elixir (default), Erlang (default),
-      and Python.
-   ``array``
-      Array delimiters.  Available for Crystal (default) and Julia
-      (default).
    ``vec``
       Vec macro (``vec![...]``).  Available for Rust (default).
+   ``vector``
+      Vector delimiters.  Available for Clojure (default).
 
 ``:set-format:`` (optional)
    How to render sets (Python only).  Supported values:

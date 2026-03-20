@@ -42,6 +42,7 @@ from literalizer.languages import (
     Mojo,
     Nim,
     Norg,
+    ObjectiveC,
     OCaml,
     Occam,
     Perl,
@@ -93,6 +94,7 @@ _LANGUAGE_TYPES: dict[str, type[Language]] = {
     "mojo": Mojo,
     "nim": Nim,
     "norg": Norg,
+    "objective-c": ObjectiveC,
     "ocaml": OCaml,
     "occam": Occam,
     "perl": Perl,
@@ -120,6 +122,61 @@ class _DateFormats:
     date_format: object | None = None
     datetime_format: object | None = None
 
+
+_DEFAULT_DATE_FORMATS: dict[str, _DateFormats] = {
+    "cpp": _DateFormats(
+        date_format=Cpp.DateFormat.ISO,
+        datetime_format=Cpp.DatetimeFormat.ISO,
+    ),
+    "csharp": _DateFormats(
+        date_format=CSharp.DateFormat.ISO,
+        datetime_format=CSharp.DatetimeFormat.ISO,
+    ),
+    "dart": _DateFormats(
+        date_format=Dart.DateFormat.ISO,
+        datetime_format=Dart.DatetimeFormat.ISO,
+    ),
+    "go": _DateFormats(
+        date_format=Go.DateFormat.ISO,
+        datetime_format=Go.DatetimeFormat.ISO,
+    ),
+    "java": _DateFormats(
+        date_format=Java.DateFormat.ISO,
+        datetime_format=Java.DatetimeFormat.ISO,
+    ),
+    "javascript": _DateFormats(
+        date_format=JavaScript.DateFormat.ISO,
+        datetime_format=JavaScript.DatetimeFormat.ISO,
+    ),
+    "julia": _DateFormats(
+        date_format=Julia.DateFormat.ISO,
+        datetime_format=Julia.DatetimeFormat.ISO,
+    ),
+    "kotlin": _DateFormats(
+        date_format=Kotlin.DateFormat.ISO,
+        datetime_format=Kotlin.DatetimeFormat.ISO,
+    ),
+    "python": _DateFormats(
+        date_format=Python.DateFormat.ISO,
+        datetime_format=Python.DatetimeFormat.ISO,
+    ),
+    "r": _DateFormats(
+        date_format=R.DateFormat.ISO,
+        datetime_format=R.DatetimeFormat.ISO,
+    ),
+    "ruby": _DateFormats(
+        date_format=Ruby.DateFormat.ISO,
+        datetime_format=Ruby.DatetimeFormat.ISO,
+    ),
+    "rust": _DateFormats(
+        date_format=Rust.DateFormat.ISO,
+        datetime_format=Rust.DatetimeFormat.ISO,
+    ),
+    "typescript": _DateFormats(
+        date_format=TypeScript.DateFormat.ISO,
+        datetime_format=TypeScript.DatetimeFormat.ISO,
+    ),
+}
 
 _DATE_FORMATS: dict[str, _DateFormats] = {
     "cpp": _DateFormats(
@@ -182,6 +239,71 @@ _DATE_FORMATS: dict[str, _DateFormats] = {
     ),
 }
 
+_DEFAULT_BYTES_FORMATS: dict[str, object] = {
+    "python": Python.BytesFormat.HEX,
+}
+
+_DEFAULT_SET_FORMATS: dict[str, object] = {
+    "python": Python.SetFormat.SET,
+}
+
+_DEFAULT_VARIABLE_TYPE_HINTS: dict[str, object] = {
+    "python": Python.VariableTypeHints.NONE,
+}
+
+_DEFAULT_EMPTY_DICT_KEYS: dict[str, object] = {
+    "r": R.EmptyDictKey.ERROR,
+}
+
+_DEFAULT_SEQUENCE_FORMATS: dict[str, object] = {
+    "ada": Ada.SequenceFormat.LIST,
+    "bash": Bash.SequenceFormat.ARRAY,
+    "c": C.SequenceFormat.ARRAY,
+    "clojure": Clojure.SequenceFormat.VECTOR,
+    "cobol": Cobol.SequenceFormat.SEQUENCE,
+    "common-lisp": CommonLisp.SequenceFormat.LIST,
+    "cpp": Cpp.SequenceFormat.INITIALIZER_LIST,
+    "crystal": Crystal.SequenceFormat.ARRAY,
+    "csharp": CSharp.SequenceFormat.ARRAY,
+    "d": D.SequenceFormat.ARRAY,
+    "dart": Dart.SequenceFormat.LIST,
+    "elixir": Elixir.SequenceFormat.LIST,
+    "erlang": Erlang.SequenceFormat.LIST,
+    "fortran": Fortran.SequenceFormat.LIST,
+    "fsharp": FSharp.SequenceFormat.LIST,
+    "go": Go.SequenceFormat.SLICE,
+    "groovy": Groovy.SequenceFormat.LIST,
+    "haskell": Haskell.SequenceFormat.LIST,
+    "hcl": Hcl.SequenceFormat.LIST,
+    "java": Java.SequenceFormat.ARRAY,
+    "javascript": JavaScript.SequenceFormat.ARRAY,
+    "julia": Julia.SequenceFormat.ARRAY,
+    "kotlin": Kotlin.SequenceFormat.LIST,
+    "lua": Lua.SequenceFormat.TABLE,
+    "matlab": Matlab.SequenceFormat.CELL_ARRAY,
+    "mojo": Mojo.SequenceFormat.LIST,
+    "nim": Nim.SequenceFormat.ARRAY,
+    "norg": Norg.SequenceFormat.ARRAY,
+    "objective-c": ObjectiveC.SequenceFormat.ARRAY,
+    "ocaml": OCaml.SequenceFormat.LIST,
+    "occam": Occam.SequenceFormat.LIST,
+    "perl": Perl.SequenceFormat.ARRAY,
+    "php": Php.SequenceFormat.ARRAY,
+    "powershell": PowerShell.SequenceFormat.ARRAY,
+    "python": Python.SequenceFormat.TUPLE,
+    "r": R.SequenceFormat.LIST,
+    "racket": Racket.SequenceFormat.LIST,
+    "ruby": Ruby.SequenceFormat.ARRAY,
+    "rust": Rust.SequenceFormat.VEC,
+    "scala": Scala.SequenceFormat.LIST,
+    "swift": Swift.SequenceFormat.ARRAY,
+    "toml": Toml.SequenceFormat.ARRAY,
+    "typescript": TypeScript.SequenceFormat.ARRAY,
+    "visual-basic": VisualBasic.SequenceFormat.ARRAY,
+    "yaml": Yaml.SequenceFormat.SEQUENCE,
+    "zig": Zig.SequenceFormat.ARRAY,
+}
+
 _SEQUENCE_FORMATS: dict[tuple[str, str], object] = {
     ("crystal", "array"): Crystal.SequenceFormat.ARRAY,
     ("crystal", "tuple"): Crystal.SequenceFormat.TUPLE,
@@ -193,15 +315,22 @@ _SEQUENCE_FORMATS: dict[tuple[str, str], object] = {
     ("julia", "tuple"): Julia.SequenceFormat.TUPLE,
     ("python", "list"): Python.SequenceFormat.LIST,
     ("python", "tuple"): Python.SequenceFormat.TUPLE,
+    ("rust", "array"): Rust.SequenceFormat.ARRAY,
     ("rust", "tuple"): Rust.SequenceFormat.TUPLE,
     ("rust", "vec"): Rust.SequenceFormat.VEC,
 }
 
 _SEQUENCE_FORMAT_VALUES: tuple[str, ...] = (
     "array",
+    "cell_array",
+    "initializer_list",
     "list",
+    "sequence",
+    "slice",
+    "table",
     "tuple",
     "vec",
+    "vector",
 )
 
 _SET_FORMATS: dict[tuple[str, str], object] = {
@@ -223,6 +352,75 @@ _BYTES_FORMAT_VALUES: tuple[str, ...] = (
     "hex",
     "python",
 )
+
+
+def _apply_date_formats(
+    constructor: partial[Language],
+    date_formats: _DateFormats,
+) -> partial[Language]:
+    """Apply date and datetime format options to a constructor."""
+    if date_formats.date_format is not None:
+        constructor = partial(
+            constructor,
+            date_format=date_formats.date_format,
+        )
+    if date_formats.datetime_format is not None:
+        constructor = partial(
+            constructor,
+            datetime_format=date_formats.datetime_format,
+        )
+    return constructor
+
+
+def _default_constructor(
+    language_name: str,
+) -> partial[Language]:
+    """Build a language constructor with sensible defaults applied."""
+    language_cls = _LANGUAGE_TYPES[language_name]
+    constructor = partial(language_cls)
+    constructor = partial(
+        constructor,
+        sequence_format=_DEFAULT_SEQUENCE_FORMATS[language_name],
+    )
+
+    default_date_formats = _DEFAULT_DATE_FORMATS.get(language_name)
+    if default_date_formats is not None:
+        constructor = _apply_date_formats(
+            constructor=constructor,
+            date_formats=default_date_formats,
+        )
+
+    default_bytes_format = _DEFAULT_BYTES_FORMATS.get(language_name)
+    if default_bytes_format is not None:
+        constructor = partial(
+            constructor,
+            bytes_format=default_bytes_format,
+        )
+
+    default_set_format = _DEFAULT_SET_FORMATS.get(language_name)
+    if default_set_format is not None:
+        constructor = partial(
+            constructor,
+            set_format=default_set_format,
+        )
+
+    default_variable_type_hints = _DEFAULT_VARIABLE_TYPE_HINTS.get(
+        language_name,
+    )
+    if default_variable_type_hints is not None:
+        constructor = partial(
+            constructor,
+            variable_type_hints=default_variable_type_hints,
+        )
+
+    default_empty_dict_key = _DEFAULT_EMPTY_DICT_KEYS.get(language_name)
+    if default_empty_dict_key is not None:
+        constructor = partial(
+            constructor,
+            empty_dict_key=default_empty_dict_key,
+        )
+
+    return constructor
 
 
 class LiteralizerDirective(SphinxDirective):
@@ -284,22 +482,14 @@ class LiteralizerDirective(SphinxDirective):
         env.note_dependency(str(object=data_path))
 
         language_name: str = self.options["language"]
-        language_cls = _LANGUAGE_TYPES[language_name]
-        constructor = partial(language_cls)
+        constructor = _default_constructor(language_name=language_name)
 
         date_format_name: str | None = self.options.get("date-format")
         if date_format_name is not None:
-            date_formats = _DATE_FORMATS[date_format_name]
-            if date_formats.date_format is not None:
-                constructor = partial(
-                    constructor,
-                    date_format=date_formats.date_format,
-                )
-            if date_formats.datetime_format is not None:
-                constructor = partial(
-                    constructor,
-                    datetime_format=date_formats.datetime_format,
-                )
+            constructor = _apply_date_formats(
+                constructor=constructor,
+                date_formats=_DATE_FORMATS[date_format_name],
+            )
 
         sequence_format_option: str | None = self.options.get(
             "sequence-format",

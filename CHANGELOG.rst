@@ -4,6 +4,17 @@ Changelog
 Next
 ----
 
+2026.03.20.1
+------------
+
+
+- Bumped ``literalizer`` to ``2026.3.20.2``.
+- Added support for Objective-C language.
+- Added ``array`` sequence format option for Rust.
+- Added ``sequence_format`` as a required field for all languages.
+  New sequence format values: ``cell_array``, ``initializer_list``,
+  ``sequence``, ``slice``, ``table``, ``vector``.
+
 2026.03.20
 ----------
 
