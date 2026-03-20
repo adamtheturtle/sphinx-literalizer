@@ -10,6 +10,7 @@ from functools import partial
 from pathlib import Path
 from typing import Any, ClassVar
 
+from beartype import beartype
 from docutils import nodes
 from docutils.parsers.rst import directives
 from literalizer import Language, literalize_yaml
@@ -115,6 +116,7 @@ _LANGUAGE_TYPES: dict[str, type[Language]] = {
 }
 
 
+@beartype
 @dataclass(frozen=True)
 class _DateFormats:
     """Date and datetime format options for a language."""
@@ -361,6 +363,7 @@ _BYTES_FORMAT_VALUES: tuple[str, ...] = (
 )
 
 
+@beartype
 def _apply_date_formats(
     constructor: partial[Language],
     date_formats: _DateFormats,
@@ -379,6 +382,7 @@ def _apply_date_formats(
     return constructor
 
 
+@beartype
 def _default_constructor(
     language_name: str,
 ) -> partial[Language]:
@@ -430,6 +434,7 @@ def _default_constructor(
     return constructor
 
 
+@beartype
 class LiteralizerDirective(SphinxDirective):
     """Directive that converts a JSON file to a native literal block.
 
@@ -569,6 +574,7 @@ class LiteralizerDirective(SphinxDirective):
         return [node]
 
 
+@beartype
 def setup(app: Sphinx) -> ExtensionMetadata:
     """Register the extension with Sphinx."""
     app.add_directive(name="literalizer", cls=LiteralizerDirective)

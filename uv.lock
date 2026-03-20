@@ -1493,6 +1493,7 @@ wheels = [
 name = "sphinx-literalizer"
 source = { editable = "." }
 dependencies = [
+    { name = "beartype" },
     { name = "docutils" },
     { name = "literalizer" },
     { name = "sphinx" },
@@ -1501,7 +1502,6 @@ dependencies = [
 [package.optional-dependencies]
 dev = [
     { name = "actionlint-py" },
-    { name = "beartype" },
     { name = "check-manifest" },
     { name = "deptry" },
     { name = "doc8" },
@@ -1540,7 +1540,7 @@ release = [
 [package.metadata]
 requires-dist = [
     { name = "actionlint-py", marker = "extra == 'dev'", specifier = "==1.7.11.24" },
-    { name = "beartype", marker = "extra == 'dev'", specifier = "==0.22.9" },
+    { name = "beartype", specifier = "==0.22.9" },
     { name = "check-manifest", marker = "extra == 'dev'", specifier = "==0.51" },
     { name = "check-wheel-contents", marker = "extra == 'release'", specifier = "==0.6.3" },
     { name = "deptry", marker = "extra == 'dev'", specifier = "==0.25.1" },
