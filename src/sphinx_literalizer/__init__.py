@@ -16,6 +16,8 @@ from literalizer.languages import (
     Bash,
     C,
     Clojure,
+    Cobol,
+    CommonLisp,
     Cpp,
     Crystal,
     CSharp,
@@ -27,6 +29,7 @@ from literalizer.languages import (
     Go,
     Groovy,
     Haskell,
+    Hcl,
     Java,
     JavaScript,
     Julia,
@@ -41,22 +44,27 @@ from literalizer.languages import (
     PowerShell,
     Python,
     R,
+    Racket,
     Ruby,
     Rust,
     Scala,
     Swift,
+    Toml,
     TypeScript,
+    VisualBasic,
     Zig,
 )
 from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
 
-_LANGUAGE_TYPES: dict[str, Any] = {
+_LANGUAGE_TYPES: dict[str, type[Language]] = {
     "ada": Ada,
     "bash": Bash,
     "c": C,
     "clojure": Clojure,
+    "cobol": Cobol,
+    "common-lisp": CommonLisp,
     "cpp": Cpp,
     "crystal": Crystal,
     "csharp": CSharp,
@@ -68,6 +76,7 @@ _LANGUAGE_TYPES: dict[str, Any] = {
     "go": Go,
     "groovy": Groovy,
     "haskell": Haskell,
+    "hcl": Hcl,
     "java": Java,
     "javascript": JavaScript,
     "julia": Julia,
@@ -82,31 +91,76 @@ _LANGUAGE_TYPES: dict[str, Any] = {
     "powershell": PowerShell,
     "python": Python,
     "r": R,
+    "racket": Racket,
     "ruby": Ruby,
     "rust": Rust,
     "scala": Scala,
     "swift": Swift,
+    "toml": Toml,
     "typescript": TypeScript,
+    "visual-basic": VisualBasic,
     "zig": Zig,
 }
 
-_DATE_FORMAT_KWARGS: dict[str, dict[str, str]] = {
-    "cpp": {"date_format": "cpp", "datetime_format": "cpp"},
-    "csharp": {"date_format": "csharp", "datetime_format": "csharp"},
-    "dart": {"date_format": "dart", "datetime_format": "dart"},
-    "epoch": {"datetime_format": "epoch"},
-    "go": {"date_format": "go", "datetime_format": "go"},
+_DATE_FORMAT_KWARGS: dict[str, dict[str, Any]] = {
+    "cpp": {
+        "date_format": Cpp.DateFormat.CPP,
+        "datetime_format": Cpp.DatetimeFormat.CPP,
+    },
+    "csharp": {
+        "date_format": CSharp.DateFormat.CSHARP,
+        "datetime_format": CSharp.DatetimeFormat.CSHARP,
+    },
+    "dart": {
+        "date_format": Dart.DateFormat.DART,
+        "datetime_format": Dart.DatetimeFormat.DART,
+    },
+    "epoch": {"datetime_format": Python.DatetimeFormat.EPOCH},
+    "go": {
+        "date_format": Go.DateFormat.GO,
+        "datetime_format": Go.DatetimeFormat.GO,
+    },
     "iso": {},
-    "java-instant": {"date_format": "java", "datetime_format": "instant"},
-    "java-zoned": {"date_format": "java", "datetime_format": "zoned"},
-    "javascript": {"date_format": "js", "datetime_format": "js"},
-    "julia": {"date_format": "julia", "datetime_format": "julia"},
-    "kotlin": {"date_format": "kotlin", "datetime_format": "kotlin"},
-    "python": {"date_format": "python", "datetime_format": "python"},
-    "r": {"date_format": "r", "datetime_format": "r"},
-    "ruby": {"date_format": "ruby", "datetime_format": "ruby"},
-    "rust": {"date_format": "rust", "datetime_format": "rust"},
-    "typescript": {"date_format": "js", "datetime_format": "js"},
+    "java-instant": {
+        "date_format": Java.DateFormat.JAVA,
+        "datetime_format": Java.DatetimeFormat.INSTANT,
+    },
+    "java-zoned": {
+        "date_format": Java.DateFormat.JAVA,
+        "datetime_format": Java.DatetimeFormat.ZONED,
+    },
+    "javascript": {
+        "date_format": JavaScript.DateFormat.JS,
+        "datetime_format": JavaScript.DatetimeFormat.JS,
+    },
+    "julia": {
+        "date_format": Julia.DateFormat.JULIA,
+        "datetime_format": Julia.DatetimeFormat.JULIA,
+    },
+    "kotlin": {
+        "date_format": Kotlin.DateFormat.KOTLIN,
+        "datetime_format": Kotlin.DatetimeFormat.KOTLIN,
+    },
+    "python": {
+        "date_format": Python.DateFormat.PYTHON,
+        "datetime_format": Python.DatetimeFormat.PYTHON,
+    },
+    "r": {
+        "date_format": R.DateFormat.R,
+        "datetime_format": R.DatetimeFormat.R,
+    },
+    "ruby": {
+        "date_format": Ruby.DateFormat.RUBY,
+        "datetime_format": Ruby.DatetimeFormat.RUBY,
+    },
+    "rust": {
+        "date_format": Rust.DateFormat.RUST,
+        "datetime_format": Rust.DatetimeFormat.RUST,
+    },
+    "typescript": {
+        "date_format": TypeScript.DateFormat.JS,
+        "datetime_format": TypeScript.DatetimeFormat.JS,
+    },
 }
 
 
