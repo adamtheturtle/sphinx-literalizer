@@ -5,6 +5,8 @@ renders it as a native language literal block.
 """
 
 from collections.abc import Callable
+from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -112,120 +114,129 @@ _LANGUAGE_TYPES: dict[str, type[Language]] = {
     "zig": Zig,
 }
 
-_DEFAULT_DATE_FORMAT_KWARGS: dict[str, dict[str, Any]] = {
-    "cpp": {
-        "date_format": Cpp.DateFormat.ISO,
-        "datetime_format": Cpp.DatetimeFormat.ISO,
-    },
-    "csharp": {
-        "date_format": CSharp.DateFormat.ISO,
-        "datetime_format": CSharp.DatetimeFormat.ISO,
-    },
-    "dart": {
-        "date_format": Dart.DateFormat.ISO,
-        "datetime_format": Dart.DatetimeFormat.ISO,
-    },
-    "go": {
-        "date_format": Go.DateFormat.ISO,
-        "datetime_format": Go.DatetimeFormat.ISO,
-    },
-    "java": {
-        "date_format": Java.DateFormat.ISO,
-        "datetime_format": Java.DatetimeFormat.ISO,
-    },
-    "javascript": {
-        "date_format": JavaScript.DateFormat.ISO,
-        "datetime_format": JavaScript.DatetimeFormat.ISO,
-    },
-    "julia": {
-        "date_format": Julia.DateFormat.ISO,
-        "datetime_format": Julia.DatetimeFormat.ISO,
-    },
-    "kotlin": {
-        "date_format": Kotlin.DateFormat.ISO,
-        "datetime_format": Kotlin.DatetimeFormat.ISO,
-    },
-    "python": {
-        "date_format": Python.DateFormat.ISO,
-        "datetime_format": Python.DatetimeFormat.ISO,
-    },
-    "r": {
-        "date_format": R.DateFormat.ISO,
-        "datetime_format": R.DatetimeFormat.ISO,
-    },
-    "ruby": {
-        "date_format": Ruby.DateFormat.ISO,
-        "datetime_format": Ruby.DatetimeFormat.ISO,
-    },
-    "rust": {
-        "date_format": Rust.DateFormat.ISO,
-        "datetime_format": Rust.DatetimeFormat.ISO,
-    },
-    "typescript": {
-        "date_format": TypeScript.DateFormat.ISO,
-        "datetime_format": TypeScript.DatetimeFormat.ISO,
-    },
+
+@dataclass(frozen=True)
+class _DateFormats:
+    """Date and datetime format options for a language."""
+
+    date_format: object | None = None
+    datetime_format: object | None = None
+
+
+_DEFAULT_DATE_FORMATS: dict[str, _DateFormats] = {
+    "cpp": _DateFormats(
+        date_format=Cpp.DateFormat.ISO,
+        datetime_format=Cpp.DatetimeFormat.ISO,
+    ),
+    "csharp": _DateFormats(
+        date_format=CSharp.DateFormat.ISO,
+        datetime_format=CSharp.DatetimeFormat.ISO,
+    ),
+    "dart": _DateFormats(
+        date_format=Dart.DateFormat.ISO,
+        datetime_format=Dart.DatetimeFormat.ISO,
+    ),
+    "go": _DateFormats(
+        date_format=Go.DateFormat.ISO,
+        datetime_format=Go.DatetimeFormat.ISO,
+    ),
+    "java": _DateFormats(
+        date_format=Java.DateFormat.ISO,
+        datetime_format=Java.DatetimeFormat.ISO,
+    ),
+    "javascript": _DateFormats(
+        date_format=JavaScript.DateFormat.ISO,
+        datetime_format=JavaScript.DatetimeFormat.ISO,
+    ),
+    "julia": _DateFormats(
+        date_format=Julia.DateFormat.ISO,
+        datetime_format=Julia.DatetimeFormat.ISO,
+    ),
+    "kotlin": _DateFormats(
+        date_format=Kotlin.DateFormat.ISO,
+        datetime_format=Kotlin.DatetimeFormat.ISO,
+    ),
+    "python": _DateFormats(
+        date_format=Python.DateFormat.ISO,
+        datetime_format=Python.DatetimeFormat.ISO,
+    ),
+    "r": _DateFormats(
+        date_format=R.DateFormat.ISO,
+        datetime_format=R.DatetimeFormat.ISO,
+    ),
+    "ruby": _DateFormats(
+        date_format=Ruby.DateFormat.ISO,
+        datetime_format=Ruby.DatetimeFormat.ISO,
+    ),
+    "rust": _DateFormats(
+        date_format=Rust.DateFormat.ISO,
+        datetime_format=Rust.DatetimeFormat.ISO,
+    ),
+    "typescript": _DateFormats(
+        date_format=TypeScript.DateFormat.ISO,
+        datetime_format=TypeScript.DatetimeFormat.ISO,
+    ),
 }
 
-_DATE_FORMAT_KWARGS: dict[str, dict[str, Any]] = {
-    "cpp": {
-        "date_format": Cpp.DateFormat.CPP,
-        "datetime_format": Cpp.DatetimeFormat.CPP,
-    },
-    "csharp": {
-        "date_format": CSharp.DateFormat.CSHARP,
-        "datetime_format": CSharp.DatetimeFormat.CSHARP,
-    },
-    "dart": {
-        "date_format": Dart.DateFormat.DART,
-        "datetime_format": Dart.DatetimeFormat.DART,
-    },
-    "epoch": {"datetime_format": Python.DatetimeFormat.EPOCH},
-    "go": {
-        "date_format": Go.DateFormat.GO,
-        "datetime_format": Go.DatetimeFormat.GO,
-    },
-    "iso": {},
-    "java-instant": {
-        "date_format": Java.DateFormat.JAVA,
-        "datetime_format": Java.DatetimeFormat.INSTANT,
-    },
-    "java-zoned": {
-        "date_format": Java.DateFormat.JAVA,
-        "datetime_format": Java.DatetimeFormat.ZONED,
-    },
-    "javascript": {
-        "date_format": JavaScript.DateFormat.JS,
-        "datetime_format": JavaScript.DatetimeFormat.JS,
-    },
-    "julia": {
-        "date_format": Julia.DateFormat.JULIA,
-        "datetime_format": Julia.DatetimeFormat.JULIA,
-    },
-    "kotlin": {
-        "date_format": Kotlin.DateFormat.KOTLIN,
-        "datetime_format": Kotlin.DatetimeFormat.KOTLIN,
-    },
-    "python": {
-        "date_format": Python.DateFormat.PYTHON,
-        "datetime_format": Python.DatetimeFormat.PYTHON,
-    },
-    "r": {
-        "date_format": R.DateFormat.R,
-        "datetime_format": R.DatetimeFormat.R,
-    },
-    "ruby": {
-        "date_format": Ruby.DateFormat.RUBY,
-        "datetime_format": Ruby.DatetimeFormat.RUBY,
-    },
-    "rust": {
-        "date_format": Rust.DateFormat.RUST,
-        "datetime_format": Rust.DatetimeFormat.RUST,
-    },
-    "typescript": {
-        "date_format": TypeScript.DateFormat.JS,
-        "datetime_format": TypeScript.DatetimeFormat.JS,
-    },
+_DATE_FORMATS: dict[str, _DateFormats] = {
+    "cpp": _DateFormats(
+        date_format=Cpp.DateFormat.CPP,
+        datetime_format=Cpp.DatetimeFormat.CPP,
+    ),
+    "csharp": _DateFormats(
+        date_format=CSharp.DateFormat.CSHARP,
+        datetime_format=CSharp.DatetimeFormat.CSHARP,
+    ),
+    "dart": _DateFormats(
+        date_format=Dart.DateFormat.DART,
+        datetime_format=Dart.DatetimeFormat.DART,
+    ),
+    "epoch": _DateFormats(datetime_format=Python.DatetimeFormat.EPOCH),
+    "go": _DateFormats(
+        date_format=Go.DateFormat.GO,
+        datetime_format=Go.DatetimeFormat.GO,
+    ),
+    "iso": _DateFormats(),
+    "java-instant": _DateFormats(
+        date_format=Java.DateFormat.JAVA,
+        datetime_format=Java.DatetimeFormat.INSTANT,
+    ),
+    "java-zoned": _DateFormats(
+        date_format=Java.DateFormat.JAVA,
+        datetime_format=Java.DatetimeFormat.ZONED,
+    ),
+    "javascript": _DateFormats(
+        date_format=JavaScript.DateFormat.JS,
+        datetime_format=JavaScript.DatetimeFormat.JS,
+    ),
+    "julia": _DateFormats(
+        date_format=Julia.DateFormat.JULIA,
+        datetime_format=Julia.DatetimeFormat.JULIA,
+    ),
+    "kotlin": _DateFormats(
+        date_format=Kotlin.DateFormat.KOTLIN,
+        datetime_format=Kotlin.DatetimeFormat.KOTLIN,
+    ),
+    "python": _DateFormats(
+        date_format=Python.DateFormat.PYTHON,
+        datetime_format=Python.DatetimeFormat.PYTHON,
+    ),
+    "r": _DateFormats(
+        date_format=R.DateFormat.R,
+        datetime_format=R.DatetimeFormat.R,
+    ),
+    "ruby": _DateFormats(
+        date_format=Ruby.DateFormat.RUBY,
+        datetime_format=Ruby.DatetimeFormat.RUBY,
+    ),
+    "rust": _DateFormats(
+        date_format=Rust.DateFormat.RUST,
+        datetime_format=Rust.DatetimeFormat.RUST,
+    ),
+    "typescript": _DateFormats(
+        date_format=TypeScript.DateFormat.JS,
+        datetime_format=TypeScript.DatetimeFormat.JS,
+    ),
 }
 
 _DEFAULT_EXTRA_KWARGS: dict[str, dict[str, Any]] = {
@@ -239,112 +250,69 @@ _DEFAULT_EXTRA_KWARGS: dict[str, dict[str, Any]] = {
     },
 }
 
-_DEFAULT_SEQUENCE_FORMAT_KWARGS: dict[str, dict[str, Any]] = {
-    "ada": {"sequence_format": Ada.SequenceFormat.LIST},
-    "bash": {"sequence_format": Bash.SequenceFormat.ARRAY},
-    "c": {"sequence_format": C.SequenceFormat.ARRAY},
-    "clojure": {"sequence_format": Clojure.SequenceFormat.VECTOR},
-    "cobol": {"sequence_format": Cobol.SequenceFormat.SEQUENCE},
-    "common-lisp": {
-        "sequence_format": CommonLisp.SequenceFormat.LIST,
-    },
-    "cpp": {
-        "sequence_format": Cpp.SequenceFormat.INITIALIZER_LIST,
-    },
-    "crystal": {"sequence_format": Crystal.SequenceFormat.ARRAY},
-    "csharp": {"sequence_format": CSharp.SequenceFormat.ARRAY},
-    "d": {"sequence_format": D.SequenceFormat.ARRAY},
-    "dart": {"sequence_format": Dart.SequenceFormat.LIST},
-    "elixir": {"sequence_format": Elixir.SequenceFormat.LIST},
-    "erlang": {"sequence_format": Erlang.SequenceFormat.LIST},
-    "fortran": {"sequence_format": Fortran.SequenceFormat.LIST},
-    "fsharp": {"sequence_format": FSharp.SequenceFormat.LIST},
-    "go": {"sequence_format": Go.SequenceFormat.SLICE},
-    "groovy": {"sequence_format": Groovy.SequenceFormat.LIST},
-    "haskell": {"sequence_format": Haskell.SequenceFormat.LIST},
-    "hcl": {"sequence_format": Hcl.SequenceFormat.LIST},
-    "java": {"sequence_format": Java.SequenceFormat.ARRAY},
-    "javascript": {
-        "sequence_format": JavaScript.SequenceFormat.ARRAY,
-    },
-    "julia": {"sequence_format": Julia.SequenceFormat.ARRAY},
-    "kotlin": {"sequence_format": Kotlin.SequenceFormat.LIST},
-    "lua": {"sequence_format": Lua.SequenceFormat.TABLE},
-    "matlab": {"sequence_format": Matlab.SequenceFormat.CELL_ARRAY},
-    "mojo": {"sequence_format": Mojo.SequenceFormat.LIST},
-    "nim": {"sequence_format": Nim.SequenceFormat.ARRAY},
-    "norg": {"sequence_format": Norg.SequenceFormat.ARRAY},
-    "objective-c": {
-        "sequence_format": ObjectiveC.SequenceFormat.ARRAY,
-    },
-    "ocaml": {"sequence_format": OCaml.SequenceFormat.LIST},
-    "occam": {"sequence_format": Occam.SequenceFormat.LIST},
-    "perl": {"sequence_format": Perl.SequenceFormat.ARRAY},
-    "php": {"sequence_format": Php.SequenceFormat.ARRAY},
-    "powershell": {
-        "sequence_format": PowerShell.SequenceFormat.ARRAY,
-    },
-    "python": {"sequence_format": Python.SequenceFormat.TUPLE},
-    "r": {"sequence_format": R.SequenceFormat.LIST},
-    "racket": {"sequence_format": Racket.SequenceFormat.LIST},
-    "ruby": {"sequence_format": Ruby.SequenceFormat.ARRAY},
-    "rust": {"sequence_format": Rust.SequenceFormat.VEC},
-    "scala": {"sequence_format": Scala.SequenceFormat.LIST},
-    "swift": {"sequence_format": Swift.SequenceFormat.ARRAY},
-    "toml": {"sequence_format": Toml.SequenceFormat.ARRAY},
-    "typescript": {
-        "sequence_format": TypeScript.SequenceFormat.ARRAY,
-    },
-    "visual-basic": {
-        "sequence_format": VisualBasic.SequenceFormat.ARRAY,
-    },
-    "yaml": {"sequence_format": Yaml.SequenceFormat.SEQUENCE},
-    "zig": {"sequence_format": Zig.SequenceFormat.ARRAY},
+_DEFAULT_SEQUENCE_FORMATS: dict[str, object] = {
+    "ada": Ada.SequenceFormat.LIST,
+    "bash": Bash.SequenceFormat.ARRAY,
+    "c": C.SequenceFormat.ARRAY,
+    "clojure": Clojure.SequenceFormat.VECTOR,
+    "cobol": Cobol.SequenceFormat.SEQUENCE,
+    "common-lisp": CommonLisp.SequenceFormat.LIST,
+    "cpp": Cpp.SequenceFormat.INITIALIZER_LIST,
+    "crystal": Crystal.SequenceFormat.ARRAY,
+    "csharp": CSharp.SequenceFormat.ARRAY,
+    "d": D.SequenceFormat.ARRAY,
+    "dart": Dart.SequenceFormat.LIST,
+    "elixir": Elixir.SequenceFormat.LIST,
+    "erlang": Erlang.SequenceFormat.LIST,
+    "fortran": Fortran.SequenceFormat.LIST,
+    "fsharp": FSharp.SequenceFormat.LIST,
+    "go": Go.SequenceFormat.SLICE,
+    "groovy": Groovy.SequenceFormat.LIST,
+    "haskell": Haskell.SequenceFormat.LIST,
+    "hcl": Hcl.SequenceFormat.LIST,
+    "java": Java.SequenceFormat.ARRAY,
+    "javascript": JavaScript.SequenceFormat.ARRAY,
+    "julia": Julia.SequenceFormat.ARRAY,
+    "kotlin": Kotlin.SequenceFormat.LIST,
+    "lua": Lua.SequenceFormat.TABLE,
+    "matlab": Matlab.SequenceFormat.CELL_ARRAY,
+    "mojo": Mojo.SequenceFormat.LIST,
+    "nim": Nim.SequenceFormat.ARRAY,
+    "norg": Norg.SequenceFormat.ARRAY,
+    "objective-c": ObjectiveC.SequenceFormat.ARRAY,
+    "ocaml": OCaml.SequenceFormat.LIST,
+    "occam": Occam.SequenceFormat.LIST,
+    "perl": Perl.SequenceFormat.ARRAY,
+    "php": Php.SequenceFormat.ARRAY,
+    "powershell": PowerShell.SequenceFormat.ARRAY,
+    "python": Python.SequenceFormat.TUPLE,
+    "r": R.SequenceFormat.LIST,
+    "racket": Racket.SequenceFormat.LIST,
+    "ruby": Ruby.SequenceFormat.ARRAY,
+    "rust": Rust.SequenceFormat.VEC,
+    "scala": Scala.SequenceFormat.LIST,
+    "swift": Swift.SequenceFormat.ARRAY,
+    "toml": Toml.SequenceFormat.ARRAY,
+    "typescript": TypeScript.SequenceFormat.ARRAY,
+    "visual-basic": VisualBasic.SequenceFormat.ARRAY,
+    "yaml": Yaml.SequenceFormat.SEQUENCE,
+    "zig": Zig.SequenceFormat.ARRAY,
 }
 
-_SEQUENCE_FORMAT_KWARGS: dict[
-    tuple[str, str],
-    dict[str, Any],
-] = {
-    ("crystal", "array"): {
-        "sequence_format": Crystal.SequenceFormat.ARRAY,
-    },
-    ("crystal", "tuple"): {
-        "sequence_format": Crystal.SequenceFormat.TUPLE,
-    },
-    ("elixir", "list"): {
-        "sequence_format": Elixir.SequenceFormat.LIST,
-    },
-    ("elixir", "tuple"): {
-        "sequence_format": Elixir.SequenceFormat.TUPLE,
-    },
-    ("erlang", "list"): {
-        "sequence_format": Erlang.SequenceFormat.LIST,
-    },
-    ("erlang", "tuple"): {
-        "sequence_format": Erlang.SequenceFormat.TUPLE,
-    },
-    ("julia", "array"): {
-        "sequence_format": Julia.SequenceFormat.ARRAY,
-    },
-    ("julia", "tuple"): {
-        "sequence_format": Julia.SequenceFormat.TUPLE,
-    },
-    ("python", "list"): {
-        "sequence_format": Python.SequenceFormat.LIST,
-    },
-    ("python", "tuple"): {
-        "sequence_format": Python.SequenceFormat.TUPLE,
-    },
-    ("rust", "array"): {
-        "sequence_format": Rust.SequenceFormat.ARRAY,
-    },
-    ("rust", "tuple"): {
-        "sequence_format": Rust.SequenceFormat.TUPLE,
-    },
-    ("rust", "vec"): {
-        "sequence_format": Rust.SequenceFormat.VEC,
-    },
+_SEQUENCE_FORMATS: dict[tuple[str, str], object] = {
+    ("crystal", "array"): Crystal.SequenceFormat.ARRAY,
+    ("crystal", "tuple"): Crystal.SequenceFormat.TUPLE,
+    ("elixir", "list"): Elixir.SequenceFormat.LIST,
+    ("elixir", "tuple"): Elixir.SequenceFormat.TUPLE,
+    ("erlang", "list"): Erlang.SequenceFormat.LIST,
+    ("erlang", "tuple"): Erlang.SequenceFormat.TUPLE,
+    ("julia", "array"): Julia.SequenceFormat.ARRAY,
+    ("julia", "tuple"): Julia.SequenceFormat.TUPLE,
+    ("python", "list"): Python.SequenceFormat.LIST,
+    ("python", "tuple"): Python.SequenceFormat.TUPLE,
+    ("rust", "array"): Rust.SequenceFormat.ARRAY,
+    ("rust", "tuple"): Rust.SequenceFormat.TUPLE,
+    ("rust", "vec"): Rust.SequenceFormat.VEC,
 }
 
 _SEQUENCE_FORMAT_VALUES: tuple[str, ...] = (
@@ -360,13 +328,9 @@ _SEQUENCE_FORMAT_VALUES: tuple[str, ...] = (
     "vector",
 )
 
-_SET_FORMAT_KWARGS: dict[tuple[str, str], dict[str, Any]] = {
-    ("python", "frozenset"): {
-        "set_format": Python.SetFormat.FROZENSET,
-    },
-    ("python", "set"): {
-        "set_format": Python.SetFormat.SET,
-    },
+_SET_FORMATS: dict[tuple[str, str], object] = {
+    ("python", "frozenset"): Python.SetFormat.FROZENSET,
+    ("python", "set"): Python.SetFormat.SET,
 }
 
 _SET_FORMAT_VALUES: tuple[str, ...] = (
@@ -374,13 +338,9 @@ _SET_FORMAT_VALUES: tuple[str, ...] = (
     "set",
 )
 
-_BYTES_FORMAT_KWARGS: dict[tuple[str, str], dict[str, Any]] = {
-    ("python", "hex"): {
-        "bytes_format": Python.BytesFormat.HEX,
-    },
-    ("python", "python"): {
-        "bytes_format": Python.BytesFormat.PYTHON,
-    },
+_BYTES_FORMATS: dict[tuple[str, str], object] = {
+    ("python", "hex"): Python.BytesFormat.HEX,
+    ("python", "python"): Python.BytesFormat.PYTHON,
 }
 
 _BYTES_FORMAT_VALUES: tuple[str, ...] = (
@@ -420,7 +380,7 @@ class LiteralizerDirective(SphinxDirective):
         "wrap": directives.flag,
         "date-format": lambda x: directives.choice(
             argument=x,
-            values=tuple(_DATE_FORMAT_KWARGS),
+            values=tuple(_DATE_FORMATS),
         ),
         "variable-name": directives.unchanged,
         "existing-variable": directives.flag,
@@ -449,43 +409,66 @@ class LiteralizerDirective(SphinxDirective):
 
         language_name: str = self.options["language"]
         language_cls = _LANGUAGE_TYPES[language_name]
-        format_kwargs: dict[str, Any] = {}
-
-        format_kwargs.update(_DEFAULT_SEQUENCE_FORMAT_KWARGS[language_name])
-
-        default_date_kwargs = _DEFAULT_DATE_FORMAT_KWARGS.get(
-            language_name,
+        constructor = partial(language_cls)
+        constructor = partial(
+            constructor,
+            sequence_format=_DEFAULT_SEQUENCE_FORMATS[language_name],
         )
-        if default_date_kwargs is not None:
-            format_kwargs.update(default_date_kwargs)
 
-        default_extra_kwargs = _DEFAULT_EXTRA_KWARGS.get(
-            language_name,
-        )
+        default_date_formats = _DEFAULT_DATE_FORMATS.get(language_name)
+        if default_date_formats is not None:
+            if default_date_formats.date_format is not None:
+                constructor = partial(
+                    constructor,
+                    date_format=default_date_formats.date_format,
+                )
+            if default_date_formats.datetime_format is not None:
+                constructor = partial(
+                    constructor,
+                    datetime_format=default_date_formats.datetime_format,
+                )
+
+        default_extra_kwargs = _DEFAULT_EXTRA_KWARGS.get(language_name)
         if default_extra_kwargs is not None:
-            format_kwargs.update(default_extra_kwargs)
+            constructor = partial(constructor, **default_extra_kwargs)
 
         date_format_name: str | None = self.options.get("date-format")
         if date_format_name is not None:
-            format_kwargs.update(_DATE_FORMAT_KWARGS[date_format_name])
+            date_formats = _DATE_FORMATS[date_format_name]
+            if date_formats.date_format is not None:
+                constructor = partial(
+                    constructor,
+                    date_format=date_formats.date_format,
+                )
+            if date_formats.datetime_format is not None:
+                constructor = partial(
+                    constructor,
+                    datetime_format=date_formats.datetime_format,
+                )
 
         seq_fmt: str | None = self.options.get("sequence-format")
         if seq_fmt is not None:
-            format_kwargs.update(
-                _SEQUENCE_FORMAT_KWARGS[(language_name, seq_fmt)]
+            constructor = partial(
+                constructor,
+                sequence_format=_SEQUENCE_FORMATS[(language_name, seq_fmt)],
             )
 
         set_fmt: str | None = self.options.get("set-format")
         if set_fmt is not None:
-            format_kwargs.update(_SET_FORMAT_KWARGS[(language_name, set_fmt)])
+            constructor = partial(
+                constructor,
+                set_format=_SET_FORMATS[(language_name, set_fmt)],
+            )
 
         bytes_fmt: str | None = self.options.get("bytes-format")
         if bytes_fmt is not None:
-            format_kwargs.update(
-                _BYTES_FORMAT_KWARGS[(language_name, bytes_fmt)]
+            constructor = partial(
+                constructor,
+                bytes_format=_BYTES_FORMATS[(language_name, bytes_fmt)],
             )
 
-        language_spec: Language = language_cls(**format_kwargs)
+        language_spec: Language = constructor()
+
         prefix_count: int = self.options.get("prefix", 0)
         prefix_char_name: str = self.options.get("prefix-char", "spaces")
         prefix_char = "\t" if prefix_char_name == "tabs" else " "
