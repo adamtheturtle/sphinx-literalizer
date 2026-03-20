@@ -239,15 +239,20 @@ _DATE_FORMATS: dict[str, _DateFormats] = {
     ),
 }
 
-_DEFAULT_EXTRA_KWARGS: dict[str, dict[str, Any]] = {
-    "python": {
-        "bytes_format": Python.BytesFormat.HEX,
-        "set_format": Python.SetFormat.SET,
-        "variable_type_hints": Python.VariableTypeHints.NONE,
-    },
-    "r": {
-        "empty_dict_key": R.EmptyDictKey.ERROR,
-    },
+_DEFAULT_BYTES_FORMATS: dict[str, object] = {
+    "python": Python.BytesFormat.HEX,
+}
+
+_DEFAULT_SET_FORMATS: dict[str, object] = {
+    "python": Python.SetFormat.SET,
+}
+
+_DEFAULT_VARIABLE_TYPE_HINTS: dict[str, object] = {
+    "python": Python.VariableTypeHints.NONE,
+}
+
+_DEFAULT_EMPTY_DICT_KEYS: dict[str, object] = {
+    "r": R.EmptyDictKey.ERROR,
 }
 
 _DEFAULT_SEQUENCE_FORMATS: dict[str, object] = {
@@ -349,6 +354,75 @@ _BYTES_FORMAT_VALUES: tuple[str, ...] = (
 )
 
 
+def _apply_date_formats(
+    constructor: partial[Language],
+    date_formats: _DateFormats,
+) -> partial[Language]:
+    """Apply date and datetime format options to a constructor."""
+    if date_formats.date_format is not None:
+        constructor = partial(
+            constructor,
+            date_format=date_formats.date_format,
+        )
+    if date_formats.datetime_format is not None:
+        constructor = partial(
+            constructor,
+            datetime_format=date_formats.datetime_format,
+        )
+    return constructor
+
+
+def _default_constructor(
+    language_name: str,
+) -> partial[Language]:
+    """Build a language constructor with sensible defaults applied."""
+    language_cls = _LANGUAGE_TYPES[language_name]
+    constructor = partial(language_cls)
+    constructor = partial(
+        constructor,
+        sequence_format=_DEFAULT_SEQUENCE_FORMATS[language_name],
+    )
+
+    default_date_formats = _DEFAULT_DATE_FORMATS.get(language_name)
+    if default_date_formats is not None:
+        constructor = _apply_date_formats(
+            constructor=constructor,
+            date_formats=default_date_formats,
+        )
+
+    default_bytes_format = _DEFAULT_BYTES_FORMATS.get(language_name)
+    if default_bytes_format is not None:
+        constructor = partial(
+            constructor,
+            bytes_format=default_bytes_format,
+        )
+
+    default_set_format = _DEFAULT_SET_FORMATS.get(language_name)
+    if default_set_format is not None:
+        constructor = partial(
+            constructor,
+            set_format=default_set_format,
+        )
+
+    default_variable_type_hints = _DEFAULT_VARIABLE_TYPE_HINTS.get(
+        language_name,
+    )
+    if default_variable_type_hints is not None:
+        constructor = partial(
+            constructor,
+            variable_type_hints=default_variable_type_hints,
+        )
+
+    default_empty_dict_key = _DEFAULT_EMPTY_DICT_KEYS.get(language_name)
+    if default_empty_dict_key is not None:
+        constructor = partial(
+            constructor,
+            empty_dict_key=default_empty_dict_key,
+        )
+
+    return constructor
+
+
 class LiteralizerDirective(SphinxDirective):
     """Directive that converts a JSON file to a native literal block.
 
@@ -408,43 +482,14 @@ class LiteralizerDirective(SphinxDirective):
         env.note_dependency(str(object=data_path))
 
         language_name: str = self.options["language"]
-        language_cls = _LANGUAGE_TYPES[language_name]
-        constructor = partial(language_cls)
-        constructor = partial(
-            constructor,
-            sequence_format=_DEFAULT_SEQUENCE_FORMATS[language_name],
-        )
-
-        default_date_formats = _DEFAULT_DATE_FORMATS.get(language_name)
-        if default_date_formats is not None:
-            if default_date_formats.date_format is not None:
-                constructor = partial(
-                    constructor,
-                    date_format=default_date_formats.date_format,
-                )
-            if default_date_formats.datetime_format is not None:
-                constructor = partial(
-                    constructor,
-                    datetime_format=default_date_formats.datetime_format,
-                )
-
-        default_extra_kwargs = _DEFAULT_EXTRA_KWARGS.get(language_name)
-        if default_extra_kwargs is not None:
-            constructor = partial(constructor, **default_extra_kwargs)
+        constructor = _default_constructor(language_name=language_name)
 
         date_format_name: str | None = self.options.get("date-format")
         if date_format_name is not None:
-            date_formats = _DATE_FORMATS[date_format_name]
-            if date_formats.date_format is not None:
-                constructor = partial(
-                    constructor,
-                    date_format=date_formats.date_format,
-                )
-            if date_formats.datetime_format is not None:
-                constructor = partial(
-                    constructor,
-                    datetime_format=date_formats.datetime_format,
-                )
+            constructor = _apply_date_formats(
+                constructor=constructor,
+                date_formats=_DATE_FORMATS[date_format_name],
+            )
 
         seq_fmt: str | None = self.options.get("sequence-format")
         if seq_fmt is not None:
