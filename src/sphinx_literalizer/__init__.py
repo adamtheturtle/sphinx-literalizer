@@ -25,6 +25,7 @@ from literalizer.languages import (
     Dart,
     Elixir,
     Erlang,
+    Fortran,
     FSharp,
     Go,
     Groovy,
@@ -38,6 +39,7 @@ from literalizer.languages import (
     Matlab,
     Mojo,
     Nim,
+    Norg,
     OCaml,
     Occam,
     Perl,
@@ -74,6 +76,7 @@ _LANGUAGE_TYPES: dict[str, type[Language]] = {
     "dart": Dart,
     "elixir": Elixir,
     "erlang": Erlang,
+    "fortran": Fortran,
     "fsharp": FSharp,
     "go": Go,
     "groovy": Groovy,
@@ -87,6 +90,7 @@ _LANGUAGE_TYPES: dict[str, type[Language]] = {
     "matlab": Matlab,
     "mojo": Mojo,
     "nim": Nim,
+    "norg": Norg,
     "ocaml": OCaml,
     "occam": Occam,
     "perl": Perl,
@@ -201,12 +205,19 @@ _SEQUENCE_FORMAT_KWARGS: dict[
     ("python", "tuple"): {
         "sequence_format": Python.SequenceFormat.TUPLE,
     },
+    ("rust", "tuple"): {
+        "sequence_format": Rust.SequenceFormat.TUPLE,
+    },
+    ("rust", "vec"): {
+        "sequence_format": Rust.SequenceFormat.VEC,
+    },
 }
 
 _SEQUENCE_FORMAT_VALUES: tuple[str, ...] = (
     "array",
     "list",
     "tuple",
+    "vec",
 )
 
 _SET_FORMAT_KWARGS: dict[tuple[str, str], dict[str, Any]] = {
