@@ -444,7 +444,10 @@ class LiteralizerDirective(SphinxDirective):
     required_arguments = 1
     has_content = False
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
-        "language": directives.unchanged_required,
+        "language": lambda x: directives.choice(
+            argument=x,
+            values=tuple(_LANGUAGE_TYPES),
+        ),
         "prefix": directives.nonnegative_int,
         "prefix-char": lambda x: directives.choice(
             argument=x,
