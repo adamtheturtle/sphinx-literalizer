@@ -65,7 +65,7 @@ from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
 
-_LANGUAGE_TYPES: dict[str, type[Language]] = {
+_LANGUAGE_TYPES: dict[str, type[Any]] = {
     "ada": Ada,
     "bash": Bash,
     "c": C,
@@ -352,7 +352,7 @@ _DEFAULT_SEQUENCE_FORMATS: dict[str, object] = {
 _SEQUENCE_FORMATS: dict[tuple[str, str], object] = {
     (lang_name, member.name.lower()): member
     for lang_name, lang_cls in _LANGUAGE_TYPES.items()
-    for member in lang_cls.SequenceFormat  # type: ignore[attr-defined]
+    for member in lang_cls.SequenceFormat
 }
 
 _SEQUENCE_FORMAT_VALUES: tuple[str, ...] = tuple(
@@ -362,7 +362,7 @@ _SEQUENCE_FORMAT_VALUES: tuple[str, ...] = tuple(
 _SET_FORMATS: dict[tuple[str, str], object] = {
     (lang_name, member.name.lower()): member
     for lang_name, lang_cls in _LANGUAGE_TYPES.items()
-    for member in lang_cls.SetFormat  # type: ignore[attr-defined]
+    for member in lang_cls.SetFormat
 }
 
 _SET_FORMAT_VALUES: tuple[str, ...] = tuple(
@@ -372,7 +372,7 @@ _SET_FORMAT_VALUES: tuple[str, ...] = tuple(
 _BYTES_FORMATS: dict[tuple[str, str], object] = {
     (lang_name, member.name.lower()): member
     for lang_name, lang_cls in _LANGUAGE_TYPES.items()
-    for member in lang_cls.BytesFormat  # type: ignore[attr-defined]
+    for member in lang_cls.BytesFormat
 }
 
 _BYTES_FORMAT_VALUES: tuple[str, ...] = tuple(
