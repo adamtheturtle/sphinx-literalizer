@@ -43,9 +43,10 @@ Directive options
    Target language name (Pygments language name).
    Supported values: ``ada``, ``bash``, ``c``, ``clojure``, ``cobol``,
    ``common-lisp``, ``cpp``, ``crystal``, ``csharp``, ``d``, ``dart``,
-   ``elixir``, ``erlang``, ``fsharp``, ``go``, ``groovy``, ``haskell``,
-   ``hcl``, ``java``, ``javascript``, ``julia``, ``kotlin``, ``lua``,
-   ``matlab``, ``mojo``, ``nim``, ``ocaml``, ``occam``, ``perl``, ``php``,
+   ``elixir``, ``erlang``, ``fortran``, ``fsharp``, ``go``, ``groovy``,
+   ``haskell``, ``hcl``, ``java``, ``javascript``, ``julia``, ``kotlin``,
+   ``lua``, ``matlab``, ``mojo``, ``nim``, ``norg``, ``ocaml``, ``occam``,
+   ``perl``, ``php``,
    ``powershell``, ``python``, ``r``, ``racket``, ``ruby``, ``rust``,
    ``scala``, ``swift``, ``toml``, ``typescript``, ``visual-basic``,
    ``yaml``, ``zig``.
@@ -107,13 +108,15 @@ Directive options
 
    ``tuple``
       Tuple delimiters.  Available for Crystal, Elixir, Erlang, Julia,
-      and Python (default for Python).
+      Python (default for Python), and Rust.
    ``list``
       List delimiters.  Available for Elixir (default), Erlang (default),
       and Python.
    ``array``
       Array delimiters.  Available for Crystal (default) and Julia
       (default).
+   ``vec``
+      Vec macro (``vec![...]``).  Available for Rust (default).
 
 ``:set-format:`` (optional)
    How to render sets (Python only).  Supported values:
