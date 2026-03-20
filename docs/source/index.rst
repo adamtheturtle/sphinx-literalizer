@@ -41,9 +41,14 @@ Directive options
 
 ``:language:`` (required)
    Target language name (Pygments language name).
-   Supported values: ``clojure``, ``cpp``, ``csharp``, ``dart``, ``go``,
-   ``java``, ``javascript``, ``julia``, ``kotlin``, ``php``, ``python``,
-   ``r``, ``ruby``, ``scala``, ``swift``, ``typescript``.
+   Supported values: ``ada``, ``bash``, ``c``, ``clojure``, ``cobol``,
+   ``common-lisp``, ``cpp``, ``crystal``, ``csharp``, ``d``, ``dart``,
+   ``elixir``, ``erlang``, ``fsharp``, ``go``, ``groovy``, ``haskell``,
+   ``hcl``, ``java``, ``javascript``, ``julia``, ``kotlin``, ``lua``,
+   ``matlab``, ``mojo``, ``nim``, ``ocaml``, ``occam``, ``perl``, ``php``,
+   ``powershell``, ``python``, ``r``, ``racket``, ``ruby``, ``rust``,
+   ``scala``, ``swift``, ``toml``, ``typescript``, ``visual-basic``,
+   ``yaml``, ``zig``.
 
 ``:prefix:`` (optional)
    Number of whitespace characters to prepend to each output line.
@@ -95,6 +100,36 @@ Directive options
       ``Date(...)`` / ``DateTime(...)`` constructors.
    ``r``
       ``as.Date(...)`` / ``as.POSIXct(...)`` calls.
+
+``:sequence-format:`` (optional)
+   How to render sequences (arrays/lists).  Not all values are valid for
+   every language.  Supported values:
+
+   ``tuple``
+      Tuple delimiters.  Available for Crystal, Elixir, Erlang, Julia,
+      and Python (default for Python).
+   ``list``
+      List delimiters.  Available for Elixir (default), Erlang (default),
+      and Python.
+   ``array``
+      Array delimiters.  Available for Crystal (default) and Julia
+      (default).
+
+``:set-format:`` (optional)
+   How to render sets (Python only).  Supported values:
+
+   ``set``
+      ``{`` … ``}`` set literal (default).
+   ``frozenset``
+      ``frozenset({`` … ``})`` constructor.
+
+``:bytes-format:`` (optional)
+   How to render binary data (Python only).  Supported values:
+
+   ``hex``
+      Hex-escaped bytes literal, e.g. ``b"\x48\x65"`` (default).
+   ``python``
+      Python bytes literal, e.g. ``b"Hello"``.
 
 ``:variable-name:`` (optional)
    Wrap the output in a variable declaration or assignment using the given

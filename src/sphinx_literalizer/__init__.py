@@ -36,6 +36,7 @@ from literalizer.languages import (
     Kotlin,
     Lua,
     Matlab,
+    Mojo,
     Nim,
     OCaml,
     Occam,
@@ -52,6 +53,7 @@ from literalizer.languages import (
     Toml,
     TypeScript,
     VisualBasic,
+    Yaml,
     Zig,
 )
 from sphinx.application import Sphinx
@@ -83,6 +85,7 @@ _LANGUAGE_TYPES: dict[str, type[Language]] = {
     "kotlin": Kotlin,
     "lua": Lua,
     "matlab": Matlab,
+    "mojo": Mojo,
     "nim": Nim,
     "ocaml": OCaml,
     "occam": Occam,
@@ -99,6 +102,7 @@ _LANGUAGE_TYPES: dict[str, type[Language]] = {
     "toml": Toml,
     "typescript": TypeScript,
     "visual-basic": VisualBasic,
+    "yaml": Yaml,
     "zig": Zig,
 }
 
@@ -163,6 +167,76 @@ _DATE_FORMAT_KWARGS: dict[str, dict[str, Any]] = {
     },
 }
 
+_SEQUENCE_FORMAT_KWARGS: dict[
+    tuple[str, str],
+    dict[str, Any],
+] = {
+    ("crystal", "array"): {
+        "sequence_format": Crystal.SequenceFormat.ARRAY,
+    },
+    ("crystal", "tuple"): {
+        "sequence_format": Crystal.SequenceFormat.TUPLE,
+    },
+    ("elixir", "list"): {
+        "sequence_format": Elixir.SequenceFormat.LIST,
+    },
+    ("elixir", "tuple"): {
+        "sequence_format": Elixir.SequenceFormat.TUPLE,
+    },
+    ("erlang", "list"): {
+        "sequence_format": Erlang.SequenceFormat.LIST,
+    },
+    ("erlang", "tuple"): {
+        "sequence_format": Erlang.SequenceFormat.TUPLE,
+    },
+    ("julia", "array"): {
+        "sequence_format": Julia.SequenceFormat.ARRAY,
+    },
+    ("julia", "tuple"): {
+        "sequence_format": Julia.SequenceFormat.TUPLE,
+    },
+    ("python", "list"): {
+        "sequence_format": Python.SequenceFormat.LIST,
+    },
+    ("python", "tuple"): {
+        "sequence_format": Python.SequenceFormat.TUPLE,
+    },
+}
+
+_SEQUENCE_FORMAT_VALUES: tuple[str, ...] = (
+    "array",
+    "list",
+    "tuple",
+)
+
+_SET_FORMAT_KWARGS: dict[tuple[str, str], dict[str, Any]] = {
+    ("python", "frozenset"): {
+        "set_format": Python.SetFormat.FROZENSET,
+    },
+    ("python", "set"): {
+        "set_format": Python.SetFormat.SET,
+    },
+}
+
+_SET_FORMAT_VALUES: tuple[str, ...] = (
+    "frozenset",
+    "set",
+)
+
+_BYTES_FORMAT_KWARGS: dict[tuple[str, str], dict[str, Any]] = {
+    ("python", "hex"): {
+        "bytes_format": Python.BytesFormat.HEX,
+    },
+    ("python", "python"): {
+        "bytes_format": Python.BytesFormat.PYTHON,
+    },
+}
+
+_BYTES_FORMAT_VALUES: tuple[str, ...] = (
+    "hex",
+    "python",
+)
+
 
 class LiteralizerDirective(SphinxDirective):
     """Directive that converts a JSON file to a native literal block.
@@ -177,6 +251,9 @@ class LiteralizerDirective(SphinxDirective):
            :wrap:
            :variable-name: my_var
            :existing-variable:
+           :sequence-format: list
+           :set-format: frozenset
+           :bytes-format: python
     """
 
     required_arguments = 1
@@ -196,6 +273,18 @@ class LiteralizerDirective(SphinxDirective):
         ),
         "variable-name": directives.unchanged,
         "existing-variable": directives.flag,
+        "sequence-format": lambda x: directives.choice(
+            argument=x,
+            values=_SEQUENCE_FORMAT_VALUES,
+        ),
+        "set-format": lambda x: directives.choice(
+            argument=x,
+            values=_SET_FORMAT_VALUES,
+        ),
+        "bytes-format": lambda x: directives.choice(
+            argument=x,
+            values=_BYTES_FORMAT_VALUES,
+        ),
     }
 
     def run(self) -> list[nodes.Node]:
@@ -208,14 +297,30 @@ class LiteralizerDirective(SphinxDirective):
         env.note_dependency(str(object=data_path))
 
         language_name: str = self.options["language"]
+        language_cls = _LANGUAGE_TYPES[language_name]
+        format_kwargs: dict[str, Any] = {}
+
         date_format_name: str | None = self.options.get("date-format")
         if date_format_name is not None:
-            date_format_kwargs = _DATE_FORMAT_KWARGS[date_format_name]
-        else:
-            date_format_kwargs = {}
-        language_spec: Language = _LANGUAGE_TYPES[language_name](
-            **date_format_kwargs
-        )
+            format_kwargs.update(_DATE_FORMAT_KWARGS[date_format_name])
+
+        seq_fmt: str | None = self.options.get("sequence-format")
+        if seq_fmt is not None:
+            format_kwargs.update(
+                _SEQUENCE_FORMAT_KWARGS[(language_name, seq_fmt)]
+            )
+
+        set_fmt: str | None = self.options.get("set-format")
+        if set_fmt is not None:
+            format_kwargs.update(_SET_FORMAT_KWARGS[(language_name, set_fmt)])
+
+        bytes_fmt: str | None = self.options.get("bytes-format")
+        if bytes_fmt is not None:
+            format_kwargs.update(
+                _BYTES_FORMAT_KWARGS[(language_name, bytes_fmt)]
+            )
+
+        language_spec: Language = language_cls(**format_kwargs)
         prefix_count: int = self.options.get("prefix", 0)
         prefix_char_name: str = self.options.get("prefix-char", "spaces")
         prefix_char = "\t" if prefix_char_name == "tabs" else " "

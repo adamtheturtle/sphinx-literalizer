@@ -1,7 +1,10 @@
 Changelog
 Lua
+Mojo
+Nim
 OCaml
 Pygments
+Zig
 datetimes
 dicts
 literalizer
