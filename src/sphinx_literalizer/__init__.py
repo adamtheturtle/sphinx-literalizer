@@ -6,7 +6,6 @@ renders it as a native language literal block.
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from functools import partial
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -184,6 +183,65 @@ _DATE_FORMATS: dict[str, _DateFormats] = {
     ),
 }
 
+_DEFAULT_LANGUAGE_KWARGS: dict[str, dict[str, object]] = {
+    "cpp": {
+        "date_format": Cpp.DateFormat.ISO,
+        "datetime_format": Cpp.DatetimeFormat.ISO,
+    },
+    "csharp": {
+        "date_format": CSharp.DateFormat.ISO,
+        "datetime_format": CSharp.DatetimeFormat.ISO,
+    },
+    "dart": {
+        "date_format": Dart.DateFormat.ISO,
+        "datetime_format": Dart.DatetimeFormat.ISO,
+    },
+    "go": {
+        "date_format": Go.DateFormat.ISO,
+        "datetime_format": Go.DatetimeFormat.ISO,
+    },
+    "java": {
+        "date_format": Java.DateFormat.ISO,
+        "datetime_format": Java.DatetimeFormat.ISO,
+    },
+    "javascript": {
+        "date_format": JavaScript.DateFormat.ISO,
+        "datetime_format": JavaScript.DatetimeFormat.ISO,
+    },
+    "julia": {
+        "date_format": Julia.DateFormat.ISO,
+        "datetime_format": Julia.DatetimeFormat.ISO,
+    },
+    "kotlin": {
+        "date_format": Kotlin.DateFormat.ISO,
+        "datetime_format": Kotlin.DatetimeFormat.ISO,
+    },
+    "python": {
+        "date_format": Python.DateFormat.ISO,
+        "datetime_format": Python.DatetimeFormat.ISO,
+        "bytes_format": Python.BytesFormat.HEX,
+        "set_format": Python.SetFormat.SET,
+        "variable_type_hints": Python.VariableTypeHints.NONE,
+    },
+    "r": {
+        "date_format": R.DateFormat.ISO,
+        "datetime_format": R.DatetimeFormat.ISO,
+        "empty_dict_key": R.EmptyDictKey.POSITIONAL,
+    },
+    "ruby": {
+        "date_format": Ruby.DateFormat.ISO,
+        "datetime_format": Ruby.DatetimeFormat.ISO,
+    },
+    "rust": {
+        "date_format": Rust.DateFormat.ISO,
+        "datetime_format": Rust.DatetimeFormat.ISO,
+    },
+    "typescript": {
+        "date_format": TypeScript.DateFormat.ISO,
+        "datetime_format": TypeScript.DatetimeFormat.ISO,
+    },
+}
+
 _DEFAULT_SEQUENCE_FORMATS: dict[str, object] = {
     "ada": Ada.SequenceFormat.LIST,
     "bash": Bash.SequenceFormat.ARRAY,
@@ -337,47 +395,37 @@ class LiteralizerDirective(SphinxDirective):
 
         language_name: str = self.options["language"]
         language_cls = _LANGUAGE_TYPES[language_name]
-        constructor = partial(language_cls)
+        kwargs: dict[str, object] = dict(
+            _DEFAULT_LANGUAGE_KWARGS.get(language_name, {}),
+        )
 
         date_format_name: str | None = self.options.get("date-format")
         if date_format_name is not None:
             date_formats = _DATE_FORMATS[date_format_name]
             if date_formats.date_format is not None:
-                constructor = partial(
-                    constructor,
-                    date_format=date_formats.date_format,
-                )
+                kwargs["date_format"] = date_formats.date_format
             if date_formats.datetime_format is not None:
-                constructor = partial(
-                    constructor,
-                    datetime_format=date_formats.datetime_format,
-                )
+                kwargs["datetime_format"] = date_formats.datetime_format
 
         seq_fmt: str | None = self.options.get("sequence-format")
         if seq_fmt is not None:
-            sequence_format = _SEQUENCE_FORMATS[(language_name, seq_fmt)]
+            kwargs["sequence_format"] = _SEQUENCE_FORMATS[
+                (language_name, seq_fmt)
+            ]
         else:
-            sequence_format = _DEFAULT_SEQUENCE_FORMATS[language_name]
-        constructor = partial(
-            constructor,
-            sequence_format=sequence_format,
-        )
+            kwargs["sequence_format"] = _DEFAULT_SEQUENCE_FORMATS[
+                language_name
+            ]
 
         set_fmt: str | None = self.options.get("set-format")
         if set_fmt is not None:
-            constructor = partial(
-                constructor,
-                set_format=_SET_FORMATS[(language_name, set_fmt)],
-            )
+            kwargs["set_format"] = _SET_FORMATS[(language_name, set_fmt)]
 
         bytes_fmt: str | None = self.options.get("bytes-format")
         if bytes_fmt is not None:
-            constructor = partial(
-                constructor,
-                bytes_format=_BYTES_FORMATS[(language_name, bytes_fmt)],
-            )
+            kwargs["bytes_format"] = _BYTES_FORMATS[(language_name, bytes_fmt)]
 
-        language_spec: Language = constructor()
+        language_spec: Language = language_cls(**kwargs)
 
         prefix_count: int = self.options.get("prefix", 0)
         prefix_char_name: str = self.options.get("prefix-char", "spaces")
