@@ -305,19 +305,26 @@ _DEFAULT_SEQUENCE_FORMATS: dict[str, object] = {
 }
 
 _SEQUENCE_FORMATS: dict[tuple[str, str], object] = {
+    ("clojure", "vector"): Clojure.SequenceFormat.VECTOR,
+    ("cobol", "sequence"): Cobol.SequenceFormat.SEQUENCE,
+    ("cpp", "initializer_list"): Cpp.SequenceFormat.INITIALIZER_LIST,
     ("crystal", "array"): Crystal.SequenceFormat.ARRAY,
     ("crystal", "tuple"): Crystal.SequenceFormat.TUPLE,
     ("elixir", "list"): Elixir.SequenceFormat.LIST,
     ("elixir", "tuple"): Elixir.SequenceFormat.TUPLE,
     ("erlang", "list"): Erlang.SequenceFormat.LIST,
     ("erlang", "tuple"): Erlang.SequenceFormat.TUPLE,
+    ("go", "slice"): Go.SequenceFormat.SLICE,
     ("julia", "array"): Julia.SequenceFormat.ARRAY,
     ("julia", "tuple"): Julia.SequenceFormat.TUPLE,
+    ("lua", "table"): Lua.SequenceFormat.TABLE,
+    ("matlab", "cell_array"): Matlab.SequenceFormat.CELL_ARRAY,
     ("python", "list"): Python.SequenceFormat.LIST,
     ("python", "tuple"): Python.SequenceFormat.TUPLE,
     ("rust", "array"): Rust.SequenceFormat.ARRAY,
     ("rust", "tuple"): Rust.SequenceFormat.TUPLE,
     ("rust", "vec"): Rust.SequenceFormat.VEC,
+    ("yaml", "sequence"): Yaml.SequenceFormat.SEQUENCE,
 }
 
 _SEQUENCE_FORMAT_VALUES: tuple[str, ...] = (
