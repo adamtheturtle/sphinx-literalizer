@@ -34,7 +34,7 @@ dynamic = [
 ]
 dependencies = [
     "docutils",
-    "literalizer==2026.3.20.2",
+    "literalizer==2026.3.20.3",
     "sphinx>=7.0",
 ]
 optional-dependencies.dev = [

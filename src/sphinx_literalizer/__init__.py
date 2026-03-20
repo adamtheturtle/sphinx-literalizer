@@ -240,7 +240,52 @@ _DATE_FORMATS: dict[str, _DateFormats] = {
 }
 
 _DEFAULT_BYTES_FORMATS: dict[str, object] = {
+    "ada": Ada.BytesFormat.HEX,
+    "bash": Bash.BytesFormat.HEX,
+    "c": C.BytesFormat.HEX,
+    "clojure": Clojure.BytesFormat.HEX,
+    "cobol": Cobol.BytesFormat.HEX,
+    "common-lisp": CommonLisp.BytesFormat.HEX,
+    "cpp": Cpp.BytesFormat.HEX,
+    "crystal": Crystal.BytesFormat.HEX,
+    "csharp": CSharp.BytesFormat.HEX,
+    "d": D.BytesFormat.HEX,
+    "dart": Dart.BytesFormat.HEX,
+    "elixir": Elixir.BytesFormat.HEX,
+    "erlang": Erlang.BytesFormat.BINARY,
+    "fortran": Fortran.BytesFormat.HEX,
+    "fsharp": FSharp.BytesFormat.HEX,
+    "go": Go.BytesFormat.HEX,
+    "groovy": Groovy.BytesFormat.HEX,
+    "haskell": Haskell.BytesFormat.HEX,
+    "hcl": Hcl.BytesFormat.HEX,
+    "java": Java.BytesFormat.HEX,
+    "javascript": JavaScript.BytesFormat.HEX,
+    "julia": Julia.BytesFormat.HEX,
+    "kotlin": Kotlin.BytesFormat.HEX,
+    "lua": Lua.BytesFormat.HEX,
+    "matlab": Matlab.BytesFormat.HEX,
+    "mojo": Mojo.BytesFormat.HEX,
+    "nim": Nim.BytesFormat.HEX,
+    "norg": Norg.BytesFormat.HEX,
+    "objective-c": ObjectiveC.BytesFormat.HEX,
+    "ocaml": OCaml.BytesFormat.HEX,
+    "occam": Occam.BytesFormat.HEX,
+    "perl": Perl.BytesFormat.HEX,
+    "php": Php.BytesFormat.HEX,
+    "powershell": PowerShell.BytesFormat.HEX,
     "python": Python.BytesFormat.HEX,
+    "r": R.BytesFormat.HEX,
+    "racket": Racket.BytesFormat.HEX,
+    "ruby": Ruby.BytesFormat.HEX,
+    "rust": Rust.BytesFormat.HEX,
+    "scala": Scala.BytesFormat.HEX,
+    "swift": Swift.BytesFormat.HEX,
+    "toml": Toml.BytesFormat.HEX,
+    "typescript": TypeScript.BytesFormat.HEX,
+    "visual-basic": VisualBasic.BytesFormat.HEX,
+    "yaml": Yaml.BytesFormat.HEX,
+    "zig": Zig.BytesFormat.HEX,
 }
 
 _DEFAULT_SET_FORMATS: dict[str, object] = {
@@ -305,59 +350,33 @@ _DEFAULT_SEQUENCE_FORMATS: dict[str, object] = {
 }
 
 _SEQUENCE_FORMATS: dict[tuple[str, str], object] = {
-    ("clojure", "vector"): Clojure.SequenceFormat.VECTOR,
-    ("cobol", "sequence"): Cobol.SequenceFormat.SEQUENCE,
-    ("cpp", "initializer_list"): Cpp.SequenceFormat.INITIALIZER_LIST,
-    ("crystal", "array"): Crystal.SequenceFormat.ARRAY,
-    ("crystal", "tuple"): Crystal.SequenceFormat.TUPLE,
-    ("elixir", "list"): Elixir.SequenceFormat.LIST,
-    ("elixir", "tuple"): Elixir.SequenceFormat.TUPLE,
-    ("erlang", "list"): Erlang.SequenceFormat.LIST,
-    ("erlang", "tuple"): Erlang.SequenceFormat.TUPLE,
-    ("go", "slice"): Go.SequenceFormat.SLICE,
-    ("julia", "array"): Julia.SequenceFormat.ARRAY,
-    ("julia", "tuple"): Julia.SequenceFormat.TUPLE,
-    ("lua", "table"): Lua.SequenceFormat.TABLE,
-    ("matlab", "cell_array"): Matlab.SequenceFormat.CELL_ARRAY,
-    ("python", "list"): Python.SequenceFormat.LIST,
-    ("python", "tuple"): Python.SequenceFormat.TUPLE,
-    ("rust", "array"): Rust.SequenceFormat.ARRAY,
-    ("rust", "tuple"): Rust.SequenceFormat.TUPLE,
-    ("rust", "vec"): Rust.SequenceFormat.VEC,
-    ("yaml", "sequence"): Yaml.SequenceFormat.SEQUENCE,
+    (lang_name, member.name.lower()): member
+    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
+    for member in lang_cls.SequenceFormat
 }
 
-_SEQUENCE_FORMAT_VALUES: tuple[str, ...] = (
-    "array",
-    "cell_array",
-    "initializer_list",
-    "list",
-    "sequence",
-    "slice",
-    "table",
-    "tuple",
-    "vec",
-    "vector",
+_SEQUENCE_FORMAT_VALUES: tuple[str, ...] = tuple(
+    sorted({fmt_value for _, fmt_value in _SEQUENCE_FORMATS})
 )
 
 _SET_FORMATS: dict[tuple[str, str], object] = {
-    ("python", "frozenset"): Python.SetFormat.FROZENSET,
-    ("python", "set"): Python.SetFormat.SET,
+    (lang_name, member.name.lower()): member
+    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
+    for member in lang_cls.SetFormat
 }
 
-_SET_FORMAT_VALUES: tuple[str, ...] = (
-    "frozenset",
-    "set",
+_SET_FORMAT_VALUES: tuple[str, ...] = tuple(
+    sorted({fmt_value for _, fmt_value in _SET_FORMATS})
 )
 
 _BYTES_FORMATS: dict[tuple[str, str], object] = {
-    ("python", "hex"): Python.BytesFormat.HEX,
-    ("python", "python"): Python.BytesFormat.PYTHON,
+    (lang_name, member.name.lower()): member
+    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
+    for member in lang_cls.BytesFormat
 }
 
-_BYTES_FORMAT_VALUES: tuple[str, ...] = (
-    "hex",
-    "python",
+_BYTES_FORMAT_VALUES: tuple[str, ...] = tuple(
+    sorted({fmt_value for _, fmt_value in _BYTES_FORMATS})
 )
 
 
@@ -397,12 +416,10 @@ def _default_constructor(
             date_formats=default_date_formats,
         )
 
-    default_bytes_format = _DEFAULT_BYTES_FORMATS.get(language_name)
-    if default_bytes_format is not None:
-        constructor = partial(
-            constructor,
-            bytes_format=default_bytes_format,
-        )
+    constructor = partial(
+        constructor,
+        bytes_format=_DEFAULT_BYTES_FORMATS[language_name],
+    )
 
     default_set_format = _DEFAULT_SET_FORMATS.get(language_name)
     if default_set_format is not None:
@@ -548,6 +565,7 @@ class LiteralizerDirective(SphinxDirective):
             wrap=wrap,
             variable_name=variable_name,
             new_variable=not existing_variable,
+            error_on_coercion=False,
         )
 
         # First positional arg sets rawsource; Sphinx requires

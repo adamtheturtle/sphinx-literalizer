@@ -446,7 +446,7 @@ def test_date_format_python(
 
         .. code-block:: python
 
-           datetime.date(2024, 1, 15),
+           datetime.date(year=2024, month=1, day=15),
     """
         )
     )
