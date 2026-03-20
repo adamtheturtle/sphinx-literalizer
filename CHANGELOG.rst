@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.03.20
+----------
+
+
 - Bumped ``literalizer`` to ``2026.3.20.1``.
 - Added support for Fortran and Norg languages.
 - Added ``vec`` and ``tuple`` sequence format options for Rust.
