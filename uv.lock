@@ -606,15 +606,15 @@ wheels = [
 [[package]]
 name = "literalizer"
 version = "2026.3.20.2"
-source = { registry = "/Users/adam/Documents/repositories/literalizer/dist" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
     { name = "json-to-schema" },
     { name = "ruamel-yaml" },
 ]
-sdist = { path = "/Users/adam/Documents/repositories/literalizer/dist/literalizer-2026.3.20.2.tar.gz" }
+sdist = { url = "https://files.pythonhosted.org/packages/69/38/b74747348d465060b9d522be44f01a1ea6623ebf7666d5942b9ec8d871d8/literalizer-2026.3.20.2.tar.gz", hash = "sha256:934525ad324ade3ca430230c0d08c0fea37bef8cdfe2a20d4d819c848cf46f80", size = 415744, upload-time = "2026-03-20T17:45:26.81Z" }
 wheels = [
-    { path = "/Users/adam/Documents/repositories/literalizer/dist/literalizer-2026.3.20.2-py3-none-any.whl" },
+    { url = "https://files.pythonhosted.org/packages/34/da/8ffd462c49aa036e31e6d8c0b937d2e113ee66c998c756dc02f2cd411659/literalizer-2026.3.20.2-py3-none-any.whl", hash = "sha256:1fc1a66d187bc3cfc876a2e98994b6d1bdef39e7280e2e8bc6d8aa7ce21a44a1", size = 94265, upload-time = "2026-03-20T17:45:25.171Z" },
 ]
 
 [[package]]
