@@ -301,25 +301,32 @@ class LiteralizerDirective(SphinxDirective):
                     datetime_format=date_formats.datetime_format,
                 )
 
-        seq_fmt: str | None = self.options.get("sequence-format")
-        if seq_fmt is not None:
+        sequence_format_option: str | None = self.options.get(
+            "sequence-format",
+        )
+        if sequence_format_option is not None:
+            sequence_format_key = (language_name, sequence_format_option)
             constructor = partial(
                 constructor,
-                sequence_format=_SEQUENCE_FORMATS[(language_name, seq_fmt)],
+                sequence_format=_SEQUENCE_FORMATS[sequence_format_key],
             )
 
-        set_fmt: str | None = self.options.get("set-format")
-        if set_fmt is not None:
+        set_format_option: str | None = self.options.get("set-format")
+        if set_format_option is not None:
             constructor = partial(
                 constructor,
-                set_format=_SET_FORMATS[(language_name, set_fmt)],
+                set_format=_SET_FORMATS[(language_name, set_format_option)],
             )
 
-        bytes_fmt: str | None = self.options.get("bytes-format")
-        if bytes_fmt is not None:
+        bytes_format_option: str | None = self.options.get(
+            "bytes-format",
+        )
+        if bytes_format_option is not None:
             constructor = partial(
                 constructor,
-                bytes_format=_BYTES_FORMATS[(language_name, bytes_fmt)],
+                bytes_format=_BYTES_FORMATS[
+                    (language_name, bytes_format_option)
+                ],
             )
 
         language_spec: Language = constructor()
