@@ -4,6 +4,16 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.3.20``.
+- Added support for Mojo and YAML languages.
+- Added ``:sequence-format:`` directive option for choosing between
+  tuple, list, and array output formats (supported by Crystal, Elixir,
+  Erlang, Julia, and Python).
+- Added ``:set-format:`` directive option for choosing between set and
+  frozenset output (Python only).
+- Added ``:bytes-format:`` directive option for choosing between hex and
+  Python bytes output (Python only).
+
 2026.03.19
 ----------
 
