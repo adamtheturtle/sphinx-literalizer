@@ -1,6 +1,8 @@
+COBOL
 Changelog
 Fortran
 Lua
+MATLAB
 Mojo
 Nim
 Norg
