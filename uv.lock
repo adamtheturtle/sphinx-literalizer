@@ -605,12 +605,16 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.3.20.3.post32+g57616a41c"
-source = { git = "https://github.com/adamtheturtle/literalizer.git?rev=add-format-enumeration-properties#57616a41c6e4162f67a6c3ac2044e349c240e321" }
+version = "2026.3.21"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
     { name = "json-to-schema" },
     { name = "ruamel-yaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/58/bc/43771a76f70340eb1d5cd62066cd41ba86e681014bb26f181849449bd7df/literalizer-2026.3.21.tar.gz", hash = "sha256:06b91d2af34bb818e125d6497ef7728e1ccc46ba830fdd34fd5aaab49cfddc09", size = 431518, upload-time = "2026-03-21T08:24:40.128Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/de/29/dead06a4d978cddbcf3303556cfa4c36010bf48852f4c5d15406290d613b/literalizer-2026.3.21-py3-none-any.whl", hash = "sha256:308fafe3e6e73f97a21df64db0d4789ae7fef83e266405aeca0744d8baf5f713", size = 106000, upload-time = "2026-03-21T08:24:38.349Z" },
 ]
 
 [[package]]
@@ -1545,7 +1549,7 @@ requires-dist = [
     { name = "docutils" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
     { name = "interrogate", marker = "extra == 'dev'", specifier = "==1.7.0" },
-    { name = "literalizer", git = "https://github.com/adamtheturtle/literalizer.git?rev=add-format-enumeration-properties" },
+    { name = "literalizer", specifier = "==2026.3.21" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "==1.19.1" },
     { name = "mypy-strict-kwargs", marker = "extra == 'dev'", specifier = "==2026.1.12" },
     { name = "prek", marker = "extra == 'dev'", specifier = "==0.3.6" },
