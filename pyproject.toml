@@ -34,7 +34,7 @@ dynamic = [
 ]
 dependencies = [
     "docutils",
-    "literalizer==2026.3.20.3",
+    "literalizer @ git+https://github.com/adamtheturtle/literalizer.git@add-format-enumeration-properties",
     "sphinx>=7.0",
 ]
 optional-dependencies.dev = [
