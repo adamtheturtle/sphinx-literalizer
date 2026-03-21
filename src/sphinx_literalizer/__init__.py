@@ -221,19 +221,23 @@ _BYTES_FORMAT_VALUES: tuple[str, ...] = tuple(
 def _apply_date_formats(
     constructor: partial[Language],
     date_formats: _DateFormats,
+    language_cls: HasFormatEnums,
 ) -> partial[Language]:
     """Apply date and datetime format options to a constructor."""
-    if date_formats.date_format is not None:
-        constructor = partial(
-            constructor,
-            date_format=date_formats.date_format,
-        )
-    if date_formats.datetime_format is not None:
-        constructor = partial(
-            constructor,
-            datetime_format=date_formats.datetime_format,
-        )
-    return constructor
+    date_format = (
+        date_formats.date_format
+        if date_formats.date_format is not None
+        else next(iter(language_cls.DateFormats))
+    )
+    datetime_format = (
+        date_formats.datetime_format
+        if date_formats.datetime_format is not None
+        else next(iter(language_cls.DatetimeFormats))
+    )
+    return partial(
+        partial(constructor, date_format=date_format),
+        datetime_format=datetime_format,
+    )
 
 
 @beartype
@@ -242,7 +246,18 @@ def _default_constructor(
 ) -> partial[Language]:
     """Build a language constructor."""
     language_cls = _LANGUAGE_TYPES[language_name]
-    return partial(language_cls)
+    constructor = partial(language_cls)
+    if language_name == "python":
+        constructor = partial(
+            constructor,
+            variable_type_hints=Python.VariableTypeHints.NONE,
+        )
+    if language_name == "r":
+        constructor = partial(
+            constructor,
+            empty_dict_key=R.EmptyDictKey.POSITIONAL,
+        )
+    return constructor
 
 
 @beartype
@@ -315,6 +330,7 @@ class LiteralizerDirective(SphinxDirective):
             constructor = _apply_date_formats(
                 constructor=constructor,
                 date_formats=_DATE_FORMATS[date_format_name],
+                language_cls=_LANGUAGE_TYPES[language_name],
             )
 
         sequence_format_option: str | None = self.options.get(

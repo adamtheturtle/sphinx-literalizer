@@ -33,6 +33,10 @@ def test_source_attribute_is_absolute(
 
         .. literalizer:: data.json
            :language: python
+           :date-format: python
+           :sequence-format: tuple
+           :bytes-format: hex
+           :set-format: set
     """
         )
     )
@@ -75,6 +79,10 @@ def test_boolean_array_python(
 
         .. literalizer:: data.json
            :language: python
+           :date-format: python
+           :sequence-format: tuple
+           :bytes-format: hex
+           :set-format: set
     """
         )
     )
@@ -134,6 +142,9 @@ def test_array_of_arrays_typescript(
 
         .. literalizer:: data.json
            :language: typescript
+           :date-format: iso
+           :sequence-format: array
+           :bytes-format: hex
     """
         )
     )
@@ -188,6 +199,10 @@ def test_prefix_spaces(
         .. literalizer:: data.json
            :language: python
            :prefix: 4
+           :date-format: python
+           :sequence-format: tuple
+           :bytes-format: hex
+           :set-format: set
     """
         )
     )
@@ -243,6 +258,9 @@ def test_prefix_tabs(
            :language: go
            :prefix: 2
            :prefix-char: tabs
+           :date-format: iso
+           :sequence-format: slice
+           :bytes-format: hex
     """
         )
     )
@@ -299,6 +317,10 @@ def test_wrap_adds_brackets(
         .. literalizer:: data.json
            :language: python
            :wrap:
+           :date-format: python
+           :sequence-format: tuple
+           :bytes-format: hex
+           :set-format: set
     """
         )
     )
@@ -363,6 +385,10 @@ def test_yaml_file_python(
 
         .. literalizer:: data.yaml
            :language: python
+           :date-format: python
+           :sequence-format: tuple
+           :bytes-format: hex
+           :set-format: set
     """
         )
     )
@@ -425,67 +451,9 @@ def test_date_format_python(
         .. literalizer:: data.yaml
            :language: python
            :date-format: python
-    """
-        )
-    )
-
-    app = make_app(
-        srcdir=source_directory,
-        confoverrides={"extensions": ["sphinx_literalizer"]},
-    )
-    app.build()
-    assert app.statuscode == 0
-    content_html = (app.outdir / "index.html").read_text()
-    app.cleanup()
-
-    source_file.write_text(
-        data=dedent(
-            text="""\
-        Test
-        ====
-
-        .. code-block:: python
-
-           datetime.date(year=2024, month=1, day=15),
-    """
-        )
-    )
-    expected_app = make_app(srcdir=source_directory)
-    expected_app.build()
-    assert expected_app.statuscode == 0
-    expected_html = (expected_app.outdir / "index.html").read_text()
-    expected_app.cleanup()
-
-    assert content_html == expected_html
-
-
-def test_date_format_iso_default(
-    *,
-    make_app: Callable[..., SphinxTestApp],
-    tmp_path: Path,
-) -> None:
-    """Without :date-format:, dates render using the language's
-    default date format.
-    """
-    source_directory = tmp_path / "source"
-    source_directory.mkdir()
-    (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(
-        data=dedent(
-            text="""\
-            - 2024-01-15
-        """
-        )
-    )
-    source_file = source_directory / "index.rst"
-    source_file.write_text(
-        data=dedent(
-            text="""\
-        Test
-        ====
-
-        .. literalizer:: data.yaml
-           :language: python
+           :sequence-format: tuple
+           :bytes-format: hex
+           :set-format: set
     """
         )
     )
@@ -525,8 +493,8 @@ def test_date_format_iso_explicit(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """The :date-format: iso option is a no-op (uses language
-    default).
+    """The :date-format: iso option uses the language's native date
+    format.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -548,6 +516,9 @@ def test_date_format_iso_explicit(
         .. literalizer:: data.yaml
            :language: python
            :date-format: iso
+           :sequence-format: tuple
+           :bytes-format: hex
+           :set-format: set
     """
         )
     )
@@ -610,6 +581,9 @@ def test_date_format_epoch(
         .. literalizer:: data.yaml
            :language: python
            :date-format: epoch
+           :sequence-format: tuple
+           :bytes-format: hex
+           :set-format: set
     """
         )
     )
@@ -670,6 +644,8 @@ def test_date_format_java_instant(
         .. literalizer:: data.yaml
            :language: java
            :date-format: java-instant
+           :sequence-format: array
+           :bytes-format: hex
     """
         )
     )
@@ -723,6 +699,9 @@ def test_swift_language(
 
         .. literalizer:: data.json
            :language: swift
+           :date-format: iso
+           :sequence-format: array
+           :bytes-format: hex
     """
         )
     )
@@ -777,6 +756,9 @@ def test_php_language(
 
         .. literalizer:: data.json
            :language: php
+           :date-format: iso
+           :sequence-format: array
+           :bytes-format: hex
     """
         )
     )
@@ -835,6 +817,10 @@ def test_variable_name_python(
            :language: python
            :wrap:
            :variable-name: my_list
+           :date-format: python
+           :sequence-format: tuple
+           :bytes-format: hex
+           :set-format: set
     """
         )
     )
@@ -891,6 +877,9 @@ def test_dart_language(
 
         .. literalizer:: data.json
            :language: dart
+           :date-format: iso
+           :sequence-format: list
+           :bytes-format: hex
     """
         )
     )
@@ -945,6 +934,9 @@ def test_julia_language(
 
         .. literalizer:: data.json
            :language: julia
+           :date-format: iso
+           :sequence-format: array
+           :bytes-format: hex
     """
         )
     )
@@ -1004,6 +996,9 @@ def test_existing_variable_dart(
            :wrap:
            :variable-name: myList
            :existing-variable:
+           :date-format: iso
+           :sequence-format: list
+           :bytes-format: hex
     """
         )
     )
@@ -1027,6 +1022,9 @@ def test_existing_variable_dart(
            :language: dart
            :wrap:
            :variable-name: myList
+           :date-format: iso
+           :sequence-format: list
+           :bytes-format: hex
     """
         )
     )
@@ -1062,6 +1060,9 @@ def test_rust_language(
 
         .. literalizer:: data.json
            :language: rust
+           :date-format: iso
+           :sequence-format: vec
+           :bytes-format: hex
     """
         )
     )
@@ -1116,6 +1117,9 @@ def test_elixir_language(
 
         .. literalizer:: data.json
            :language: elixir
+           :date-format: iso
+           :sequence-format: list
+           :bytes-format: hex
     """
         )
     )
@@ -1177,6 +1181,8 @@ def test_date_format_rust(
         .. literalizer:: data.yaml
            :language: rust
            :date-format: rust
+           :sequence-format: vec
+           :bytes-format: hex
     """
         )
     )
@@ -1230,6 +1236,10 @@ def test_no_wrap_by_default(
 
         .. literalizer:: data.json
            :language: python
+           :date-format: python
+           :sequence-format: tuple
+           :bytes-format: hex
+           :set-format: set
     """
         )
     )
@@ -1284,6 +1294,9 @@ def test_mojo_language(
 
         .. literalizer:: data.json
            :language: mojo
+           :date-format: iso
+           :sequence-format: list
+           :bytes-format: hex
     """
         )
     )
@@ -1338,6 +1351,9 @@ def test_yaml_language(
 
         .. literalizer:: data.json
            :language: yaml
+           :date-format: iso
+           :sequence-format: sequence
+           :bytes-format: hex
     """
         )
     )
@@ -1395,6 +1411,9 @@ def test_sequence_format_list_python(
            :language: python
            :wrap:
            :sequence-format: list
+           :date-format: python
+           :bytes-format: hex
+           :set-format: set
     """
         )
     )
@@ -1455,6 +1474,9 @@ def test_sequence_format_tuple_python(
            :language: python
            :wrap:
            :sequence-format: tuple
+           :date-format: python
+           :bytes-format: hex
+           :set-format: set
     """
         )
     )
@@ -1521,6 +1543,9 @@ def test_set_format_frozenset_python(
            :language: python
            :wrap:
            :set-format: frozenset
+           :date-format: python
+           :sequence-format: tuple
+           :bytes-format: hex
     """
         )
     )
@@ -1545,6 +1570,9 @@ def test_set_format_frozenset_python(
            :language: python
            :wrap:
            :set-format: set
+           :date-format: python
+           :sequence-format: tuple
+           :bytes-format: hex
     """
         )
     )
@@ -1587,6 +1615,9 @@ def test_bytes_format_python(
         .. literalizer:: data.yaml
            :language: python
            :bytes-format: hex
+           :date-format: python
+           :sequence-format: tuple
+           :set-format: set
     """
         )
     )
@@ -1609,6 +1640,9 @@ def test_bytes_format_python(
         .. literalizer:: data.yaml
            :language: python
            :bytes-format: python
+           :date-format: python
+           :sequence-format: tuple
+           :set-format: set
     """
         )
     )
@@ -1643,6 +1677,9 @@ def test_fortran_language(
 
         .. literalizer:: data.json
            :language: fortran
+           :date-format: iso
+           :sequence-format: list
+           :bytes-format: hex
     """
         )
     )
@@ -1696,6 +1733,9 @@ def test_norg_language(
 
         .. literalizer:: data.json
            :language: norg
+           :date-format: iso
+           :sequence-format: array
+           :bytes-format: hex
     """
         )
     )
@@ -1751,6 +1791,8 @@ def test_sequence_format_tuple_elixir(
            :language: elixir
            :wrap:
            :sequence-format: tuple
+           :date-format: iso
+           :bytes-format: hex
     """
         )
     )
@@ -1774,6 +1816,8 @@ def test_sequence_format_tuple_elixir(
            :language: elixir
            :wrap:
            :sequence-format: list
+           :date-format: iso
+           :bytes-format: hex
     """
         )
     )
@@ -1810,6 +1854,8 @@ def test_sequence_format_tuple_rust(
            :language: rust
            :wrap:
            :sequence-format: tuple
+           :date-format: iso
+           :bytes-format: hex
     """
         )
     )
@@ -1833,6 +1879,8 @@ def test_sequence_format_tuple_rust(
            :language: rust
            :wrap:
            :sequence-format: vec
+           :date-format: iso
+           :bytes-format: hex
     """
         )
     )
@@ -1867,6 +1915,9 @@ def test_objective_c_language(
 
         .. literalizer:: data.json
            :language: objective-c
+           :date-format: iso
+           :sequence-format: array
+           :bytes-format: hex
     """
         )
     )
@@ -1923,6 +1974,8 @@ def test_sequence_format_array_rust(
            :language: rust
            :wrap:
            :sequence-format: array
+           :date-format: iso
+           :bytes-format: hex
     """
         )
     )
@@ -1946,6 +1999,8 @@ def test_sequence_format_array_rust(
            :language: rust
            :wrap:
            :sequence-format: vec
+           :date-format: iso
+           :bytes-format: hex
     """
         )
     )
@@ -1980,6 +2035,9 @@ def test_r_language(
 
         .. literalizer:: data.json
            :language: r
+           :date-format: iso
+           :sequence-format: list
+           :bytes-format: hex
     """
         )
     )
