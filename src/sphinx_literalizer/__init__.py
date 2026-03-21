@@ -63,6 +63,7 @@ from literalizer.languages import (
     Zig,
 )
 from sphinx.application import Sphinx
+from sphinx.errors import ExtensionError
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
 
@@ -614,27 +615,51 @@ class LiteralizerDirective(SphinxDirective):
         )
         if sequence_format_option is not None:
             sequence_format_key = (language_name, sequence_format_option)
+            try:
+                sequence_format = _SEQUENCE_FORMATS[sequence_format_key]
+            except KeyError:
+                msg = (
+                    f"Language '{language_name}' does not support "
+                    f"sequence-format '{sequence_format_option}'."
+                )
+                raise ExtensionError(message=msg) from None
             constructor = partial(
                 constructor,
-                sequence_format=_SEQUENCE_FORMATS[sequence_format_key],
+                sequence_format=sequence_format,
             )
 
         set_format_option: str | None = self.options.get("set-format")
         if set_format_option is not None:
+            try:
+                set_format = _SET_FORMATS[(language_name, set_format_option)]
+            except KeyError:
+                msg = (
+                    f"Language '{language_name}' does not support "
+                    f"set-format '{set_format_option}'."
+                )
+                raise ExtensionError(message=msg) from None
             constructor = partial(
                 constructor,
-                set_format=_SET_FORMATS[(language_name, set_format_option)],
+                set_format=set_format,
             )
 
         bytes_format_option: str | None = self.options.get(
             "bytes-format",
         )
         if bytes_format_option is not None:
+            try:
+                bytes_format = _BYTES_FORMATS[
+                    (language_name, bytes_format_option)
+                ]
+            except KeyError:
+                msg = (
+                    f"Language '{language_name}' does not support "
+                    f"bytes-format '{bytes_format_option}'."
+                )
+                raise ExtensionError(message=msg) from None
             constructor = partial(
                 constructor,
-                bytes_format=_BYTES_FORMATS[
-                    (language_name, bytes_format_option)
-                ],
+                bytes_format=bytes_format,
             )
 
         language_spec: Language = constructor()
