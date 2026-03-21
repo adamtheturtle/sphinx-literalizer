@@ -68,8 +68,7 @@ Directive options
    (``[`` … ``]`` for arrays, ``{`` … ``}`` for dicts).
 
 ``:date-format:`` (optional)
-   How to render YAML dates and datetimes.  Defaults to ``iso``
-   (quoted ISO 8601 strings).  Supported values:
+   How to render YAML dates and datetimes.  Supported values:
 
    ``iso``
       Quoted ISO 8601 string (e.g. ``"2024-01-15"``).
@@ -107,35 +106,34 @@ Directive options
    every language.  Supported values:
 
    ``array``
-      Array delimiters.  Available for Crystal (default), Julia (default),
+      Array delimiters.  Available for Crystal, Julia,
       Rust, and many other languages.
    ``cell_array``
-      Cell array delimiters.  Available for MATLAB (default).
+      Cell array delimiters.  Available for MATLAB.
    ``initializer_list``
-      Initializer list.  Available for C++ (default).
+      Initializer list.  Available for C++.
    ``list``
-      List delimiters.  Available for Elixir (default), Erlang (default),
+      List delimiters.  Available for Elixir, Erlang,
       Python, and many other languages.
    ``sequence``
-      Sequence delimiters.  Available for COBOL (default) and YAML
-      (default).
+      Sequence delimiters.  Available for COBOL and YAML.
    ``slice``
-      Slice delimiters.  Available for Go (default).
+      Slice delimiters.  Available for Go.
    ``table``
-      Table delimiters.  Available for Lua (default).
+      Table delimiters.  Available for Lua.
    ``tuple``
       Tuple delimiters.  Available for Crystal, Elixir, Erlang, Julia,
-      Python (default for Python), and Rust.
+      Python, and Rust.
    ``vec``
-      Vec macro (``vec![...]``).  Available for Rust (default).
+      Vec macro (``vec![...]``).  Available for Rust.
    ``vector``
-      Vector delimiters.  Available for Clojure (default).
+      Vector delimiters.  Available for Clojure.
 
 ``:set-format:`` (optional)
    How to render sets (Python only).  Supported values:
 
    ``set``
-      ``{`` … ``}`` set literal (default).
+      ``{`` … ``}`` set literal.
    ``frozenset``
       ``frozenset({`` … ``})`` constructor.
 
@@ -143,7 +141,7 @@ Directive options
    How to render binary data (Python only).  Supported values:
 
    ``hex``
-      Hex-escaped bytes literal, e.g. ``b"\x48\x65"`` (default).
+      Hex-escaped bytes literal, e.g. ``b"\x48\x65"``.
    ``python``
       Python bytes literal, e.g. ``b"Hello"``.
 

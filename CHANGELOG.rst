@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+- Removed all default format values.
+  The extension no longer auto-selects defaults for ``:date-format:``,
+  ``:sequence-format:``, ``:set-format:``, or ``:bytes-format:``.
+
 2026.03.20.1
 ------------
 
