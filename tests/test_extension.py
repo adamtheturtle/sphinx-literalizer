@@ -464,8 +464,8 @@ def test_date_format_iso_default(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """Without :date-format:, dates render as ISO strings (the
-    default).
+    """Without :date-format:, dates render using the language's
+    default date format.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -507,7 +507,7 @@ def test_date_format_iso_default(
 
         .. code-block:: python
 
-           "2024-01-15",
+           datetime.date(year=2024, month=1, day=15),
     """
         )
     )
@@ -525,7 +525,9 @@ def test_date_format_iso_explicit(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """The :date-format: iso option renders dates as ISO strings."""
+    """The :date-format: iso option is a no-op (uses language
+    default).
+    """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -567,7 +569,7 @@ def test_date_format_iso_explicit(
 
         .. code-block:: python
 
-           "2024-01-15",
+           datetime.date(year=2024, month=1, day=15),
     """
         )
     )
