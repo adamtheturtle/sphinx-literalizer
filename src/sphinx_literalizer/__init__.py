@@ -13,7 +13,7 @@ from typing import Any, ClassVar
 from beartype import beartype
 from docutils import nodes
 from docutils.parsers.rst import directives
-from literalizer import Language, literalize_yaml
+from literalizer import HasFormatEnums, Language, literalize_yaml
 from literalizer.languages import (
     Ada,
     Bash,
@@ -66,7 +66,7 @@ from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
 
-_LANGUAGE_TYPES: dict[str, type[Language]] = {
+_LANGUAGE_TYPES: dict[str, HasFormatEnums] = {
     "ada": Ada,
     "bash": Bash,
     "c": C,
@@ -126,127 +126,304 @@ class _DateFormats:
 
 
 _DEFAULT_DATE_FORMATS: dict[str, _DateFormats] = {
+    "ada": _DateFormats(
+        date_format=Ada.date_formats.ISO,
+        datetime_format=Ada.datetime_formats.ISO,
+    ),
+    "bash": _DateFormats(
+        date_format=Bash.date_formats.ISO,
+        datetime_format=Bash.datetime_formats.ISO,
+    ),
+    "c": _DateFormats(
+        date_format=C.date_formats.ISO,
+        datetime_format=C.datetime_formats.ISO,
+    ),
+    "clojure": _DateFormats(
+        date_format=Clojure.date_formats.ISO,
+        datetime_format=Clojure.datetime_formats.ISO,
+    ),
+    "cobol": _DateFormats(
+        date_format=Cobol.date_formats.ISO,
+        datetime_format=Cobol.datetime_formats.ISO,
+    ),
+    "common-lisp": _DateFormats(
+        date_format=CommonLisp.date_formats.ISO,
+        datetime_format=CommonLisp.datetime_formats.ISO,
+    ),
     "cpp": _DateFormats(
-        date_format=Cpp.DateFormat.ISO,
-        datetime_format=Cpp.DatetimeFormat.ISO,
+        date_format=Cpp.date_formats.CPP,
+        datetime_format=Cpp.datetime_formats.CPP,
+    ),
+    "crystal": _DateFormats(
+        date_format=Crystal.date_formats.ISO,
+        datetime_format=Crystal.datetime_formats.ISO,
     ),
     "csharp": _DateFormats(
-        date_format=CSharp.DateFormat.ISO,
-        datetime_format=CSharp.DatetimeFormat.ISO,
+        date_format=CSharp.date_formats.CSHARP,
+        datetime_format=CSharp.datetime_formats.CSHARP,
+    ),
+    "d": _DateFormats(
+        date_format=D.date_formats.ISO,
+        datetime_format=D.datetime_formats.ISO,
     ),
     "dart": _DateFormats(
-        date_format=Dart.DateFormat.ISO,
-        datetime_format=Dart.DatetimeFormat.ISO,
+        date_format=Dart.date_formats.DART,
+        datetime_format=Dart.datetime_formats.DART,
+    ),
+    "elixir": _DateFormats(
+        date_format=Elixir.date_formats.ISO,
+        datetime_format=Elixir.datetime_formats.ISO,
+    ),
+    "erlang": _DateFormats(
+        date_format=Erlang.date_formats.ISO,
+        datetime_format=Erlang.datetime_formats.ISO,
+    ),
+    "fortran": _DateFormats(
+        date_format=Fortran.date_formats.ISO,
+        datetime_format=Fortran.datetime_formats.ISO,
+    ),
+    "fsharp": _DateFormats(
+        date_format=FSharp.date_formats.ISO,
+        datetime_format=FSharp.datetime_formats.ISO,
     ),
     "go": _DateFormats(
-        date_format=Go.DateFormat.ISO,
-        datetime_format=Go.DatetimeFormat.ISO,
+        date_format=Go.date_formats.GO,
+        datetime_format=Go.datetime_formats.GO,
+    ),
+    "groovy": _DateFormats(
+        date_format=Groovy.date_formats.ISO,
+        datetime_format=Groovy.datetime_formats.ISO,
+    ),
+    "haskell": _DateFormats(
+        date_format=Haskell.date_formats.ISO,
+        datetime_format=Haskell.datetime_formats.ISO,
+    ),
+    "hcl": _DateFormats(
+        date_format=Hcl.date_formats.ISO,
+        datetime_format=Hcl.datetime_formats.ISO,
     ),
     "java": _DateFormats(
-        date_format=Java.DateFormat.ISO,
-        datetime_format=Java.DatetimeFormat.ISO,
+        date_format=Java.date_formats.JAVA,
+        datetime_format=Java.datetime_formats.INSTANT,
     ),
     "javascript": _DateFormats(
-        date_format=JavaScript.DateFormat.ISO,
-        datetime_format=JavaScript.DatetimeFormat.ISO,
+        date_format=JavaScript.date_formats.JS,
+        datetime_format=JavaScript.datetime_formats.JS,
     ),
     "julia": _DateFormats(
-        date_format=Julia.DateFormat.ISO,
-        datetime_format=Julia.DatetimeFormat.ISO,
+        date_format=Julia.date_formats.JULIA,
+        datetime_format=Julia.datetime_formats.JULIA,
     ),
     "kotlin": _DateFormats(
-        date_format=Kotlin.DateFormat.ISO,
-        datetime_format=Kotlin.DatetimeFormat.ISO,
+        date_format=Kotlin.date_formats.KOTLIN,
+        datetime_format=Kotlin.datetime_formats.KOTLIN,
+    ),
+    "lua": _DateFormats(
+        date_format=Lua.date_formats.ISO,
+        datetime_format=Lua.datetime_formats.ISO,
+    ),
+    "matlab": _DateFormats(
+        date_format=Matlab.date_formats.ISO,
+        datetime_format=Matlab.datetime_formats.ISO,
+    ),
+    "mojo": _DateFormats(
+        date_format=Mojo.date_formats.ISO,
+        datetime_format=Mojo.datetime_formats.ISO,
+    ),
+    "nim": _DateFormats(
+        date_format=Nim.date_formats.ISO,
+        datetime_format=Nim.datetime_formats.ISO,
+    ),
+    "norg": _DateFormats(
+        date_format=Norg.date_formats.ISO,
+        datetime_format=Norg.datetime_formats.ISO,
+    ),
+    "objective-c": _DateFormats(
+        date_format=ObjectiveC.date_formats.OBJC,
+        datetime_format=ObjectiveC.datetime_formats.OBJC,
+    ),
+    "ocaml": _DateFormats(
+        date_format=OCaml.date_formats.ISO,
+        datetime_format=OCaml.datetime_formats.ISO,
+    ),
+    "occam": _DateFormats(
+        date_format=Occam.date_formats.ISO,
+        datetime_format=Occam.datetime_formats.ISO,
+    ),
+    "perl": _DateFormats(
+        date_format=Perl.date_formats.ISO,
+        datetime_format=Perl.datetime_formats.ISO,
+    ),
+    "php": _DateFormats(
+        date_format=Php.date_formats.PHP,
+        datetime_format=Php.datetime_formats.PHP,
+    ),
+    "powershell": _DateFormats(
+        date_format=PowerShell.date_formats.ISO,
+        datetime_format=PowerShell.datetime_formats.ISO,
     ),
     "python": _DateFormats(
-        date_format=Python.DateFormat.ISO,
-        datetime_format=Python.DatetimeFormat.ISO,
+        date_format=Python.date_formats.PYTHON,
+        datetime_format=Python.datetime_formats.PYTHON,
     ),
     "r": _DateFormats(
-        date_format=R.DateFormat.ISO,
-        datetime_format=R.DatetimeFormat.ISO,
+        date_format=R.date_formats.R,
+        datetime_format=R.datetime_formats.R,
+    ),
+    "racket": _DateFormats(
+        date_format=Racket.date_formats.ISO,
+        datetime_format=Racket.datetime_formats.ISO,
     ),
     "ruby": _DateFormats(
-        date_format=Ruby.DateFormat.ISO,
-        datetime_format=Ruby.DatetimeFormat.ISO,
+        date_format=Ruby.date_formats.RUBY,
+        datetime_format=Ruby.datetime_formats.RUBY,
     ),
     "rust": _DateFormats(
-        date_format=Rust.DateFormat.ISO,
-        datetime_format=Rust.DatetimeFormat.ISO,
+        date_format=Rust.date_formats.RUST,
+        datetime_format=Rust.datetime_formats.RUST,
+    ),
+    "scala": _DateFormats(
+        date_format=Scala.date_formats.ISO,
+        datetime_format=Scala.datetime_formats.ISO,
+    ),
+    "swift": _DateFormats(
+        date_format=Swift.date_formats.ISO,
+        datetime_format=Swift.datetime_formats.ISO,
+    ),
+    "toml": _DateFormats(
+        date_format=Toml.date_formats.TOML,
+        datetime_format=Toml.datetime_formats.TOML,
     ),
     "typescript": _DateFormats(
-        date_format=TypeScript.DateFormat.ISO,
-        datetime_format=TypeScript.DatetimeFormat.ISO,
+        date_format=TypeScript.date_formats.JS,
+        datetime_format=TypeScript.datetime_formats.JS,
+    ),
+    "visual-basic": _DateFormats(
+        date_format=VisualBasic.date_formats.ISO,
+        datetime_format=VisualBasic.datetime_formats.ISO,
+    ),
+    "yaml": _DateFormats(
+        date_format=Yaml.date_formats.YAML,
+        datetime_format=Yaml.datetime_formats.YAML,
+    ),
+    "zig": _DateFormats(
+        date_format=Zig.date_formats.ISO,
+        datetime_format=Zig.datetime_formats.ISO,
     ),
 }
 
 _DATE_FORMATS: dict[str, _DateFormats] = {
     "cpp": _DateFormats(
-        date_format=Cpp.DateFormat.CPP,
-        datetime_format=Cpp.DatetimeFormat.CPP,
+        date_format=Cpp.date_formats.CPP,
+        datetime_format=Cpp.datetime_formats.CPP,
     ),
     "csharp": _DateFormats(
-        date_format=CSharp.DateFormat.CSHARP,
-        datetime_format=CSharp.DatetimeFormat.CSHARP,
+        date_format=CSharp.date_formats.CSHARP,
+        datetime_format=CSharp.datetime_formats.CSHARP,
     ),
     "dart": _DateFormats(
-        date_format=Dart.DateFormat.DART,
-        datetime_format=Dart.DatetimeFormat.DART,
+        date_format=Dart.date_formats.DART,
+        datetime_format=Dart.datetime_formats.DART,
     ),
-    "epoch": _DateFormats(datetime_format=Python.DatetimeFormat.EPOCH),
+    "epoch": _DateFormats(datetime_format=Python.datetime_formats.EPOCH),
     "go": _DateFormats(
-        date_format=Go.DateFormat.GO,
-        datetime_format=Go.DatetimeFormat.GO,
+        date_format=Go.date_formats.GO,
+        datetime_format=Go.datetime_formats.GO,
     ),
     "iso": _DateFormats(),
     "java-instant": _DateFormats(
-        date_format=Java.DateFormat.JAVA,
-        datetime_format=Java.DatetimeFormat.INSTANT,
+        date_format=Java.date_formats.JAVA,
+        datetime_format=Java.datetime_formats.INSTANT,
     ),
     "java-zoned": _DateFormats(
-        date_format=Java.DateFormat.JAVA,
-        datetime_format=Java.DatetimeFormat.ZONED,
+        date_format=Java.date_formats.JAVA,
+        datetime_format=Java.datetime_formats.ZONED,
     ),
     "javascript": _DateFormats(
-        date_format=JavaScript.DateFormat.JS,
-        datetime_format=JavaScript.DatetimeFormat.JS,
+        date_format=JavaScript.date_formats.JS,
+        datetime_format=JavaScript.datetime_formats.JS,
     ),
     "julia": _DateFormats(
-        date_format=Julia.DateFormat.JULIA,
-        datetime_format=Julia.DatetimeFormat.JULIA,
+        date_format=Julia.date_formats.JULIA,
+        datetime_format=Julia.datetime_formats.JULIA,
     ),
     "kotlin": _DateFormats(
-        date_format=Kotlin.DateFormat.KOTLIN,
-        datetime_format=Kotlin.DatetimeFormat.KOTLIN,
+        date_format=Kotlin.date_formats.KOTLIN,
+        datetime_format=Kotlin.datetime_formats.KOTLIN,
     ),
     "python": _DateFormats(
-        date_format=Python.DateFormat.PYTHON,
-        datetime_format=Python.DatetimeFormat.PYTHON,
+        date_format=Python.date_formats.PYTHON,
+        datetime_format=Python.datetime_formats.PYTHON,
     ),
     "r": _DateFormats(
-        date_format=R.DateFormat.R,
-        datetime_format=R.DatetimeFormat.R,
+        date_format=R.date_formats.R,
+        datetime_format=R.datetime_formats.R,
     ),
     "ruby": _DateFormats(
-        date_format=Ruby.DateFormat.RUBY,
-        datetime_format=Ruby.DatetimeFormat.RUBY,
+        date_format=Ruby.date_formats.RUBY,
+        datetime_format=Ruby.datetime_formats.RUBY,
     ),
     "rust": _DateFormats(
-        date_format=Rust.DateFormat.RUST,
-        datetime_format=Rust.DatetimeFormat.RUST,
+        date_format=Rust.date_formats.RUST,
+        datetime_format=Rust.datetime_formats.RUST,
     ),
     "typescript": _DateFormats(
-        date_format=TypeScript.DateFormat.JS,
-        datetime_format=TypeScript.DatetimeFormat.JS,
+        date_format=TypeScript.date_formats.JS,
+        datetime_format=TypeScript.datetime_formats.JS,
     ),
 }
 
 _DEFAULT_BYTES_FORMATS: dict[str, object] = {
-    "python": Python.BytesFormat.HEX,
+    "ada": Ada.bytes_formats.HEX,
+    "bash": Bash.bytes_formats.HEX,
+    "c": C.bytes_formats.HEX,
+    "clojure": Clojure.bytes_formats.HEX,
+    "cobol": Cobol.bytes_formats.HEX,
+    "common-lisp": CommonLisp.bytes_formats.HEX,
+    "cpp": Cpp.bytes_formats.HEX,
+    "crystal": Crystal.bytes_formats.HEX,
+    "csharp": CSharp.bytes_formats.HEX,
+    "d": D.bytes_formats.HEX,
+    "dart": Dart.bytes_formats.HEX,
+    "elixir": Elixir.bytes_formats.HEX,
+    "erlang": Erlang.bytes_formats.BINARY,
+    "fortran": Fortran.bytes_formats.HEX,
+    "fsharp": FSharp.bytes_formats.HEX,
+    "go": Go.bytes_formats.HEX,
+    "groovy": Groovy.bytes_formats.HEX,
+    "haskell": Haskell.bytes_formats.HEX,
+    "hcl": Hcl.bytes_formats.HEX,
+    "java": Java.bytes_formats.HEX,
+    "javascript": JavaScript.bytes_formats.HEX,
+    "julia": Julia.bytes_formats.HEX,
+    "kotlin": Kotlin.bytes_formats.HEX,
+    "lua": Lua.bytes_formats.HEX,
+    "matlab": Matlab.bytes_formats.HEX,
+    "mojo": Mojo.bytes_formats.HEX,
+    "nim": Nim.bytes_formats.HEX,
+    "norg": Norg.bytes_formats.HEX,
+    "objective-c": ObjectiveC.bytes_formats.HEX,
+    "ocaml": OCaml.bytes_formats.HEX,
+    "occam": Occam.bytes_formats.HEX,
+    "perl": Perl.bytes_formats.HEX,
+    "php": Php.bytes_formats.HEX,
+    "powershell": PowerShell.bytes_formats.HEX,
+    "python": Python.bytes_formats.HEX,
+    "r": R.bytes_formats.HEX,
+    "racket": Racket.bytes_formats.HEX,
+    "ruby": Ruby.bytes_formats.HEX,
+    "rust": Rust.bytes_formats.HEX,
+    "scala": Scala.bytes_formats.HEX,
+    "swift": Swift.bytes_formats.HEX,
+    "toml": Toml.bytes_formats.HEX,
+    "typescript": TypeScript.bytes_formats.HEX,
+    "visual-basic": VisualBasic.bytes_formats.HEX,
+    "yaml": Yaml.bytes_formats.HEX,
+    "zig": Zig.bytes_formats.HEX,
 }
 
 _DEFAULT_SET_FORMATS: dict[str, object] = {
-    "python": Python.SetFormat.SET,
+    "python": Python.set_formats.SET,
 }
 
 _DEFAULT_VARIABLE_TYPE_HINTS: dict[str, object] = {
@@ -258,108 +435,38 @@ _DEFAULT_EMPTY_DICT_KEYS: dict[str, object] = {
 }
 
 _DEFAULT_SEQUENCE_FORMATS: dict[str, object] = {
-    "ada": Ada.SequenceFormat.LIST,
-    "bash": Bash.SequenceFormat.ARRAY,
-    "c": C.SequenceFormat.ARRAY,
-    "clojure": Clojure.SequenceFormat.VECTOR,
-    "cobol": Cobol.SequenceFormat.SEQUENCE,
-    "common-lisp": CommonLisp.SequenceFormat.LIST,
-    "cpp": Cpp.SequenceFormat.INITIALIZER_LIST,
-    "crystal": Crystal.SequenceFormat.ARRAY,
-    "csharp": CSharp.SequenceFormat.ARRAY,
-    "d": D.SequenceFormat.ARRAY,
-    "dart": Dart.SequenceFormat.LIST,
-    "elixir": Elixir.SequenceFormat.LIST,
-    "erlang": Erlang.SequenceFormat.LIST,
-    "fortran": Fortran.SequenceFormat.LIST,
-    "fsharp": FSharp.SequenceFormat.LIST,
-    "go": Go.SequenceFormat.SLICE,
-    "groovy": Groovy.SequenceFormat.LIST,
-    "haskell": Haskell.SequenceFormat.LIST,
-    "hcl": Hcl.SequenceFormat.LIST,
-    "java": Java.SequenceFormat.ARRAY,
-    "javascript": JavaScript.SequenceFormat.ARRAY,
-    "julia": Julia.SequenceFormat.ARRAY,
-    "kotlin": Kotlin.SequenceFormat.LIST,
-    "lua": Lua.SequenceFormat.TABLE,
-    "matlab": Matlab.SequenceFormat.CELL_ARRAY,
-    "mojo": Mojo.SequenceFormat.LIST,
-    "nim": Nim.SequenceFormat.ARRAY,
-    "norg": Norg.SequenceFormat.ARRAY,
-    "objective-c": ObjectiveC.SequenceFormat.ARRAY,
-    "ocaml": OCaml.SequenceFormat.LIST,
-    "occam": Occam.SequenceFormat.LIST,
-    "perl": Perl.SequenceFormat.ARRAY,
-    "php": Php.SequenceFormat.ARRAY,
-    "powershell": PowerShell.SequenceFormat.ARRAY,
-    "python": Python.SequenceFormat.TUPLE,
-    "r": R.SequenceFormat.LIST,
-    "racket": Racket.SequenceFormat.LIST,
-    "ruby": Ruby.SequenceFormat.ARRAY,
-    "rust": Rust.SequenceFormat.VEC,
-    "scala": Scala.SequenceFormat.LIST,
-    "swift": Swift.SequenceFormat.ARRAY,
-    "toml": Toml.SequenceFormat.ARRAY,
-    "typescript": TypeScript.SequenceFormat.ARRAY,
-    "visual-basic": VisualBasic.SequenceFormat.ARRAY,
-    "yaml": Yaml.SequenceFormat.SEQUENCE,
-    "zig": Zig.SequenceFormat.ARRAY,
+    lang_name: next(iter(lang_cls.SequenceFormats))
+    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
 }
 
 _SEQUENCE_FORMATS: dict[tuple[str, str], object] = {
-    ("clojure", "vector"): Clojure.SequenceFormat.VECTOR,
-    ("cobol", "sequence"): Cobol.SequenceFormat.SEQUENCE,
-    ("cpp", "initializer_list"): Cpp.SequenceFormat.INITIALIZER_LIST,
-    ("crystal", "array"): Crystal.SequenceFormat.ARRAY,
-    ("crystal", "tuple"): Crystal.SequenceFormat.TUPLE,
-    ("elixir", "list"): Elixir.SequenceFormat.LIST,
-    ("elixir", "tuple"): Elixir.SequenceFormat.TUPLE,
-    ("erlang", "list"): Erlang.SequenceFormat.LIST,
-    ("erlang", "tuple"): Erlang.SequenceFormat.TUPLE,
-    ("go", "slice"): Go.SequenceFormat.SLICE,
-    ("julia", "array"): Julia.SequenceFormat.ARRAY,
-    ("julia", "tuple"): Julia.SequenceFormat.TUPLE,
-    ("lua", "table"): Lua.SequenceFormat.TABLE,
-    ("matlab", "cell_array"): Matlab.SequenceFormat.CELL_ARRAY,
-    ("python", "list"): Python.SequenceFormat.LIST,
-    ("python", "tuple"): Python.SequenceFormat.TUPLE,
-    ("rust", "array"): Rust.SequenceFormat.ARRAY,
-    ("rust", "tuple"): Rust.SequenceFormat.TUPLE,
-    ("rust", "vec"): Rust.SequenceFormat.VEC,
-    ("yaml", "sequence"): Yaml.SequenceFormat.SEQUENCE,
+    (lang_name, member.name.lower()): member
+    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
+    for member in lang_cls.SequenceFormats
 }
 
-_SEQUENCE_FORMAT_VALUES: tuple[str, ...] = (
-    "array",
-    "cell_array",
-    "initializer_list",
-    "list",
-    "sequence",
-    "slice",
-    "table",
-    "tuple",
-    "vec",
-    "vector",
+_SEQUENCE_FORMAT_VALUES: tuple[str, ...] = tuple(
+    sorted({fmt_value for _, fmt_value in _SEQUENCE_FORMATS})
 )
 
 _SET_FORMATS: dict[tuple[str, str], object] = {
-    ("python", "frozenset"): Python.SetFormat.FROZENSET,
-    ("python", "set"): Python.SetFormat.SET,
+    (lang_name, member.name.lower()): member
+    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
+    for member in lang_cls.SetFormats
 }
 
-_SET_FORMAT_VALUES: tuple[str, ...] = (
-    "frozenset",
-    "set",
+_SET_FORMAT_VALUES: tuple[str, ...] = tuple(
+    sorted({fmt_value for _, fmt_value in _SET_FORMATS})
 )
 
 _BYTES_FORMATS: dict[tuple[str, str], object] = {
-    ("python", "hex"): Python.BytesFormat.HEX,
-    ("python", "python"): Python.BytesFormat.PYTHON,
+    (lang_name, member.name.lower()): member
+    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
+    for member in lang_cls.BytesFormats
 }
 
-_BYTES_FORMAT_VALUES: tuple[str, ...] = (
-    "hex",
-    "python",
+_BYTES_FORMAT_VALUES: tuple[str, ...] = tuple(
+    sorted({fmt_value for _, fmt_value in _BYTES_FORMATS})
 )
 
 
@@ -394,19 +501,15 @@ def _default_constructor(
         sequence_format=_DEFAULT_SEQUENCE_FORMATS[language_name],
     )
 
-    default_date_formats = _DEFAULT_DATE_FORMATS.get(language_name)
-    if default_date_formats is not None:
-        constructor = _apply_date_formats(
-            constructor=constructor,
-            date_formats=default_date_formats,
-        )
+    constructor = _apply_date_formats(
+        constructor=constructor,
+        date_formats=_DEFAULT_DATE_FORMATS[language_name],
+    )
 
-    default_bytes_format = _DEFAULT_BYTES_FORMATS.get(language_name)
-    if default_bytes_format is not None:
-        constructor = partial(
-            constructor,
-            bytes_format=default_bytes_format,
-        )
+    constructor = partial(
+        constructor,
+        bytes_format=_DEFAULT_BYTES_FORMATS[language_name],
+    )
 
     default_set_format = _DEFAULT_SET_FORMATS.get(language_name)
     if default_set_format is not None:
@@ -556,6 +659,7 @@ class LiteralizerDirective(SphinxDirective):
             wrap=wrap,
             variable_name=variable_name,
             new_variable=not existing_variable,
+            error_on_coercion=False,
         )
 
         # First positional arg sets rawsource; Sphinx requires
