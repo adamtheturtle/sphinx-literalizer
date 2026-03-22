@@ -248,15 +248,6 @@ def _apply_date_formats(
 
 
 @beartype
-def _default_constructor(
-    language_name: str,
-) -> partial[Language]:
-    """Build a language constructor with sensible defaults applied."""
-    language_cls = _LANGUAGE_TYPES[language_name]
-    return partial(language_cls)
-
-
-@beartype
 def _apply_format_option(
     constructor: partial[Language],
     language_name: str,
@@ -344,7 +335,8 @@ class LiteralizerDirective(SphinxDirective):
         env.note_dependency(str(object=data_path))
 
         language_name: str = self.options["language"]
-        constructor = _default_constructor(language_name=language_name)
+        language_cls = _LANGUAGE_TYPES[language_name]
+        constructor = partial(language_cls)
 
         date_format_name: str | None = self.options.get("date-format")
         if date_format_name is not None:
