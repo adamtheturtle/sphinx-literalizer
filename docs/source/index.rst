@@ -48,7 +48,7 @@ Directive options
    ``lua``, ``matlab``, ``mojo``, ``nim``, ``norg``, ``objective-c``,
    ``ocaml``, ``occam``, ``perl``, ``php``,
    ``powershell``, ``python``, ``r``, ``racket``, ``ruby``, ``rust``,
-   ``scala``, ``swift``, ``toml``, ``typescript``, ``visual-basic``,
+   ``scala``, ``swift``, ``toml``, ``typescript``, ``vb.net``,
    ``yaml``, ``zig``.
 
 ``:prefix:`` (optional)
@@ -63,8 +63,8 @@ Directive options
    delimiters.  Uses the same character type as ``:prefix-char:``.
    Defaults to ``4``.
 
-``:wrap:`` (optional flag)
-   Wrap the output in language-appropriate delimiters
+``:include-delimiters:`` (optional flag)
+   Include collection delimiters in the output
    (``[`` … ``]`` for arrays, ``{`` … ``}`` for dicts).
 
 ``:date-format:`` (optional)
@@ -197,13 +197,24 @@ Directive options
 
 ``:variable-name:`` (optional)
    Wrap the output in a variable declaration or assignment using the given
-   name.  Use with ``:wrap:`` to include the collection delimiters.
+   name.  Use with ``:include-delimiters:`` to include the collection
+   delimiters.
 
 ``:existing-variable:`` (optional flag)
    When combined with ``:variable-name:``, produce an assignment to an
    existing variable (e.g. ``x = ...``) instead of a new variable
    declaration (e.g. ``final x = ...`` in Dart).  Has no effect without
    ``:variable-name:``.
+
+``:variable-type-hints:`` (optional)
+   Whether to add inline type hints to variable declarations.
+   Supported values:
+
+   ``none``
+      Bare assignment, e.g. ``my_var = {...}`` (default).
+   ``inline``
+      With type annotation, e.g. ``my_var: dict[str, Any] = {...}``.
+      Currently available for Python only.
 
 Example
 ~~~~~~~
@@ -220,7 +231,7 @@ The directive:
 
    .. literalizer:: data.json
       :language: python
-      :wrap:
+      :include-delimiters:
 
 renders as a code block containing:
 
