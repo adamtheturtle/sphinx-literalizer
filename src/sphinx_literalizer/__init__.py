@@ -5,7 +5,7 @@ renders it as a native language literal block.
 """
 
 from collections.abc import Callable
-from functools import partial
+from functools import cache, partial
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -27,80 +27,31 @@ def _language_key(lang_cls: LanguageCls) -> str:
     return lang_cls.pygments_name
 
 
-_LANGUAGE_TYPES: dict[str, LanguageCls] = {
-    _language_key(lang_cls=lang_cls): lang_cls for lang_cls in ALL_LANGUAGES
-}
+@cache
+def _language_types() -> dict[str, LanguageCls]:
+    """Map directive language keys to their language classes."""
+    return {
+        _language_key(lang_cls=lang_cls): lang_cls
+        for lang_cls in ALL_LANGUAGES
+    }
 
 
-_DATE_FORMATS: dict[tuple[str, str], object] = {
-    (lang_name, member.name.lower()): member
-    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
-    for member in lang_cls.DateFormats
-}
+@cache
+def _format_map(enum_attr: str) -> dict[tuple[str, str], object]:
+    """Build a mapping from (language_key, member_name) to enum member."""
+    return {
+        (lang_name, member.name.lower()): member
+        for lang_name, lang_cls in _language_types().items()
+        for member in getattr(lang_cls, enum_attr)
+    }
 
-_DATE_FORMAT_VALUES: tuple[str, ...] = tuple(
-    sorted({fmt_value for _, fmt_value in _DATE_FORMATS})
-)
 
-_DATETIME_FORMATS: dict[tuple[str, str], object] = {
-    (lang_name, member.name.lower()): member
-    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
-    for member in lang_cls.DatetimeFormats
-}
-
-_DATETIME_FORMAT_VALUES: tuple[str, ...] = tuple(
-    sorted({fmt_value for _, fmt_value in _DATETIME_FORMATS})
-)
-
-_SEQUENCE_FORMATS: dict[tuple[str, str], object] = {
-    (lang_name, member.name.lower()): member
-    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
-    for member in lang_cls.SequenceFormats
-}
-
-_SEQUENCE_FORMAT_VALUES: tuple[str, ...] = tuple(
-    sorted({fmt_value for _, fmt_value in _SEQUENCE_FORMATS})
-)
-
-_SET_FORMATS: dict[tuple[str, str], object] = {
-    (lang_name, member.name.lower()): member
-    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
-    for member in lang_cls.SetFormats
-}
-
-_SET_FORMAT_VALUES: tuple[str, ...] = tuple(
-    sorted({fmt_value for _, fmt_value in _SET_FORMATS})
-)
-
-_BYTES_FORMATS: dict[tuple[str, str], object] = {
-    (lang_name, member.name.lower()): member
-    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
-    for member in lang_cls.BytesFormats
-}
-
-_BYTES_FORMAT_VALUES: tuple[str, ...] = tuple(
-    sorted({fmt_value for _, fmt_value in _BYTES_FORMATS})
-)
-
-_COMMENT_FORMATS: dict[tuple[str, str], object] = {
-    (lang_name, member.name.lower()): member
-    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
-    for member in lang_cls.CommentFormats
-}
-
-_COMMENT_FORMAT_VALUES: tuple[str, ...] = tuple(
-    sorted({fmt_value for _, fmt_value in _COMMENT_FORMATS})
-)
-
-_VARIABLE_TYPE_HINTS_FORMATS: dict[tuple[str, str], object] = {
-    (lang_name, member.name.lower()): member
-    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
-    for member in lang_cls.VariableTypeHints
-}
-
-_VARIABLE_TYPE_HINTS_FORMAT_VALUES: tuple[str, ...] = tuple(
-    sorted({fmt_value for _, fmt_value in _VARIABLE_TYPE_HINTS_FORMATS})
-)
+@cache
+def _format_values(enum_attr: str) -> tuple[str, ...]:
+    """Return sorted unique format value names for the given enum attr."""
+    return tuple(
+        sorted({fmt_value for _, fmt_value in _format_map(enum_attr)})
+    )
 
 
 @beartype
@@ -108,9 +59,10 @@ def _lookup_format(
     language_name: str,
     directive_name: str,
     format_value: str,
-    formats: dict[tuple[str, str], object],
+    enum_attr: str,
 ) -> object:
     """Look up a format enum member by language and value."""
+    formats = _format_map(enum_attr)
     try:
         return formats[(language_name, format_value)]
     except KeyError:
@@ -149,7 +101,7 @@ class LiteralizerDirective(SphinxDirective):
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
         "language": lambda x: directives.choice(
             argument=x,
-            values=tuple(_LANGUAGE_TYPES),
+            values=tuple(_language_types()),
         ),
         "prefix": directives.nonnegative_int,
         "prefix-char": lambda x: directives.choice(
@@ -160,33 +112,33 @@ class LiteralizerDirective(SphinxDirective):
         "include-delimiters": directives.flag,
         "date-format": lambda x: directives.choice(
             argument=x,
-            values=_DATE_FORMAT_VALUES,
+            values=_format_values("DateFormats"),
         ),
         "datetime-format": lambda x: directives.choice(
             argument=x,
-            values=_DATETIME_FORMAT_VALUES,
+            values=_format_values("DatetimeFormats"),
         ),
         "variable-name": directives.unchanged,
         "existing-variable": directives.flag,
         "sequence-format": lambda x: directives.choice(
             argument=x,
-            values=_SEQUENCE_FORMAT_VALUES,
+            values=_format_values("SequenceFormats"),
         ),
         "set-format": lambda x: directives.choice(
             argument=x,
-            values=_SET_FORMAT_VALUES,
+            values=_format_values("SetFormats"),
         ),
         "bytes-format": lambda x: directives.choice(
             argument=x,
-            values=_BYTES_FORMAT_VALUES,
+            values=_format_values("BytesFormats"),
         ),
         "comment-format": lambda x: directives.choice(
             argument=x,
-            values=_COMMENT_FORMAT_VALUES,
+            values=_format_values("CommentFormats"),
         ),
         "variable-type-hints": lambda x: directives.choice(
             argument=x,
-            values=_VARIABLE_TYPE_HINTS_FORMAT_VALUES,
+            values=_format_values("VariableTypeHints"),
         ),
     }
 
@@ -200,7 +152,7 @@ class LiteralizerDirective(SphinxDirective):
         env.note_dependency(str(object=data_path))
 
         language_name: str = self.options["language"]
-        language_cls = _LANGUAGE_TYPES[language_name]
+        language_cls = _language_types()[language_name]
         constructor = partial(language_cls)
 
         date_format_value = self.options.get("date-format")
@@ -211,7 +163,7 @@ class LiteralizerDirective(SphinxDirective):
                     language_name=language_name,
                     directive_name="date-format",
                     format_value=date_format_value,
-                    formats=_DATE_FORMATS,
+                    enum_attr="DateFormats",
                 ),
             )
 
@@ -223,7 +175,7 @@ class LiteralizerDirective(SphinxDirective):
                     language_name=language_name,
                     directive_name="datetime-format",
                     format_value=datetime_format_value,
-                    formats=_DATETIME_FORMATS,
+                    enum_attr="DatetimeFormats",
                 ),
             )
 
@@ -235,7 +187,7 @@ class LiteralizerDirective(SphinxDirective):
                     language_name=language_name,
                     directive_name="sequence-format",
                     format_value=sequence_format_value,
-                    formats=_SEQUENCE_FORMATS,
+                    enum_attr="SequenceFormats",
                 ),
             )
 
@@ -247,7 +199,7 @@ class LiteralizerDirective(SphinxDirective):
                     language_name=language_name,
                     directive_name="set-format",
                     format_value=set_format_value,
-                    formats=_SET_FORMATS,
+                    enum_attr="SetFormats",
                 ),
             )
 
@@ -259,7 +211,7 @@ class LiteralizerDirective(SphinxDirective):
                     language_name=language_name,
                     directive_name="bytes-format",
                     format_value=bytes_format_value,
-                    formats=_BYTES_FORMATS,
+                    enum_attr="BytesFormats",
                 ),
             )
 
@@ -271,7 +223,7 @@ class LiteralizerDirective(SphinxDirective):
                     language_name=language_name,
                     directive_name="comment-format",
                     format_value=comment_format_value,
-                    formats=_COMMENT_FORMATS,
+                    enum_attr="CommentFormats",
                 ),
             )
 
@@ -283,7 +235,7 @@ class LiteralizerDirective(SphinxDirective):
                     language_name=language_name,
                     directive_name="variable-type-hints",
                     format_value=variable_type_hints_value,
-                    formats=_VARIABLE_TYPE_HINTS_FORMATS,
+                    enum_attr="VariableTypeHints",
                 ),
             )
 
