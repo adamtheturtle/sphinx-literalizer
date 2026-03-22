@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.03.22.1
+------------
+
+
 - Bumped ``literalizer`` to ``2026.3.22.1``.
 - Renamed ``:wrap:`` directive option to ``:include-delimiters:``.
 - Added ``:variable-type-hints:`` directive option.
