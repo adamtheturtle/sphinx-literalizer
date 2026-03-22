@@ -12,107 +12,23 @@ from typing import Any, ClassVar
 from beartype import beartype
 from docutils import nodes
 from docutils.parsers.rst import directives
-from literalizer import HasFormatEnums, Language, literalize_yaml
-from literalizer.languages import (
-    Ada,
-    Bash,
-    C,
-    Clojure,
-    Cobol,
-    CommonLisp,
-    Cpp,
-    Crystal,
-    CSharp,
-    D,
-    Dart,
-    Elixir,
-    Erlang,
-    Fortran,
-    FSharp,
-    Go,
-    Groovy,
-    Haskell,
-    Hcl,
-    Java,
-    JavaScript,
-    Julia,
-    Kotlin,
-    Lua,
-    Matlab,
-    Mojo,
-    Nim,
-    Norg,
-    ObjectiveC,
-    OCaml,
-    Occam,
-    Perl,
-    Php,
-    PowerShell,
-    Python,
-    R,
-    Racket,
-    Ruby,
-    Rust,
-    Scala,
-    Swift,
-    Toml,
-    TypeScript,
-    VisualBasic,
-    Yaml,
-    Zig,
-)
+from literalizer import Language, LanguageCls, literalize_yaml
+from literalizer.languages import ALL_LANGUAGES
 from sphinx.application import Sphinx
 from sphinx.errors import ExtensionError
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
 
-_LANGUAGE_TYPES: dict[str, HasFormatEnums] = {
-    "ada": Ada,
-    "bash": Bash,
-    "c": C,
-    "clojure": Clojure,
-    "cobol": Cobol,
-    "common-lisp": CommonLisp,
-    "cpp": Cpp,
-    "crystal": Crystal,
-    "csharp": CSharp,
-    "d": D,
-    "dart": Dart,
-    "elixir": Elixir,
-    "erlang": Erlang,
-    "fortran": Fortran,
-    "fsharp": FSharp,
-    "go": Go,
-    "groovy": Groovy,
-    "haskell": Haskell,
-    "hcl": Hcl,
-    "java": Java,
-    "javascript": JavaScript,
-    "julia": Julia,
-    "kotlin": Kotlin,
-    "lua": Lua,
-    "matlab": Matlab,
-    "mojo": Mojo,
-    "nim": Nim,
-    "norg": Norg,
-    "objective-c": ObjectiveC,
-    "ocaml": OCaml,
-    "occam": Occam,
-    "perl": Perl,
-    "php": Php,
-    "powershell": PowerShell,
-    "python": Python,
-    "r": R,
-    "racket": Racket,
-    "ruby": Ruby,
-    "rust": Rust,
-    "scala": Scala,
-    "swift": Swift,
-    "toml": Toml,
-    "typescript": TypeScript,
-    "visual-basic": VisualBasic,
-    "yaml": Yaml,
-    "zig": Zig,
+
+def _language_key(lang_cls: LanguageCls) -> str:
+    """Derive the directive key for a language class."""
+    if lang_cls.pygments_name == "text":
+        return lang_cls.__name__.lower()
+    return lang_cls.pygments_name
+
+
+_LANGUAGE_TYPES: dict[str, LanguageCls] = {
+    _language_key(lang_cls=lang_cls): lang_cls for lang_cls in ALL_LANGUAGES
 }
 
 
@@ -176,6 +92,16 @@ _COMMENT_FORMAT_VALUES: tuple[str, ...] = tuple(
     sorted({fmt_value for _, fmt_value in _COMMENT_FORMATS})
 )
 
+_VARIABLE_TYPE_HINTS_FORMATS: dict[tuple[str, str], object] = {
+    (lang_name, member.name.lower()): member
+    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
+    for member in lang_cls.VariableTypeHints
+}
+
+_VARIABLE_TYPE_HINTS_FORMAT_VALUES: tuple[str, ...] = tuple(
+    sorted({fmt_value for _, fmt_value in _VARIABLE_TYPE_HINTS_FORMATS})
+)
+
 
 @beartype
 def _apply_format_option(
@@ -208,7 +134,7 @@ class LiteralizerDirective(SphinxDirective):
            :prefix: 8
            :prefix-char: spaces
            :indent: 4
-           :wrap:
+           :include-delimiters:
            :date-format: python
            :datetime-format: python
            :variable-name: my_var
@@ -217,6 +143,7 @@ class LiteralizerDirective(SphinxDirective):
            :set-format: frozenset
            :bytes-format: python
            :comment-format: block
+           :variable-type-hints: inline
     """
 
     required_arguments = 1
@@ -232,7 +159,7 @@ class LiteralizerDirective(SphinxDirective):
             values=("spaces", "tabs"),
         ),
         "indent": directives.nonnegative_int,
-        "wrap": directives.flag,
+        "include-delimiters": directives.flag,
         "date-format": lambda x: directives.choice(
             argument=x,
             values=_DATE_FORMAT_VALUES,
@@ -259,6 +186,10 @@ class LiteralizerDirective(SphinxDirective):
             argument=x,
             values=_COMMENT_FORMAT_VALUES,
         ),
+        "variable-type-hints": lambda x: directives.choice(
+            argument=x,
+            values=_VARIABLE_TYPE_HINTS_FORMAT_VALUES,
+        ),
     }
 
     def run(self) -> list[nodes.Node]:
@@ -283,6 +214,7 @@ class LiteralizerDirective(SphinxDirective):
             ("set-format", _SET_FORMATS),
             ("bytes-format", _BYTES_FORMATS),
             ("comment-format", _COMMENT_FORMATS),
+            ("variable-type-hints", _VARIABLE_TYPE_HINTS_FORMATS),
         )
         for format_name, formats in format_options:
             format_value: str | None = self.options.get(format_name)
@@ -303,7 +235,7 @@ class LiteralizerDirective(SphinxDirective):
         line_prefix = prefix_char * prefix_count
         indent_count: int = self.options.get("indent", 4)
         indent = prefix_char * indent_count
-        wrap: bool = "wrap" in self.options
+        include_delimiters: bool = "include-delimiters" in self.options
         variable_name: str | None = self.options.get("variable-name")
         existing_variable: bool = "existing-variable" in self.options
 
@@ -314,7 +246,7 @@ class LiteralizerDirective(SphinxDirective):
             language=language_spec,
             line_prefix=line_prefix,
             indent=indent,
-            wrap=wrap,
+            include_delimiters=include_delimiters,
             variable_name=variable_name,
             new_variable=not existing_variable,
             error_on_coercion=False,
@@ -331,7 +263,7 @@ class LiteralizerDirective(SphinxDirective):
             text,
             source=str(object=data_path),
         )
-        node["language"] = language_name
+        node["language"] = language_cls.pygments_name
         self.add_name(node=node)
         return [node]
 

@@ -4,6 +4,15 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.3.22.1``.
+- Renamed ``:wrap:`` directive option to ``:include-delimiters:``.
+- Added ``:variable-type-hints:`` directive option.
+- Derived language directive keys from ``pygments_name`` instead of a
+  hand-maintained mapping.  Renamed ``visual-basic`` to ``vb.net``.
+- Used ``pygments_name`` from language classes for syntax highlighting.
+- Used ``LanguageCls`` instead of ``HasFormatEnums``.
+- Added ``ALL_LANGUAGES`` consistency check.
+
 2026.03.22
 ----------
 

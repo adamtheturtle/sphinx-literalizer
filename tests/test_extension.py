@@ -279,13 +279,13 @@ def test_prefix_tabs(
     assert content_html == expected_html
 
 
-def test_wrap_adds_brackets(
+def test_include_delimiters_adds_brackets(
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """The :wrap: flag produces the same output as a wrapped code-
-    block.
+    """The :include-delimiters: flag produces the same output as a
+    wrapped code-block.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -300,7 +300,7 @@ def test_wrap_adds_brackets(
 
         .. literalizer:: data.json
            :language: python
-           :wrap:
+           :include-delimiters:
     """
         )
     )
@@ -833,7 +833,7 @@ def test_variable_name_python(
 
         .. literalizer:: data.json
            :language: python
-           :wrap:
+           :include-delimiters:
            :variable-name: my_list
     """
         )
@@ -1001,7 +1001,7 @@ def test_existing_variable_dart(
 
         .. literalizer:: data.json
            :language: dart
-           :wrap:
+           :include-delimiters:
            :variable-name: myList
            :existing-variable:
     """
@@ -1025,7 +1025,7 @@ def test_existing_variable_dart(
 
         .. literalizer:: data.json
            :language: dart
-           :wrap:
+           :include-delimiters:
            :variable-name: myList
     """
         )
@@ -1211,12 +1211,14 @@ def test_date_format_rust(
     assert content_html == expected_html
 
 
-def test_no_wrap_by_default(
+def test_no_include_delimiters_by_default(
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """Without :wrap:, output matches an unwrapped code-block."""
+    """Without :include-delimiters:, output matches an unwrapped
+    code-block.
+    """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -1393,7 +1395,7 @@ def test_sequence_format_list_python(
 
         .. literalizer:: data.json
            :language: python
-           :wrap:
+           :include-delimiters:
            :sequence-format: list
     """
         )
@@ -1453,7 +1455,7 @@ def test_sequence_format_tuple_python(
 
         .. literalizer:: data.json
            :language: python
-           :wrap:
+           :include-delimiters:
            :sequence-format: tuple
     """
         )
@@ -1519,7 +1521,7 @@ def test_set_format_frozenset_python(
 
         .. literalizer:: data.yaml
            :language: python
-           :wrap:
+           :include-delimiters:
            :set-format: frozenset
     """
         )
@@ -1543,7 +1545,7 @@ def test_set_format_frozenset_python(
 
         .. literalizer:: data.yaml
            :language: python
-           :wrap:
+           :include-delimiters:
            :set-format: set
     """
         )
@@ -1717,7 +1719,7 @@ def test_norg_language(
         ====
 
         .. literalinclude:: expected.norg
-           :language: norg
+           :language: text
     """
         )
     )
@@ -1749,7 +1751,7 @@ def test_sequence_format_tuple_elixir(
 
         .. literalizer:: data.json
            :language: elixir
-           :wrap:
+           :include-delimiters:
            :sequence-format: tuple
     """
         )
@@ -1772,7 +1774,7 @@ def test_sequence_format_tuple_elixir(
 
         .. literalizer:: data.json
            :language: elixir
-           :wrap:
+           :include-delimiters:
            :sequence-format: list
     """
         )
@@ -1808,7 +1810,7 @@ def test_sequence_format_tuple_rust(
 
         .. literalizer:: data.json
            :language: rust
-           :wrap:
+           :include-delimiters:
            :sequence-format: tuple
     """
         )
@@ -1831,7 +1833,7 @@ def test_sequence_format_tuple_rust(
 
         .. literalizer:: data.json
            :language: rust
-           :wrap:
+           :include-delimiters:
            :sequence-format: vec
     """
         )
@@ -1921,7 +1923,7 @@ def test_sequence_format_array_rust(
 
         .. literalizer:: data.json
            :language: rust
-           :wrap:
+           :include-delimiters:
            :sequence-format: array
     """
         )
@@ -1944,7 +1946,7 @@ def test_sequence_format_array_rust(
 
         .. literalizer:: data.json
            :language: rust
-           :wrap:
+           :include-delimiters:
            :sequence-format: vec
     """
         )
