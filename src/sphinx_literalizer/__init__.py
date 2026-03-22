@@ -470,6 +470,16 @@ _BYTES_FORMAT_VALUES: tuple[str, ...] = tuple(
     sorted({fmt_value for _, fmt_value in _BYTES_FORMATS})
 )
 
+_COMMENT_FORMATS: dict[tuple[str, str], object] = {
+    (lang_name, member.name.lower()): member
+    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
+    for member in lang_cls.CommentFormats
+}
+
+_COMMENT_FORMAT_VALUES: tuple[str, ...] = tuple(
+    sorted({fmt_value for _, fmt_value in _COMMENT_FORMATS})
+)
+
 
 @beartype
 def _apply_date_formats(
@@ -539,6 +549,26 @@ def _default_constructor(
 
 
 @beartype
+def _apply_format_option(
+    constructor: partial[Language],
+    language_name: str,
+    format_name: str,
+    format_value: str,
+    formats: dict[tuple[str, str], object],
+) -> partial[Language]:
+    """Look up a format enum member and apply it to the constructor."""
+    try:
+        fmt = formats[(language_name, format_value)]
+    except KeyError:
+        msg = (
+            f"Language '{language_name}' does not support "
+            f"{format_name} '{format_value}'."
+        )
+        raise ExtensionError(message=msg) from None
+    return partial(constructor, **{format_name.replace("-", "_"): fmt})
+
+
+@beartype
 class LiteralizerDirective(SphinxDirective):
     """Directive that converts a JSON file to a native literal block.
 
@@ -555,6 +585,7 @@ class LiteralizerDirective(SphinxDirective):
            :sequence-format: list
            :set-format: frozenset
            :bytes-format: python
+           :comment-format: block
     """
 
     required_arguments = 1
@@ -589,6 +620,10 @@ class LiteralizerDirective(SphinxDirective):
             argument=x,
             values=_BYTES_FORMAT_VALUES,
         ),
+        "comment-format": lambda x: directives.choice(
+            argument=x,
+            values=_COMMENT_FORMAT_VALUES,
+        ),
     }
 
     def run(self) -> list[nodes.Node]:
@@ -610,57 +645,24 @@ class LiteralizerDirective(SphinxDirective):
                 date_formats=_DATE_FORMATS[date_format_name],
             )
 
-        sequence_format_option: str | None = self.options.get(
-            "sequence-format",
+        format_options: tuple[
+            tuple[str, dict[tuple[str, str], object]], ...
+        ] = (
+            ("sequence-format", _SEQUENCE_FORMATS),
+            ("set-format", _SET_FORMATS),
+            ("bytes-format", _BYTES_FORMATS),
+            ("comment-format", _COMMENT_FORMATS),
         )
-        if sequence_format_option is not None:
-            sequence_format_key = (language_name, sequence_format_option)
-            try:
-                sequence_format = _SEQUENCE_FORMATS[sequence_format_key]
-            except KeyError:
-                msg = (
-                    f"Language '{language_name}' does not support "
-                    f"sequence-format '{sequence_format_option}'."
+        for format_name, formats in format_options:
+            format_value: str | None = self.options.get(format_name)
+            if format_value is not None:
+                constructor = _apply_format_option(
+                    constructor=constructor,
+                    language_name=language_name,
+                    format_name=format_name,
+                    format_value=format_value,
+                    formats=formats,
                 )
-                raise ExtensionError(message=msg) from None
-            constructor = partial(
-                constructor,
-                sequence_format=sequence_format,
-            )
-
-        set_format_option: str | None = self.options.get("set-format")
-        if set_format_option is not None:
-            try:
-                set_format = _SET_FORMATS[(language_name, set_format_option)]
-            except KeyError:
-                msg = (
-                    f"Language '{language_name}' does not support "
-                    f"set-format '{set_format_option}'."
-                )
-                raise ExtensionError(message=msg) from None
-            constructor = partial(
-                constructor,
-                set_format=set_format,
-            )
-
-        bytes_format_option: str | None = self.options.get(
-            "bytes-format",
-        )
-        if bytes_format_option is not None:
-            try:
-                bytes_format = _BYTES_FORMATS[
-                    (language_name, bytes_format_option)
-                ]
-            except KeyError:
-                msg = (
-                    f"Language '{language_name}' does not support "
-                    f"bytes-format '{bytes_format_option}'."
-                )
-                raise ExtensionError(message=msg) from None
-            constructor = partial(
-                constructor,
-                bytes_format=bytes_format,
-            )
 
         language_spec: Language = constructor()
 

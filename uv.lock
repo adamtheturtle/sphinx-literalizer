@@ -605,16 +605,16 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.3.21"
+version = "2026.3.22"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
     { name = "json-to-schema" },
     { name = "ruamel-yaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/58/bc/43771a76f70340eb1d5cd62066cd41ba86e681014bb26f181849449bd7df/literalizer-2026.3.21.tar.gz", hash = "sha256:06b91d2af34bb818e125d6497ef7728e1ccc46ba830fdd34fd5aaab49cfddc09", size = 431518, upload-time = "2026-03-21T08:24:40.128Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ae/a1/de50d8460cd958d6be49bd71d003144a00073616eafae5626beaf46431e1/literalizer-2026.3.22.tar.gz", hash = "sha256:927ef906c24ec4698c1478b356acb6904872d0257243196d3f26a7348c660f02", size = 431195, upload-time = "2026-03-22T09:28:42.976Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/de/29/dead06a4d978cddbcf3303556cfa4c36010bf48852f4c5d15406290d613b/literalizer-2026.3.21-py3-none-any.whl", hash = "sha256:308fafe3e6e73f97a21df64db0d4789ae7fef83e266405aeca0744d8baf5f713", size = 106000, upload-time = "2026-03-21T08:24:38.349Z" },
+    { url = "https://files.pythonhosted.org/packages/17/a7/c63e514459dce934a5e14c5ca49b3f6c6617cc55028145680fe0247f710f/literalizer-2026.3.22-py3-none-any.whl", hash = "sha256:15d8b8066f2e349d11018e3419f639ab1135daae1371119194cfa8b82ff08f37", size = 119360, upload-time = "2026-03-22T09:28:41.198Z" },
 ]
 
 [[package]]
@@ -1549,7 +1549,7 @@ requires-dist = [
     { name = "docutils" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
     { name = "interrogate", marker = "extra == 'dev'", specifier = "==1.7.0" },
-    { name = "literalizer", specifier = "==2026.3.21" },
+    { name = "literalizer", specifier = "==2026.3.22" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "==1.19.1" },
     { name = "mypy-strict-kwargs", marker = "extra == 'dev'", specifier = "==2026.1.12" },
     { name = "prek", marker = "extra == 'dev'", specifier = "==0.3.6" },
