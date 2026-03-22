@@ -5,7 +5,6 @@ renders it as a native language literal block.
 """
 
 from collections.abc import Callable
-from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 from typing import Any, ClassVar
@@ -117,75 +116,25 @@ _LANGUAGE_TYPES: dict[str, HasFormatEnums] = {
 }
 
 
-@beartype
-@dataclass(frozen=True)
-class _DateFormats:
-    """Date and datetime format options for a language."""
-
-    date_format: object | None = None
-    datetime_format: object | None = None
-
-
-_DATE_FORMATS: dict[str, _DateFormats] = {
-    "cpp": _DateFormats(
-        date_format=Cpp.date_formats.CPP,
-        datetime_format=Cpp.datetime_formats.CPP,
-    ),
-    "csharp": _DateFormats(
-        date_format=CSharp.date_formats.CSHARP,
-        datetime_format=CSharp.datetime_formats.CSHARP,
-    ),
-    "dart": _DateFormats(
-        date_format=Dart.date_formats.DART,
-        datetime_format=Dart.datetime_formats.DART,
-    ),
-    "epoch": _DateFormats(datetime_format=Python.datetime_formats.EPOCH),
-    "go": _DateFormats(
-        date_format=Go.date_formats.GO,
-        datetime_format=Go.datetime_formats.GO,
-    ),
-    "iso": _DateFormats(),
-    "java-instant": _DateFormats(
-        date_format=Java.date_formats.JAVA,
-        datetime_format=Java.datetime_formats.INSTANT,
-    ),
-    "java-zoned": _DateFormats(
-        date_format=Java.date_formats.JAVA,
-        datetime_format=Java.datetime_formats.ZONED,
-    ),
-    "javascript": _DateFormats(
-        date_format=JavaScript.date_formats.JS,
-        datetime_format=JavaScript.datetime_formats.JS,
-    ),
-    "julia": _DateFormats(
-        date_format=Julia.date_formats.JULIA,
-        datetime_format=Julia.datetime_formats.JULIA,
-    ),
-    "kotlin": _DateFormats(
-        date_format=Kotlin.date_formats.KOTLIN,
-        datetime_format=Kotlin.datetime_formats.KOTLIN,
-    ),
-    "python": _DateFormats(
-        date_format=Python.date_formats.PYTHON,
-        datetime_format=Python.datetime_formats.PYTHON,
-    ),
-    "r": _DateFormats(
-        date_format=R.date_formats.R,
-        datetime_format=R.datetime_formats.R,
-    ),
-    "ruby": _DateFormats(
-        date_format=Ruby.date_formats.RUBY,
-        datetime_format=Ruby.datetime_formats.RUBY,
-    ),
-    "rust": _DateFormats(
-        date_format=Rust.date_formats.RUST,
-        datetime_format=Rust.datetime_formats.RUST,
-    ),
-    "typescript": _DateFormats(
-        date_format=TypeScript.date_formats.JS,
-        datetime_format=TypeScript.datetime_formats.JS,
-    ),
+_DATE_FORMATS: dict[tuple[str, str], object] = {
+    (lang_name, member.name.lower()): member
+    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
+    for member in lang_cls.DateFormats
 }
+
+_DATE_FORMAT_VALUES: tuple[str, ...] = tuple(
+    sorted({fmt_value for _, fmt_value in _DATE_FORMATS})
+)
+
+_DATETIME_FORMATS: dict[tuple[str, str], object] = {
+    (lang_name, member.name.lower()): member
+    for lang_name, lang_cls in _LANGUAGE_TYPES.items()
+    for member in lang_cls.DatetimeFormats
+}
+
+_DATETIME_FORMAT_VALUES: tuple[str, ...] = tuple(
+    sorted({fmt_value for _, fmt_value in _DATETIME_FORMATS})
+)
 
 _SEQUENCE_FORMATS: dict[tuple[str, str], object] = {
     (lang_name, member.name.lower()): member
@@ -229,25 +178,6 @@ _COMMENT_FORMAT_VALUES: tuple[str, ...] = tuple(
 
 
 @beartype
-def _apply_date_formats(
-    constructor: partial[Language],
-    date_formats: _DateFormats,
-) -> partial[Language]:
-    """Apply date and datetime format options to a constructor."""
-    if date_formats.date_format is not None:
-        constructor = partial(
-            constructor,
-            date_format=date_formats.date_format,
-        )
-    if date_formats.datetime_format is not None:
-        constructor = partial(
-            constructor,
-            datetime_format=date_formats.datetime_format,
-        )
-    return constructor
-
-
-@beartype
 def _apply_format_option(
     constructor: partial[Language],
     language_name: str,
@@ -279,6 +209,8 @@ class LiteralizerDirective(SphinxDirective):
            :prefix-char: spaces
            :indent: 4
            :wrap:
+           :date-format: python
+           :datetime-format: python
            :variable-name: my_var
            :existing-variable:
            :sequence-format: list
@@ -303,7 +235,11 @@ class LiteralizerDirective(SphinxDirective):
         "wrap": directives.flag,
         "date-format": lambda x: directives.choice(
             argument=x,
-            values=tuple(_DATE_FORMATS),
+            values=_DATE_FORMAT_VALUES,
+        ),
+        "datetime-format": lambda x: directives.choice(
+            argument=x,
+            values=_DATETIME_FORMAT_VALUES,
         ),
         "variable-name": directives.unchanged,
         "existing-variable": directives.flag,
@@ -338,16 +274,11 @@ class LiteralizerDirective(SphinxDirective):
         language_cls = _LANGUAGE_TYPES[language_name]
         constructor = partial(language_cls)
 
-        date_format_name: str | None = self.options.get("date-format")
-        if date_format_name is not None:
-            constructor = _apply_date_formats(
-                constructor=constructor,
-                date_formats=_DATE_FORMATS[date_format_name],
-            )
-
         format_options: tuple[
             tuple[str, dict[tuple[str, str], object]], ...
         ] = (
+            ("date-format", _DATE_FORMATS),
+            ("datetime-format", _DATETIME_FORMATS),
             ("sequence-format", _SEQUENCE_FORMATS),
             ("set-format", _SET_FORMATS),
             ("bytes-format", _BYTES_FORMATS),

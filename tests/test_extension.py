@@ -527,9 +527,7 @@ def test_date_format_iso_explicit(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """The :date-format: iso option is a no-op (uses language
-    default).
-    """
+    """The :date-format: iso option explicitly selects ISO format."""
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -548,7 +546,7 @@ def test_date_format_iso_explicit(
         ====
 
         .. literalizer:: data.yaml
-           :language: python
+           :language: bash
            :date-format: iso
     """
         )
@@ -569,9 +567,9 @@ def test_date_format_iso_explicit(
         Test
         ====
 
-        .. code-block:: python
+        .. code-block:: bash
 
-           datetime.date(year=2024, month=1, day=15),
+           "2024-01-15"
     """
         )
     )
@@ -589,7 +587,7 @@ def test_date_format_epoch(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """The :date-format: epoch option renders datetimes as epoch
+    """The :datetime-format: epoch option renders datetimes as epoch
     floats.
     """
     source_directory = tmp_path / "source"
@@ -611,7 +609,7 @@ def test_date_format_epoch(
 
         .. literalizer:: data.yaml
            :language: python
-           :date-format: epoch
+           :datetime-format: epoch
     """
         )
     )
@@ -651,7 +649,7 @@ def test_date_format_java_instant(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """The :date-format: java-instant option renders dates for Java."""
+    """The :date-format: java option renders dates for Java."""
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -671,7 +669,7 @@ def test_date_format_java_instant(
 
         .. literalizer:: data.yaml
            :language: java
-           :date-format: java-instant
+           :date-format: java
     """
         )
     )

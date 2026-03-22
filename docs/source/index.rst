@@ -68,39 +68,87 @@ Directive options
    (``[`` … ``]`` for arrays, ``{`` … ``}`` for dicts).
 
 ``:date-format:`` (optional)
-   How to render YAML dates and datetimes.  Defaults to ``iso``
-   (quoted ISO 8601 strings).  Supported values:
+   How to render YAML dates.  Not all values are valid for every
+   language.  Supported values:
 
-   ``iso``
-      Quoted ISO 8601 string (e.g. ``"2024-01-15"``).
-   ``python``
-      Python constructor (e.g. ``datetime.date(2024, 1, 15)``).
-   ``epoch``
-      Seconds since Unix epoch for datetimes; ISO for dates.
-   ``java-instant``
-      ``LocalDate.of(...)`` for dates, ``Instant.parse(...)`` for
-      datetimes.
-   ``java-zoned``
-      ``LocalDate.of(...)`` for dates, ``ZonedDateTime.of(...)`` for
-      datetimes.
-   ``ruby``
-      ``Date.new(...)`` / ``Time.new(...)``.
-   ``javascript``
-      ``new Date(...)``.
-   ``csharp``
-      ``new DateOnly(...)`` / ``new DateTime(...)``.
-   ``go``
-      ``time.Date(...)``.
-   ``kotlin``
-      ``LocalDate.of(...)`` / ``LocalDateTime.of(...)``.
    ``cpp``
-      ``std::chrono`` types.
+      ``std::chrono::year_month_day`` type.
+   ``csharp``
+      ``new DateOnly(...)`` constructor.
    ``dart``
-      ``DateTime.parse(...)`` for dates and datetimes.
+      ``DateTime.parse(...)`` constructor.
+   ``go``
+      ``time.Date(...)`` call.
+   ``iso``
+      Quoted ISO 8601 string (e.g. ``"2024-01-15"``).  This is the
+      default for most languages.
+   ``java``
+      ``LocalDate.of(...)`` constructor.
+   ``js``
+      ``new Date(...)`` constructor (JavaScript/TypeScript).
    ``julia``
-      ``Date(...)`` / ``DateTime(...)`` constructors.
+      ``Date(...)`` constructor.
+   ``kotlin``
+      ``LocalDate.of(...)`` constructor.
+   ``objc``
+      Objective-C date representation.
+   ``php``
+      PHP date representation.
+   ``python``
+      ``datetime.date(...)`` constructor.
    ``r``
-      ``as.Date(...)`` / ``as.POSIXct(...)`` calls.
+      ``as.Date(...)`` call.
+   ``ruby``
+      ``Date.new(...)`` constructor.
+   ``rust``
+      ``NaiveDate::from_ymd_opt(...)`` call.
+   ``toml``
+      TOML date literal.
+   ``yaml``
+      YAML date literal.
+
+``:datetime-format:`` (optional)
+   How to render YAML datetimes.  Not all values are valid for every
+   language.  Supported values:
+
+   ``cpp``
+      ``std::chrono`` datetime type.
+   ``csharp``
+      ``new DateTime(...)`` constructor.
+   ``dart``
+      ``DateTime.parse(...)`` constructor.
+   ``epoch``
+      Seconds since Unix epoch (e.g. ``1705314600.0``).
+   ``go``
+      ``time.Date(...)`` call.
+   ``instant``
+      ``Instant.parse(...)`` (Java).
+   ``iso``
+      Quoted ISO 8601 string.  This is the default for most languages.
+   ``js``
+      ``new Date(...)`` constructor (JavaScript/TypeScript).
+   ``julia``
+      ``DateTime(...)`` constructor.
+   ``kotlin``
+      ``LocalDateTime.of(...)`` constructor.
+   ``objc``
+      Objective-C datetime representation.
+   ``php``
+      PHP datetime representation.
+   ``python``
+      ``datetime.datetime(...)`` constructor.
+   ``r``
+      ``as.POSIXct(...)`` call.
+   ``ruby``
+      ``Time.new(...)`` constructor.
+   ``rust``
+      ``NaiveDateTime::new(...)`` call.
+   ``toml``
+      TOML datetime literal.
+   ``yaml``
+      YAML datetime literal.
+   ``zoned``
+      ``ZonedDateTime.of(...)`` (Java).
 
 ``:sequence-format:`` (optional)
    How to render sequences (arrays/lists).  Not all values are valid for
