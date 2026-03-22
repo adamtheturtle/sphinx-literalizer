@@ -428,7 +428,7 @@ _DEFAULT_SET_FORMATS: dict[str, object] = {
 }
 
 _DEFAULT_VARIABLE_TYPE_HINTS: dict[str, object] = {
-    "python": Python.VariableTypeHints.NONE,
+    "python": next(m for m in Python.VariableTypeHints if m.name == "NONE"),
 }
 
 _DEFAULT_EMPTY_DICT_KEYS: dict[str, object] = {
