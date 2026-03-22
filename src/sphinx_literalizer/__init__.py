@@ -104,23 +104,21 @@ _VARIABLE_TYPE_HINTS_FORMAT_VALUES: tuple[str, ...] = tuple(
 
 
 @beartype
-def _apply_format_option(
-    constructor: partial[Language],
+def _lookup_format(
     language_name: str,
-    format_name: str,
+    directive_name: str,
     format_value: str,
     formats: dict[tuple[str, str], object],
-) -> partial[Language]:
-    """Look up a format enum member and apply it to the constructor."""
+) -> object:
+    """Look up a format enum member by language and value."""
     try:
-        fmt = formats[(language_name, format_value)]
+        return formats[(language_name, format_value)]
     except KeyError:
         msg = (
             f"Language '{language_name}' does not support "
-            f"{format_name} '{format_value}'."
+            f"{directive_name} '{format_value}'."
         )
         raise ExtensionError(message=msg) from None
-    return partial(constructor, **{format_name.replace("-", "_"): fmt})
 
 
 @beartype
@@ -205,27 +203,89 @@ class LiteralizerDirective(SphinxDirective):
         language_cls = _LANGUAGE_TYPES[language_name]
         constructor = partial(language_cls)
 
-        format_options: tuple[
-            tuple[str, dict[tuple[str, str], object]], ...
-        ] = (
-            ("date-format", _DATE_FORMATS),
-            ("datetime-format", _DATETIME_FORMATS),
-            ("sequence-format", _SEQUENCE_FORMATS),
-            ("set-format", _SET_FORMATS),
-            ("bytes-format", _BYTES_FORMATS),
-            ("comment-format", _COMMENT_FORMATS),
-            ("variable-type-hints", _VARIABLE_TYPE_HINTS_FORMATS),
-        )
-        for format_name, formats in format_options:
-            format_value: str | None = self.options.get(format_name)
-            if format_value is not None:
-                constructor = _apply_format_option(
-                    constructor=constructor,
+        date_format_value = self.options.get("date-format")
+        if date_format_value is not None:
+            constructor = partial(
+                constructor,
+                date_format=_lookup_format(
                     language_name=language_name,
-                    format_name=format_name,
-                    format_value=format_value,
-                    formats=formats,
-                )
+                    directive_name="date-format",
+                    format_value=date_format_value,
+                    formats=_DATE_FORMATS,
+                ),
+            )
+
+        datetime_format_value = self.options.get("datetime-format")
+        if datetime_format_value is not None:
+            constructor = partial(
+                constructor,
+                datetime_format=_lookup_format(
+                    language_name=language_name,
+                    directive_name="datetime-format",
+                    format_value=datetime_format_value,
+                    formats=_DATETIME_FORMATS,
+                ),
+            )
+
+        sequence_format_value = self.options.get("sequence-format")
+        if sequence_format_value is not None:
+            constructor = partial(
+                constructor,
+                sequence_format=_lookup_format(
+                    language_name=language_name,
+                    directive_name="sequence-format",
+                    format_value=sequence_format_value,
+                    formats=_SEQUENCE_FORMATS,
+                ),
+            )
+
+        set_format_value = self.options.get("set-format")
+        if set_format_value is not None:
+            constructor = partial(
+                constructor,
+                set_format=_lookup_format(
+                    language_name=language_name,
+                    directive_name="set-format",
+                    format_value=set_format_value,
+                    formats=_SET_FORMATS,
+                ),
+            )
+
+        bytes_format_value = self.options.get("bytes-format")
+        if bytes_format_value is not None:
+            constructor = partial(
+                constructor,
+                bytes_format=_lookup_format(
+                    language_name=language_name,
+                    directive_name="bytes-format",
+                    format_value=bytes_format_value,
+                    formats=_BYTES_FORMATS,
+                ),
+            )
+
+        comment_format_value = self.options.get("comment-format")
+        if comment_format_value is not None:
+            constructor = partial(
+                constructor,
+                comment_format=_lookup_format(
+                    language_name=language_name,
+                    directive_name="comment-format",
+                    format_value=comment_format_value,
+                    formats=_COMMENT_FORMATS,
+                ),
+            )
+
+        variable_type_hints_value = self.options.get("variable-type-hints")
+        if variable_type_hints_value is not None:
+            constructor = partial(
+                constructor,
+                variable_type_hints=_lookup_format(
+                    language_name=language_name,
+                    directive_name="variable-type-hints",
+                    format_value=variable_type_hints_value,
+                    formats=_VARIABLE_TYPE_HINTS_FORMATS,
+                ),
+            )
 
         language_spec: Language = constructor()
 

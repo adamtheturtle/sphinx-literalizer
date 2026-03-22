@@ -2221,3 +2221,40 @@ def test_unsupported_comment_format_error(
         match=r"Language 'python' does not support comment-format 'block'\.",
     ):
         app.build()
+
+
+def test_variable_type_hints_inline(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :variable-type-hints: option produces type-annotated output."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"key": "value"}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :variable-name: my_var
+           :variable-type-hints: inline
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    html = (app.outdir / "index.html").read_text()
+    assert "my_var" in html
+    app.cleanup()
