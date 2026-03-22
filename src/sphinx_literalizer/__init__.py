@@ -119,7 +119,7 @@ _LANGUAGE_TYPES: dict[str, HasFormatEnums] = {
 _DATE_FORMATS: dict[tuple[str, str], object] = {
     (lang_name, member.name.lower()): member
     for lang_name, lang_cls in _LANGUAGE_TYPES.items()
-    for member in lang_cls.date_formats
+    for member in lang_cls.DateFormats
 }
 
 _DATE_FORMAT_VALUES: tuple[str, ...] = tuple(
@@ -129,7 +129,7 @@ _DATE_FORMAT_VALUES: tuple[str, ...] = tuple(
 _DATETIME_FORMATS: dict[tuple[str, str], object] = {
     (lang_name, member.name.lower()): member
     for lang_name, lang_cls in _LANGUAGE_TYPES.items()
-    for member in lang_cls.datetime_formats
+    for member in lang_cls.DatetimeFormats
 }
 
 _DATETIME_FORMAT_VALUES: tuple[str, ...] = tuple(
