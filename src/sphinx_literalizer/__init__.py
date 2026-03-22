@@ -37,20 +37,118 @@ def _language_types() -> dict[str, LanguageCls]:
 
 
 @cache
-def _format_map(enum_attr: str) -> dict[tuple[str, str], object]:
-    """Build a mapping from (language_key, member_name) to enum member."""
+def _date_formats() -> dict[tuple[str, str], object]:
+    """Map (language_key, member_name) to DateFormats enum member."""
     return {
         (lang_name, member.name.lower()): member
         for lang_name, lang_cls in _language_types().items()
-        for member in getattr(lang_cls, enum_attr)
+        for member in lang_cls.DateFormats
     }
 
 
 @cache
-def _format_values(enum_attr: str) -> tuple[str, ...]:
-    """Return sorted unique format value names for the given enum attr."""
+def _date_format_values() -> tuple[str, ...]:
+    """Return sorted unique DateFormats member names."""
+    return tuple(sorted({fmt_value for _, fmt_value in _date_formats()}))
+
+
+@cache
+def _datetime_formats() -> dict[tuple[str, str], object]:
+    """Map (language_key, member_name) to DatetimeFormats enum member."""
+    return {
+        (lang_name, member.name.lower()): member
+        for lang_name, lang_cls in _language_types().items()
+        for member in lang_cls.DatetimeFormats
+    }
+
+
+@cache
+def _datetime_format_values() -> tuple[str, ...]:
+    """Return sorted unique DatetimeFormats member names."""
+    return tuple(sorted({fmt_value for _, fmt_value in _datetime_formats()}))
+
+
+@cache
+def _sequence_formats() -> dict[tuple[str, str], object]:
+    """Map (language_key, member_name) to SequenceFormats enum member."""
+    return {
+        (lang_name, member.name.lower()): member
+        for lang_name, lang_cls in _language_types().items()
+        for member in lang_cls.SequenceFormats
+    }
+
+
+@cache
+def _sequence_format_values() -> tuple[str, ...]:
+    """Return sorted unique SequenceFormats member names."""
+    return tuple(sorted({fmt_value for _, fmt_value in _sequence_formats()}))
+
+
+@cache
+def _set_formats() -> dict[tuple[str, str], object]:
+    """Map (language_key, member_name) to SetFormats enum member."""
+    return {
+        (lang_name, member.name.lower()): member
+        for lang_name, lang_cls in _language_types().items()
+        for member in lang_cls.SetFormats
+    }
+
+
+@cache
+def _set_format_values() -> tuple[str, ...]:
+    """Return sorted unique SetFormats member names."""
+    return tuple(sorted({fmt_value for _, fmt_value in _set_formats()}))
+
+
+@cache
+def _bytes_formats() -> dict[tuple[str, str], object]:
+    """Map (language_key, member_name) to BytesFormats enum member."""
+    return {
+        (lang_name, member.name.lower()): member
+        for lang_name, lang_cls in _language_types().items()
+        for member in lang_cls.BytesFormats
+    }
+
+
+@cache
+def _bytes_format_values() -> tuple[str, ...]:
+    """Return sorted unique BytesFormats member names."""
+    return tuple(sorted({fmt_value for _, fmt_value in _bytes_formats()}))
+
+
+@cache
+def _comment_formats() -> dict[tuple[str, str], object]:
+    """Map (language_key, member_name) to CommentFormats enum member."""
+    return {
+        (lang_name, member.name.lower()): member
+        for lang_name, lang_cls in _language_types().items()
+        for member in lang_cls.CommentFormats
+    }
+
+
+@cache
+def _comment_format_values() -> tuple[str, ...]:
+    """Return sorted unique CommentFormats member names."""
+    return tuple(sorted({fmt_value for _, fmt_value in _comment_formats()}))
+
+
+@cache
+def _variable_type_hints_formats() -> dict[tuple[str, str], object]:
+    """Map (language_key, member_name) to VariableTypeHints enum
+    member.
+    """
+    return {
+        (lang_name, member.name.lower()): member
+        for lang_name, lang_cls in _language_types().items()
+        for member in lang_cls.VariableTypeHints
+    }
+
+
+@cache
+def _variable_type_hints_format_values() -> tuple[str, ...]:
+    """Return sorted unique VariableTypeHints member names."""
     return tuple(
-        sorted({fmt_value for _, fmt_value in _format_map(enum_attr)})
+        sorted({fmt_value for _, fmt_value in _variable_type_hints_formats()})
     )
 
 
@@ -59,10 +157,9 @@ def _lookup_format(
     language_name: str,
     directive_name: str,
     format_value: str,
-    enum_attr: str,
+    formats: dict[tuple[str, str], object],
 ) -> object:
     """Look up a format enum member by language and value."""
-    formats = _format_map(enum_attr)
     try:
         return formats[(language_name, format_value)]
     except KeyError:
@@ -112,33 +209,33 @@ class LiteralizerDirective(SphinxDirective):
         "include-delimiters": directives.flag,
         "date-format": lambda x: directives.choice(
             argument=x,
-            values=_format_values("DateFormats"),
+            values=_date_format_values(),
         ),
         "datetime-format": lambda x: directives.choice(
             argument=x,
-            values=_format_values("DatetimeFormats"),
+            values=_datetime_format_values(),
         ),
         "variable-name": directives.unchanged,
         "existing-variable": directives.flag,
         "sequence-format": lambda x: directives.choice(
             argument=x,
-            values=_format_values("SequenceFormats"),
+            values=_sequence_format_values(),
         ),
         "set-format": lambda x: directives.choice(
             argument=x,
-            values=_format_values("SetFormats"),
+            values=_set_format_values(),
         ),
         "bytes-format": lambda x: directives.choice(
             argument=x,
-            values=_format_values("BytesFormats"),
+            values=_bytes_format_values(),
         ),
         "comment-format": lambda x: directives.choice(
             argument=x,
-            values=_format_values("CommentFormats"),
+            values=_comment_format_values(),
         ),
         "variable-type-hints": lambda x: directives.choice(
             argument=x,
-            values=_format_values("VariableTypeHints"),
+            values=_variable_type_hints_format_values(),
         ),
     }
 
@@ -163,7 +260,7 @@ class LiteralizerDirective(SphinxDirective):
                     language_name=language_name,
                     directive_name="date-format",
                     format_value=date_format_value,
-                    enum_attr="DateFormats",
+                    formats=_date_formats(),
                 ),
             )
 
@@ -175,7 +272,7 @@ class LiteralizerDirective(SphinxDirective):
                     language_name=language_name,
                     directive_name="datetime-format",
                     format_value=datetime_format_value,
-                    enum_attr="DatetimeFormats",
+                    formats=_datetime_formats(),
                 ),
             )
 
@@ -187,7 +284,7 @@ class LiteralizerDirective(SphinxDirective):
                     language_name=language_name,
                     directive_name="sequence-format",
                     format_value=sequence_format_value,
-                    enum_attr="SequenceFormats",
+                    formats=_sequence_formats(),
                 ),
             )
 
@@ -199,7 +296,7 @@ class LiteralizerDirective(SphinxDirective):
                     language_name=language_name,
                     directive_name="set-format",
                     format_value=set_format_value,
-                    enum_attr="SetFormats",
+                    formats=_set_formats(),
                 ),
             )
 
@@ -211,7 +308,7 @@ class LiteralizerDirective(SphinxDirective):
                     language_name=language_name,
                     directive_name="bytes-format",
                     format_value=bytes_format_value,
-                    enum_attr="BytesFormats",
+                    formats=_bytes_formats(),
                 ),
             )
 
@@ -223,7 +320,7 @@ class LiteralizerDirective(SphinxDirective):
                     language_name=language_name,
                     directive_name="comment-format",
                     format_value=comment_format_value,
-                    enum_attr="CommentFormats",
+                    formats=_comment_formats(),
                 ),
             )
 
@@ -235,7 +332,7 @@ class LiteralizerDirective(SphinxDirective):
                     language_name=language_name,
                     directive_name="variable-type-hints",
                     format_value=variable_type_hints_value,
-                    enum_attr="VariableTypeHints",
+                    formats=_variable_type_hints_formats(),
                 ),
             )
 
