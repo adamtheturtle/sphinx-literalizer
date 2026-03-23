@@ -4,6 +4,16 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.3.23``.
+- ``literalize_yaml`` now returns ``LiteralizeResult``; use ``.code``
+  for the rendered text.
+- Added ``:declaration-style:`` directive option.
+- Added ``:dict-format:`` directive option.
+- Added ``:integer-format:`` directive option.
+- Added ``:numeric-separator:`` directive option.
+- Added ``:string-format:`` directive option.
+- Added ``:trailing-comma:`` directive option.
+
 2026.03.22.1
 ------------
 

@@ -152,6 +152,110 @@ def _variable_type_hints_format_values() -> tuple[str, ...]:
     )
 
 
+@cache
+def _declaration_styles() -> dict[tuple[str, str], object]:
+    """Map (language_key, member_name) to DeclarationStyles enum
+    member.
+    """
+    return {
+        (lang_name, member.name.lower()): member
+        for lang_name, lang_cls in _language_types().items()
+        for member in lang_cls.DeclarationStyles
+    }
+
+
+@cache
+def _declaration_style_values() -> tuple[str, ...]:
+    """Return sorted unique DeclarationStyles member names."""
+    return tuple(sorted({fmt_value for _, fmt_value in _declaration_styles()}))
+
+
+@cache
+def _dict_formats() -> dict[tuple[str, str], object]:
+    """Map (language_key, member_name) to DictFormats enum member."""
+    return {
+        (lang_name, member.name.lower()): member
+        for lang_name, lang_cls in _language_types().items()
+        for member in lang_cls.DictFormats
+    }
+
+
+@cache
+def _dict_format_values() -> tuple[str, ...]:
+    """Return sorted unique DictFormats member names."""
+    return tuple(sorted({fmt_value for _, fmt_value in _dict_formats()}))
+
+
+@cache
+def _integer_formats() -> dict[tuple[str, str], object]:
+    """Map (language_key, member_name) to IntegerFormats enum
+    member.
+    """
+    return {
+        (lang_name, member.name.lower()): member
+        for lang_name, lang_cls in _language_types().items()
+        for member in lang_cls.IntegerFormats
+    }
+
+
+@cache
+def _integer_format_values() -> tuple[str, ...]:
+    """Return sorted unique IntegerFormats member names."""
+    return tuple(sorted({fmt_value for _, fmt_value in _integer_formats()}))
+
+
+@cache
+def _numeric_separators() -> dict[tuple[str, str], object]:
+    """Map (language_key, member_name) to NumericSeparators enum
+    member.
+    """
+    return {
+        (lang_name, member.name.lower()): member
+        for lang_name, lang_cls in _language_types().items()
+        for member in lang_cls.NumericSeparators
+    }
+
+
+@cache
+def _numeric_separator_values() -> tuple[str, ...]:
+    """Return sorted unique NumericSeparators member names."""
+    return tuple(sorted({fmt_value for _, fmt_value in _numeric_separators()}))
+
+
+@cache
+def _string_formats() -> dict[tuple[str, str], object]:
+    """Map (language_key, member_name) to StringFormats enum member."""
+    return {
+        (lang_name, member.name.lower()): member
+        for lang_name, lang_cls in _language_types().items()
+        for member in lang_cls.StringFormats
+    }
+
+
+@cache
+def _string_format_values() -> tuple[str, ...]:
+    """Return sorted unique StringFormats member names."""
+    return tuple(sorted({fmt_value for _, fmt_value in _string_formats()}))
+
+
+@cache
+def _trailing_commas() -> dict[tuple[str, str], object]:
+    """Map (language_key, member_name) to TrailingCommas enum
+    member.
+    """
+    return {
+        (lang_name, member.name.lower()): member
+        for lang_name, lang_cls in _language_types().items()
+        for member in lang_cls.TrailingCommas
+    }
+
+
+@cache
+def _trailing_comma_values() -> tuple[str, ...]:
+    """Return sorted unique TrailingCommas member names."""
+    return tuple(sorted({fmt_value for _, fmt_value in _trailing_commas()}))
+
+
 @beartype
 def _lookup_format(
     language_name: str,
@@ -168,6 +272,30 @@ def _lookup_format(
             f"{directive_name} '{format_value}'."
         )
         raise ExtensionError(message=msg) from None
+
+
+_FORMAT_OPTIONS: tuple[
+    tuple[str, str, Callable[[], dict[tuple[str, str], object]]],
+    ...,
+] = (
+    ("date-format", "date_format", _date_formats),
+    ("datetime-format", "datetime_format", _datetime_formats),
+    ("sequence-format", "sequence_format", _sequence_formats),
+    ("set-format", "set_format", _set_formats),
+    ("bytes-format", "bytes_format", _bytes_formats),
+    ("comment-format", "comment_format", _comment_formats),
+    (
+        "variable-type-hints",
+        "variable_type_hints",
+        _variable_type_hints_formats,
+    ),
+    ("declaration-style", "declaration_style", _declaration_styles),
+    ("dict-format", "dict_format", _dict_formats),
+    ("integer-format", "integer_format", _integer_formats),
+    ("numeric-separator", "numeric_separator", _numeric_separators),
+    ("string-format", "string_format", _string_formats),
+    ("trailing-comma", "trailing_comma", _trailing_commas),
+)
 
 
 @beartype
@@ -191,6 +319,12 @@ class LiteralizerDirective(SphinxDirective):
            :bytes-format: python
            :comment-format: block
            :variable-type-hints: inline
+           :declaration-style: const
+           :dict-format: object
+           :integer-format: decimal
+           :numeric-separator: none
+           :string-format: double
+           :trailing-comma: yes
     """
 
     required_arguments = 1
@@ -237,6 +371,30 @@ class LiteralizerDirective(SphinxDirective):
             argument=x,
             values=_variable_type_hints_format_values(),
         ),
+        "declaration-style": lambda x: directives.choice(
+            argument=x,
+            values=_declaration_style_values(),
+        ),
+        "dict-format": lambda x: directives.choice(
+            argument=x,
+            values=_dict_format_values(),
+        ),
+        "integer-format": lambda x: directives.choice(
+            argument=x,
+            values=_integer_format_values(),
+        ),
+        "numeric-separator": lambda x: directives.choice(
+            argument=x,
+            values=_numeric_separator_values(),
+        ),
+        "string-format": lambda x: directives.choice(
+            argument=x,
+            values=_string_format_values(),
+        ),
+        "trailing-comma": lambda x: directives.choice(
+            argument=x,
+            values=_trailing_comma_values(),
+        ),
     }
 
     def run(self) -> list[nodes.Node]:
@@ -252,89 +410,20 @@ class LiteralizerDirective(SphinxDirective):
         language_cls = _language_types()[language_name]
         constructor = partial(language_cls)
 
-        date_format_value = self.options.get("date-format")
-        if date_format_value is not None:
-            constructor = partial(
-                constructor,
-                date_format=_lookup_format(
-                    language_name=language_name,
-                    directive_name="date-format",
-                    format_value=date_format_value,
-                    formats=_date_formats(),
-                ),
-            )
-
-        datetime_format_value = self.options.get("datetime-format")
-        if datetime_format_value is not None:
-            constructor = partial(
-                constructor,
-                datetime_format=_lookup_format(
-                    language_name=language_name,
-                    directive_name="datetime-format",
-                    format_value=datetime_format_value,
-                    formats=_datetime_formats(),
-                ),
-            )
-
-        sequence_format_value = self.options.get("sequence-format")
-        if sequence_format_value is not None:
-            constructor = partial(
-                constructor,
-                sequence_format=_lookup_format(
-                    language_name=language_name,
-                    directive_name="sequence-format",
-                    format_value=sequence_format_value,
-                    formats=_sequence_formats(),
-                ),
-            )
-
-        set_format_value = self.options.get("set-format")
-        if set_format_value is not None:
-            constructor = partial(
-                constructor,
-                set_format=_lookup_format(
-                    language_name=language_name,
-                    directive_name="set-format",
-                    format_value=set_format_value,
-                    formats=_set_formats(),
-                ),
-            )
-
-        bytes_format_value = self.options.get("bytes-format")
-        if bytes_format_value is not None:
-            constructor = partial(
-                constructor,
-                bytes_format=_lookup_format(
-                    language_name=language_name,
-                    directive_name="bytes-format",
-                    format_value=bytes_format_value,
-                    formats=_bytes_formats(),
-                ),
-            )
-
-        comment_format_value = self.options.get("comment-format")
-        if comment_format_value is not None:
-            constructor = partial(
-                constructor,
-                comment_format=_lookup_format(
-                    language_name=language_name,
-                    directive_name="comment-format",
-                    format_value=comment_format_value,
-                    formats=_comment_formats(),
-                ),
-            )
-
-        variable_type_hints_value = self.options.get("variable-type-hints")
-        if variable_type_hints_value is not None:
-            constructor = partial(
-                constructor,
-                variable_type_hints=_lookup_format(
-                    language_name=language_name,
-                    directive_name="variable-type-hints",
-                    format_value=variable_type_hints_value,
-                    formats=_variable_type_hints_formats(),
-                ),
-            )
+        for option_name, kwarg, formats_fn in _FORMAT_OPTIONS:
+            value = self.options.get(option_name)
+            if value is not None:
+                constructor = partial(
+                    constructor,
+                    **{
+                        kwarg: _lookup_format(
+                            language_name=language_name,
+                            directive_name=option_name,
+                            format_value=value,
+                            formats=formats_fn(),
+                        ),
+                    },
+                )
 
         language_spec: Language = constructor()
 
@@ -350,7 +439,7 @@ class LiteralizerDirective(SphinxDirective):
 
         # YAML is a superset of JSON, so literalize_yaml handles both
         # .yaml/.yml files and .json files without any format detection.
-        text = literalize_yaml(
+        result = literalize_yaml(
             yaml_string=data_path.read_text(encoding="utf-8"),
             language=language_spec,
             line_prefix=line_prefix,
@@ -360,6 +449,7 @@ class LiteralizerDirective(SphinxDirective):
             new_variable=not existing_variable,
             error_on_coercion=False,
         )
+        text = result.code
 
         # First positional arg sets rawsource; Sphinx requires
         # rawsource == astext() for syntax highlighting to apply.

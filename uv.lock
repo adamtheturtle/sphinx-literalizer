@@ -535,15 +535,6 @@ wheels = [
 ]
 
 [[package]]
-name = "json-to-schema"
-version = "1.1.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/09/87/d65f7b1f22bc997cd75cd5666daa4994b1f22af5f14f5867eaa0cb2c8e12/json_to_schema-1.1.0.tar.gz", hash = "sha256:fc3fc4da4ad6a5bd7ccb5bc8616e5a74a8c215caa6839c13dfc4fd2f72a5f5cb", size = 14847, upload-time = "2026-02-08T13:52:02.348Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/65/a2/c5225de2d938722a2fb462842ae339912b92a73c1fcecd8aee959c03631c/json_to_schema-1.1.0-py3-none-any.whl", hash = "sha256:6b45a8a1416b80fa141d6de998644e7189ed55892858370aa6df46f519d59525", size = 11306, upload-time = "2026-02-08T13:52:01.247Z" },
-]
-
-[[package]]
 name = "librt"
 version = "0.8.1"
 source = { registry = "https://pypi.org/simple" }
@@ -605,16 +596,15 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.3.22.1"
+version = "2026.3.23"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
-    { name = "json-to-schema" },
     { name = "ruamel-yaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f6/59/0535209b6c856e7bb73d304ea38bae7664d09887cb2fc59a7ff5c46e96ce/literalizer-2026.3.22.1.tar.gz", hash = "sha256:3c3294934d7adcc8c0041ed9b1da6045643ed9b7a74f2e5dcc538d58c461a27a", size = 443235, upload-time = "2026-03-22T15:56:26.308Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/76/d4/db1443f9a0a65c25837034e8bdb92dea90ba0b34ed71e48f243902dbc65a/literalizer-2026.3.23.tar.gz", hash = "sha256:301ea7e79bef858f30f6138cb01802b1d51e011a0ca63f625e35a52d32177278", size = 637978, upload-time = "2026-03-23T14:18:27.667Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c8/9e/16066025408f6663832a2c0633c855b2998b50e3d47f1752bb058a0aa172/literalizer-2026.3.22.1-py3-none-any.whl", hash = "sha256:c31a71e7b47f0de58d5a2b99dfc85536605033888af70ee140f6e8085993cad7", size = 122372, upload-time = "2026-03-22T15:56:24.389Z" },
+    { url = "https://files.pythonhosted.org/packages/5d/c5/5dbf13b873224d43e16d862ce7fad656f9a8e79932babe8c27df7121de47/literalizer-2026.3.23-py3-none-any.whl", hash = "sha256:49843a24a2b045831886ed9ffe2f895e3fa9986265332a10a8f5af7d1d2c8e38", size = 152787, upload-time = "2026-03-23T14:18:25.244Z" },
 ]
 
 [[package]]
@@ -1549,7 +1539,7 @@ requires-dist = [
     { name = "docutils" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
     { name = "interrogate", marker = "extra == 'dev'", specifier = "==1.7.0" },
-    { name = "literalizer", specifier = "==2026.3.22.1" },
+    { name = "literalizer", specifier = "==2026.3.23" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "==1.19.1" },
     { name = "mypy-strict-kwargs", marker = "extra == 'dev'", specifier = "==2026.1.12" },
     { name = "prek", marker = "extra == 'dev'", specifier = "==0.3.6" },

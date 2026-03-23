@@ -216,6 +216,143 @@ Directive options
       With type annotation, e.g. ``my_var: dict[str, Any] = {...}``.
       Currently available for Python only.
 
+``:comment-format:`` (optional)
+   How to render comments.  Not all values are valid for every language.
+   Supported values:
+
+   ``apostrophe``
+      ``'`` comments.  Available for Visual Basic.
+   ``block``
+      Block comments (``/* ... */`` or equivalent).  Available for C,
+      C#, C++, Common Lisp, D, Dart, F#, Go, Groovy, Haskell, HCL,
+      Java, JavaScript, Julia, Kotlin, Lua, MATLAB, Nim, Objective-C,
+      PHP, PowerShell, Racket, Rust, Scala, Swift, TypeScript.
+   ``double_dash``
+      ``--`` comments.  Available for Ada, Haskell, Lua, Occam.
+   ``double_slash``
+      ``//`` comments.  Available for C, C#, C++, D, Dart, F#, Go,
+      Groovy, Java, JavaScript, Kotlin, Objective-C, PHP, Rust, Scala,
+      Swift, TypeScript, Zig.
+   ``exclamation``
+      ``!`` comments.  Available for Fortran.
+   ``hash``
+      ``#`` comments.  Available for Bash, Crystal, Elixir, HCL, Julia,
+      Mojo, Nim, Perl, PowerShell, Python, R, Ruby, TOML, YAML.
+   ``paren_star``
+      ``(* ... *)`` comments.  Available for OCaml.
+   ``percent``
+      ``%`` comments.  Available for Erlang, MATLAB, Norg.
+   ``semicolon``
+      ``;`` comments.  Available for Clojure, Common Lisp, Racket.
+   ``star_angle``
+      ``*>`` comments.  Available for COBOL.
+
+``:declaration-style:`` (optional)
+   How to declare variables.  Not all values are valid for every
+   language.  Supported values:
+
+   ``assign``
+      Plain assignment (``x = ...``).  Available for Crystal, Elixir,
+      Erlang, Haskell, HCL, Julia, MATLAB, Mojo, PHP, PowerShell,
+      Python, R, Ruby, TOML, YAML.
+   ``auto``
+      ``auto`` keyword.  Available for C++, D.
+   ``block``
+      Block-level declaration.  Available for Norg.
+   ``const``
+      ``const`` keyword.  Available for JavaScript, TypeScript, Zig.
+   ``declare``
+      Language-specific declaration keyword.  Available for Ada, Bash.
+   ``def``
+      ``def`` keyword.  Available for Clojure, Groovy.
+   ``define``
+      ``define`` form.  Available for Racket.
+   ``defparameter``
+      ``defparameter`` form.  Available for Common Lisp.
+   ``dim``
+      ``Dim`` keyword.  Available for Visual Basic.
+   ``final``
+      ``final`` keyword.  Available for Dart.
+   ``let``
+      ``let`` keyword.  Available for F#, JavaScript, OCaml, Rust,
+      Swift.
+   ``local``
+      ``local`` keyword.  Available for Lua.
+   ``my``
+      ``my`` keyword.  Available for Perl.
+   ``short``
+      Short variable declaration (``:=``).  Available for Go.
+   ``typed``
+      Typed declaration.  Available for C, COBOL, Fortran, Objective-C.
+   ``val``
+      ``val`` keyword.  Available for Kotlin, Occam, Scala.
+   ``var``
+      ``var`` keyword.  Available for C#, Java, Nim.
+
+``:dict-format:`` (optional)
+   How to render dictionaries / maps.  Not all values are valid for
+   every language.  Supported values:
+
+   ``default``
+      Language-default dict syntax.  Available for most languages.
+   ``dict``
+      ``Dict(...)`` constructor.  Available for Julia.
+   ``dictionary``
+      ``Dictionary`` constructor.  Available for C#.
+   ``hash_map``
+      ``HashMap`` constructor.  Available for Rust.
+   ``map``
+      ``Map`` constructor.  Available for C++, JavaScript, Kotlin,
+      Scala.
+   ``map_of_entries``
+      ``Map.ofEntries(...)`` constructor.  Available for Java.
+   ``object``
+      Object literal syntax.  Available for JavaScript, TypeScript.
+   ``struct``
+      ``struct`` syntax.  Available for MATLAB.
+
+``:integer-format:`` (optional)
+   How to render integer values.  Not all values are valid for every
+   language.  Supported values:
+
+   ``decimal``
+      Decimal integer literal (default for all languages).
+   ``hex``
+      Hexadecimal integer literal.  Available for JavaScript.
+
+``:numeric-separator:`` (optional)
+   Whether to use numeric separators in integer literals.  Supported
+   values:
+
+   ``none``
+      No separators (default for all languages).
+   ``underscore``
+      Underscore separators (e.g. ``1_000_000``).  Available for
+      JavaScript.
+
+``:string-format:`` (optional)
+   How to render string values.  Supported values:
+
+   ``double``
+      Double-quoted strings (default for all languages).
+   ``single``
+      Single-quoted strings.  Available for JavaScript.
+
+``:trailing-comma:`` (optional)
+   Whether to include a trailing comma after the last element in
+   collections.  Supported values:
+
+   ``yes``
+      Include trailing comma.  Available for C, C++, Crystal, D, Dart,
+      Elixir, Go, Groovy, HCL, JavaScript, Julia, Kotlin, Lua, Mojo,
+      Objective-C, Perl, PHP, Python, Ruby, Rust, Scala, Swift,
+      TypeScript, Zig.
+   ``no``
+      Omit trailing comma.  Available for Ada, Bash, C#, Clojure,
+      COBOL, Common Lisp, Erlang, F#, Fortran, Haskell, Java,
+      JavaScript, MATLAB, Nim, Norg, OCaml, Occam, PowerShell, R,
+      Racket, TOML, Visual Basic, YAML.
+
 Example
 ~~~~~~~
 
