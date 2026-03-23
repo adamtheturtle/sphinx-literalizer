@@ -35,7 +35,7 @@ dynamic = [
 dependencies = [
     "beartype==0.22.9",
     "docutils",
-    "literalizer==2026.3.22.1",
+    "literalizer==2026.3.23",
     "sphinx>=7.0",
 ]
 optional-dependencies.dev = [
@@ -50,6 +50,7 @@ optional-dependencies.dev = [
     "mypy-strict-kwargs==2026.1.12",
     "prek==0.3.6",
     "pydocstringformatter==0.7.5",
+    "pylint==4.0.5",
     "pyproject-fmt==2.20.0",
     "pyrefly==0.57.1",
     "pyright==1.1.408",
