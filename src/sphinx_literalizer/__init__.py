@@ -570,12 +570,29 @@ class LiteralizerDirective(SphinxDirective):
         )
         return constructor()
 
+    def _rendering_options(self) -> tuple[str, str, bool, str | None, bool]:
+        """Return the rendering options derived from directive flags."""
+        prefix_count: int = self.options.get("prefix", 0)
+        prefix_char_name: str = self.options.get("prefix-char", "spaces")
+        prefix_char = "\t" if prefix_char_name == "tabs" else " "
+        line_prefix = prefix_char * prefix_count
+        indent_count: int = self.options.get("indent", 4)
+        indent = prefix_char * indent_count
+        include_delimiters: bool = "include-delimiters" in self.options
+        variable_name: str | None = self.options.get("variable-name")
+        existing_variable: bool = "existing-variable" in self.options
+        return (
+            line_prefix,
+            indent,
+            include_delimiters,
+            variable_name,
+            existing_variable,
+        )
+
     def run(self) -> list[nodes.Node]:
         """Read the data file and produce a literal block."""
         env = self.state.document.settings.env
-        rel_path = self.arguments[0]
-        source_dir = Path(env.srcdir)
-        data_path = (source_dir / rel_path).resolve()
+        data_path = (Path(env.srcdir) / self.arguments[0]).resolve()
 
         env.note_dependency(str(object=data_path))
 
@@ -586,15 +603,13 @@ class LiteralizerDirective(SphinxDirective):
             language_cls=language_cls,
         )
 
-        prefix_count: int = self.options.get("prefix", 0)
-        prefix_char_name: str = self.options.get("prefix-char", "spaces")
-        prefix_char = "\t" if prefix_char_name == "tabs" else " "
-        line_prefix = prefix_char * prefix_count
-        indent_count: int = self.options.get("indent", 4)
-        indent = prefix_char * indent_count
-        include_delimiters: bool = "include-delimiters" in self.options
-        variable_name: str | None = self.options.get("variable-name")
-        existing_variable: bool = "existing-variable" in self.options
+        (
+            line_prefix,
+            indent,
+            include_delimiters,
+            variable_name,
+            existing_variable,
+        ) = self._rendering_options()
 
         # YAML is a superset of JSON, so literalize_yaml handles both
         # .yaml/.yml files and .json files without any format detection.

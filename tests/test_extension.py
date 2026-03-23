@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 """Integration tests for the Sphinx extension."""
 
 import json
