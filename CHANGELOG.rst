@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.03.23
+----------
+
+
 - Bumped ``literalizer`` to ``2026.3.23``.
 - ``literalize_yaml`` now returns ``LiteralizeResult``; use ``.code``
   for the rendered text.
