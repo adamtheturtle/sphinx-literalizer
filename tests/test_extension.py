@@ -2258,3 +2258,250 @@ def test_variable_type_hints_inline(
     html = (app.outdir / "index.html").read_text()
     assert "my_var" in html
     app.cleanup()
+
+
+def test_declaration_style_let(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :declaration-style: option changes the declaration keyword."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2]),
+    )
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: javascript
+           :variable-name: x
+           :include-delimiters:
+           :declaration-style: let
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    html = (app.outdir / "index.html").read_text()
+    assert "let" in html
+    app.cleanup()
+
+
+def test_dict_format_map(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :dict-format: option changes how dicts are rendered."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"a": 1}),
+    )
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: javascript
+           :include-delimiters:
+           :dict-format: map
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    html = (app.outdir / "index.html").read_text()
+    assert "Map" in html
+    app.cleanup()
+
+
+def test_integer_format_hex(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :integer-format: option changes how integers are rendered."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[255]),
+    )
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: javascript
+           :integer-format: hex
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    html = (app.outdir / "index.html").read_text()
+    assert "0xff" in html or "0xFF" in html
+    app.cleanup()
+
+
+def test_numeric_separator_underscore(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :numeric-separator: option adds separators to numbers."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1000000]),
+    )
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: javascript
+           :numeric-separator: underscore
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    app.cleanup()
+
+
+def test_string_format_single(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :string-format: option changes string quoting style."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=["hello"]),
+    )
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: javascript
+           :string-format: single
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    html = (app.outdir / "index.html").read_text()
+    assert "&#39;hello&#39;" in html or "'hello'" in html
+    app.cleanup()
+
+
+def test_trailing_comma_no(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :trailing-comma: option controls trailing commas."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1]),
+    )
+    source_file = source_directory / "index.rst"
+
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: javascript
+           :include-delimiters:
+           :trailing-comma: yes
+    """
+        )
+    )
+    yes_app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    yes_app.build()
+    assert yes_app.statuscode == 0
+    yes_html = (yes_app.outdir / "index.html").read_text()
+    yes_app.cleanup()
+
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: javascript
+           :include-delimiters:
+           :trailing-comma: no
+    """
+        )
+    )
+    no_app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    no_app.build()
+    assert no_app.statuscode == 0
+    no_html = (no_app.outdir / "index.html").read_text()
+    no_app.cleanup()
+
+    assert yes_html != no_html
