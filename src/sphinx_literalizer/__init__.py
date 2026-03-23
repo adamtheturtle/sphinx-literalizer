@@ -274,30 +274,6 @@ def _lookup_format(
         raise ExtensionError(message=msg) from None
 
 
-_FORMAT_OPTIONS: tuple[
-    tuple[str, str, Callable[[], dict[tuple[str, str], object]]],
-    ...,
-] = (
-    ("date-format", "date_format", _date_formats),
-    ("datetime-format", "datetime_format", _datetime_formats),
-    ("sequence-format", "sequence_format", _sequence_formats),
-    ("set-format", "set_format", _set_formats),
-    ("bytes-format", "bytes_format", _bytes_formats),
-    ("comment-format", "comment_format", _comment_formats),
-    (
-        "variable-type-hints",
-        "variable_type_hints",
-        _variable_type_hints_formats,
-    ),
-    ("declaration-style", "declaration_style", _declaration_styles),
-    ("dict-format", "dict_format", _dict_formats),
-    ("integer-format", "integer_format", _integer_formats),
-    ("numeric-separator", "numeric_separator", _numeric_separators),
-    ("string-format", "string_format", _string_formats),
-    ("trailing-comma", "trailing_comma", _trailing_commas),
-)
-
-
 @beartype
 class LiteralizerDirective(SphinxDirective):
     """Directive that converts a JSON file to a native literal block.
@@ -397,6 +373,203 @@ class LiteralizerDirective(SphinxDirective):
         ),
     }
 
+    def _apply_serialization_options(
+        self,
+        language_name: str,
+        constructor: partial[Language],
+    ) -> partial[Language]:
+        """Apply date, sequence, set, bytes, comment, and type-hint
+        options.
+        """
+        date_format_value = self.options.get("date-format")
+        if date_format_value is not None:
+            constructor = partial(
+                constructor,
+                date_format=_lookup_format(
+                    language_name=language_name,
+                    directive_name="date-format",
+                    format_value=date_format_value,
+                    formats=_date_formats(),
+                ),
+            )
+
+        datetime_format_value = self.options.get("datetime-format")
+        if datetime_format_value is not None:
+            constructor = partial(
+                constructor,
+                datetime_format=_lookup_format(
+                    language_name=language_name,
+                    directive_name="datetime-format",
+                    format_value=datetime_format_value,
+                    formats=_datetime_formats(),
+                ),
+            )
+
+        sequence_format_value = self.options.get("sequence-format")
+        if sequence_format_value is not None:
+            constructor = partial(
+                constructor,
+                sequence_format=_lookup_format(
+                    language_name=language_name,
+                    directive_name="sequence-format",
+                    format_value=sequence_format_value,
+                    formats=_sequence_formats(),
+                ),
+            )
+
+        set_format_value = self.options.get("set-format")
+        if set_format_value is not None:
+            constructor = partial(
+                constructor,
+                set_format=_lookup_format(
+                    language_name=language_name,
+                    directive_name="set-format",
+                    format_value=set_format_value,
+                    formats=_set_formats(),
+                ),
+            )
+
+        bytes_format_value = self.options.get("bytes-format")
+        if bytes_format_value is not None:
+            constructor = partial(
+                constructor,
+                bytes_format=_lookup_format(
+                    language_name=language_name,
+                    directive_name="bytes-format",
+                    format_value=bytes_format_value,
+                    formats=_bytes_formats(),
+                ),
+            )
+
+        comment_format_value = self.options.get("comment-format")
+        if comment_format_value is not None:
+            constructor = partial(
+                constructor,
+                comment_format=_lookup_format(
+                    language_name=language_name,
+                    directive_name="comment-format",
+                    format_value=comment_format_value,
+                    formats=_comment_formats(),
+                ),
+            )
+
+        variable_type_hints_value = self.options.get(
+            "variable-type-hints",
+        )
+        if variable_type_hints_value is not None:
+            constructor = partial(
+                constructor,
+                variable_type_hints=_lookup_format(
+                    language_name=language_name,
+                    directive_name="variable-type-hints",
+                    format_value=variable_type_hints_value,
+                    formats=_variable_type_hints_formats(),
+                ),
+            )
+
+        return constructor
+
+    def _apply_syntax_options(
+        self,
+        language_name: str,
+        constructor: partial[Language],
+    ) -> partial[Language]:
+        """Apply declaration, dict, integer, numeric, string, and
+        trailing-comma options.
+        """
+        declaration_style_value = self.options.get("declaration-style")
+        if declaration_style_value is not None:
+            constructor = partial(
+                constructor,
+                declaration_style=_lookup_format(
+                    language_name=language_name,
+                    directive_name="declaration-style",
+                    format_value=declaration_style_value,
+                    formats=_declaration_styles(),
+                ),
+            )
+
+        dict_format_value = self.options.get("dict-format")
+        if dict_format_value is not None:
+            constructor = partial(
+                constructor,
+                dict_format=_lookup_format(
+                    language_name=language_name,
+                    directive_name="dict-format",
+                    format_value=dict_format_value,
+                    formats=_dict_formats(),
+                ),
+            )
+
+        integer_format_value = self.options.get("integer-format")
+        if integer_format_value is not None:
+            constructor = partial(
+                constructor,
+                integer_format=_lookup_format(
+                    language_name=language_name,
+                    directive_name="integer-format",
+                    format_value=integer_format_value,
+                    formats=_integer_formats(),
+                ),
+            )
+
+        numeric_separator_value = self.options.get(
+            "numeric-separator",
+        )
+        if numeric_separator_value is not None:
+            constructor = partial(
+                constructor,
+                numeric_separator=_lookup_format(
+                    language_name=language_name,
+                    directive_name="numeric-separator",
+                    format_value=numeric_separator_value,
+                    formats=_numeric_separators(),
+                ),
+            )
+
+        string_format_value = self.options.get("string-format")
+        if string_format_value is not None:
+            constructor = partial(
+                constructor,
+                string_format=_lookup_format(
+                    language_name=language_name,
+                    directive_name="string-format",
+                    format_value=string_format_value,
+                    formats=_string_formats(),
+                ),
+            )
+
+        trailing_comma_value = self.options.get("trailing-comma")
+        if trailing_comma_value is not None:
+            constructor = partial(
+                constructor,
+                trailing_comma=_lookup_format(
+                    language_name=language_name,
+                    directive_name="trailing-comma",
+                    format_value=trailing_comma_value,
+                    formats=_trailing_commas(),
+                ),
+            )
+
+        return constructor
+
+    def _build_language(
+        self,
+        language_name: str,
+        language_cls: LanguageCls,
+    ) -> Language:
+        """Build a Language instance from directive options."""
+        constructor = partial(language_cls)
+        constructor = self._apply_serialization_options(
+            language_name=language_name,
+            constructor=constructor,
+        )
+        constructor = self._apply_syntax_options(
+            language_name=language_name,
+            constructor=constructor,
+        )
+        return constructor()
+
     def run(self) -> list[nodes.Node]:
         """Read the data file and produce a literal block."""
         env = self.state.document.settings.env
@@ -408,24 +581,10 @@ class LiteralizerDirective(SphinxDirective):
 
         language_name: str = self.options["language"]
         language_cls = _language_types()[language_name]
-        constructor = partial(language_cls)
-
-        for option_name, kwarg, formats_fn in _FORMAT_OPTIONS:
-            value = self.options.get(option_name)
-            if value is not None:
-                constructor = partial(
-                    constructor,
-                    **{
-                        kwarg: _lookup_format(
-                            language_name=language_name,
-                            directive_name=option_name,
-                            format_value=value,
-                            formats=formats_fn(),
-                        ),
-                    },
-                )
-
-        language_spec: Language = constructor()
+        language_spec = self._build_language(
+            language_name=language_name,
+            language_cls=language_cls,
+        )
 
         prefix_count: int = self.options.get("prefix", 0)
         prefix_char_name: str = self.options.get("prefix-char", "spaces")
