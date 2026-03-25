@@ -280,7 +280,6 @@ class _RenderingOptions:
     """Rendering options derived from directive flags."""
 
     line_prefix: str
-    indent: str
     include_delimiters: bool
     variable_name: str | None
     existing_variable: bool
@@ -572,6 +571,15 @@ class LiteralizerDirective(SphinxDirective):
     ) -> Language:
         """Build a Language instance from directive options."""
         constructor = partial(language_cls)
+
+        indent_count: int = self.options.get("indent", 4)
+        prefix_char_name: str = self.options.get("prefix-char", "spaces")
+        indent_char = "\t" if prefix_char_name == "tabs" else " "
+        constructor = partial(
+            constructor,
+            indent=indent_char * indent_count,
+        )
+
         constructor = self._apply_serialization_options(
             language_name=language_name,
             constructor=constructor,
@@ -588,14 +596,11 @@ class LiteralizerDirective(SphinxDirective):
         prefix_char_name: str = self.options.get("prefix-char", "spaces")
         prefix_char = "\t" if prefix_char_name == "tabs" else " "
         line_prefix = prefix_char * prefix_count
-        indent_count: int = self.options.get("indent", 4)
-        indent = prefix_char * indent_count
         include_delimiters: bool = "include-delimiters" in self.options
         variable_name: str | None = self.options.get("variable-name")
         existing_variable: bool = "existing-variable" in self.options
         return _RenderingOptions(
             line_prefix=line_prefix,
-            indent=indent,
             include_delimiters=include_delimiters,
             variable_name=variable_name,
             existing_variable=existing_variable,
@@ -623,7 +628,6 @@ class LiteralizerDirective(SphinxDirective):
             yaml_string=data_path.read_text(encoding="utf-8"),
             language=language_spec,
             line_prefix=rendering.line_prefix,
-            indent=rendering.indent,
             include_delimiters=rendering.include_delimiters,
             variable_name=rendering.variable_name,
             new_variable=not rendering.existing_variable,
