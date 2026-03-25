@@ -5,6 +5,7 @@ renders it as a native language literal block.
 """
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from functools import cache, partial
 from pathlib import Path
 from typing import Any, ClassVar
@@ -272,6 +273,17 @@ def _lookup_format(
             f"{directive_name} '{format_value}'."
         )
         raise ExtensionError(message=msg) from None
+
+
+@dataclass(frozen=True)
+class _RenderingOptions:
+    """Rendering options derived from directive flags."""
+
+    line_prefix: str
+    indent: str
+    include_delimiters: bool
+    variable_name: str | None
+    existing_variable: bool
 
 
 @beartype
@@ -570,7 +582,7 @@ class LiteralizerDirective(SphinxDirective):
         )
         return constructor()
 
-    def _rendering_options(self) -> tuple[str, str, bool, str | None, bool]:
+    def _rendering_options(self) -> _RenderingOptions:
         """Return the rendering options derived from directive flags."""
         prefix_count: int = self.options.get("prefix", 0)
         prefix_char_name: str = self.options.get("prefix-char", "spaces")
@@ -581,12 +593,12 @@ class LiteralizerDirective(SphinxDirective):
         include_delimiters: bool = "include-delimiters" in self.options
         variable_name: str | None = self.options.get("variable-name")
         existing_variable: bool = "existing-variable" in self.options
-        return (
-            line_prefix,
-            indent,
-            include_delimiters,
-            variable_name,
-            existing_variable,
+        return _RenderingOptions(
+            line_prefix=line_prefix,
+            indent=indent,
+            include_delimiters=include_delimiters,
+            variable_name=variable_name,
+            existing_variable=existing_variable,
         )
 
     def run(self) -> list[nodes.Node]:
@@ -603,24 +615,18 @@ class LiteralizerDirective(SphinxDirective):
             language_cls=language_cls,
         )
 
-        (
-            line_prefix,
-            indent,
-            include_delimiters,
-            variable_name,
-            existing_variable,
-        ) = self._rendering_options()
+        rendering = self._rendering_options()
 
         # YAML is a superset of JSON, so literalize_yaml handles both
         # .yaml/.yml files and .json files without any format detection.
         result = literalize_yaml(
             yaml_string=data_path.read_text(encoding="utf-8"),
             language=language_spec,
-            line_prefix=line_prefix,
-            indent=indent,
-            include_delimiters=include_delimiters,
-            variable_name=variable_name,
-            new_variable=not existing_variable,
+            line_prefix=rendering.line_prefix,
+            indent=rendering.indent,
+            include_delimiters=rendering.include_delimiters,
+            variable_name=rendering.variable_name,
+            new_variable=not rendering.existing_variable,
             error_on_coercion=False,
         )
         text = result.code
