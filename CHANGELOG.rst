@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.03.25
+----------
+
+
 - Bumped ``literalizer`` to ``2026.3.25``.
 - Passed ``:indent:`` to the language constructor instead of
   ``literalize_yaml``, matching the upstream API change.
