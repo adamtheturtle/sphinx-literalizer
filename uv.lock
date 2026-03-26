@@ -623,15 +623,15 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.3.26.1"
+version = "2026.3.26.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
     { name = "ruamel-yaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/83/cf/6fd02e58e4d511f6cb8e6d31efaba1fa92546a08e0529022ad233cfbe0a0/literalizer-2026.3.26.1.tar.gz", hash = "sha256:5417e1fe26a430893e2383e3cec15b4e862c33b3bcd3e0c31c62f14fc4c88f59", size = 609130, upload-time = "2026-03-26T13:03:19.509Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6c/38/b9ebddfdd94371d9c873ec501a90e509131535d88b8b07cf008c3936c69f/literalizer-2026.3.26.2.tar.gz", hash = "sha256:09c220bdca2d9a4235b6626dc781fc34f98c10a8a35f06f80f539415fd4fee83", size = 609793, upload-time = "2026-03-26T13:53:31.046Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6f/9f/6ed2e0dc195b85f538a7dfef7fc366fc4bb082555aeed61f9df72f6fc309/literalizer-2026.3.26.1-py3-none-any.whl", hash = "sha256:68cc841be9fa6a47402e6e3ef89638f8302b01548c28226d2913957bdee233d7", size = 176973, upload-time = "2026-03-26T13:03:17.85Z" },
+    { url = "https://files.pythonhosted.org/packages/4c/ce/bea2c2e91c7914db0c433fd07f6727b83d59b2c8f472f327027b4fa72c77/literalizer-2026.3.26.2-py3-none-any.whl", hash = "sha256:5453cc185d27c56a7953f32d27b707f19f4b051c99ce73ee9c02ad8c2f31cbf5", size = 176975, upload-time = "2026-03-26T13:53:29.354Z" },
 ]
 
 [[package]]
@@ -1594,7 +1594,7 @@ requires-dist = [
     { name = "docutils" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
     { name = "interrogate", marker = "extra == 'dev'", specifier = "==1.7.0" },
-    { name = "literalizer", specifier = "==2026.3.26.1" },
+    { name = "literalizer", specifier = "==2026.3.26.2" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "==1.19.1" },
     { name = "mypy-strict-kwargs", marker = "extra == 'dev'", specifier = "==2026.1.12" },
     { name = "prek", marker = "extra == 'dev'", specifier = "==0.3.8" },
