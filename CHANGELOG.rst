@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.03.26
+----------
+
+
 - Bumped ``literalizer`` to ``2026.3.26``.
 - Replaced ``:prefix:`` and ``:prefix-char:`` directive options with
   ``:pre-indent-level:`` and ``:indent-char:``, matching the upstream
