@@ -273,6 +273,24 @@ def _line_ending_values() -> tuple[str, ...]:
     return tuple(sorted({fmt_value for _, fmt_value in _line_endings()}))
 
 
+@cache
+def _empty_dict_keys() -> dict[tuple[str, str], object]:
+    """Map (language_key, member_name) to EmptyDictKey enum member."""
+    result: dict[tuple[str, str], object] = {}
+    for lang_name, lang_cls in _language_types().items():
+        enum_cls = getattr(lang_cls, "EmptyDictKey", None)
+        if enum_cls is not None:
+            for member in enum_cls:
+                result[(lang_name, member.name.lower())] = member
+    return result
+
+
+@cache
+def _empty_dict_key_values() -> tuple[str, ...]:
+    """Return sorted unique EmptyDictKey member names."""
+    return tuple(sorted({fmt_value for _, fmt_value in _empty_dict_keys()}))
+
+
 @beartype
 def _lookup_format(
     language_name: str,
@@ -321,7 +339,7 @@ class LiteralizerDirective(SphinxDirective):
            :set-format: frozenset
            :bytes-format: python
            :comment-format: block
-           :variable-type-hints: inline
+           :variable-type-hints: always
            :declaration-style: const
            :dict-format: object
            :integer-format: decimal
@@ -329,6 +347,7 @@ class LiteralizerDirective(SphinxDirective):
            :string-format: double
            :trailing-comma: yes
            :line-ending: semicolon
+           :empty-dict-key: positional
     """
 
     required_arguments = 1
@@ -402,6 +421,10 @@ class LiteralizerDirective(SphinxDirective):
         "line-ending": lambda x: directives.choice(
             argument=x,
             values=_line_ending_values(),
+        ),
+        "empty-dict-key": lambda x: directives.choice(
+            argument=x,
+            values=_empty_dict_key_values(),
         ),
     }
 
@@ -592,6 +615,18 @@ class LiteralizerDirective(SphinxDirective):
                     directive_name="line-ending",
                     format_value=line_ending_value,
                     formats=_line_endings(),
+                ),
+            )
+
+        empty_dict_key_value = self.options.get("empty-dict-key")
+        if empty_dict_key_value is not None:
+            constructor = partial(
+                constructor,
+                empty_dict_key=_lookup_format(
+                    language_name=language_name,
+                    directive_name="empty-dict-key",
+                    format_value=empty_dict_key_value,
+                    formats=_empty_dict_keys(),
                 ),
             )
 

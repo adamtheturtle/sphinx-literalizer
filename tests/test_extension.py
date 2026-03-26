@@ -2229,12 +2229,12 @@ def test_unsupported_comment_format_error(
         app.build()
 
 
-def test_variable_type_hints_inline(
+def test_variable_type_hints_always(
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """The :variable-type-hints: option produces type-annotated output."""
+    """The :variable-type-hints: always produces type-annotated output."""
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -2250,7 +2250,7 @@ def test_variable_type_hints_inline(
         .. literalizer:: data.json
            :language: python
            :variable-name: my_var
-           :variable-type-hints: inline
+           :variable-type-hints: always
     """
         )
     )
@@ -2574,3 +2574,75 @@ def test_line_ending_none(
     none_app.cleanup()
 
     assert semi_html != none_html
+
+
+def test_empty_dict_key_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :empty-dict-key: option is rejected for unsupported
+    languages.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"a": 1}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :empty-dict-key: positional
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=r"Language 'python' does not support empty-dict-key 'positional'\.",
+    ):
+        app.build()
+
+
+def test_empty_dict_key_positional(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :empty-dict-key: positional option works for R."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"a": 1}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: r
+           :empty-dict-key: positional
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    app.cleanup()
