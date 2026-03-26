@@ -51,17 +51,16 @@ Directive options
    ``scala``, ``swift``, ``toml``, ``typescript``, ``vb.net``,
    ``yaml``, ``zig``.
 
-``:prefix:`` (optional)
-   Number of whitespace characters to prepend to each output line.
+``:pre-indent-level:`` (optional)
+   Number of indent levels to prepend to each output line.
    Defaults to ``0``.
 
-``:prefix-char:`` (optional)
-   Type of whitespace for the prefix: ``spaces`` (default) or ``tabs``.
-
 ``:indent:`` (optional)
-   Number of whitespace characters used for indentation inside wrapped
-   delimiters.  Uses the same character type as ``:prefix-char:``.
+   Number of whitespace characters used for one level of indentation.
    Defaults to ``4``.
+
+``:indent-char:`` (optional)
+   Type of whitespace for indentation: ``spaces`` (default) or ``tabs``.
 
 ``:include-delimiters:`` (optional flag)
    Include collection delimiters in the output
@@ -352,6 +351,15 @@ Directive options
       COBOL, Common Lisp, Erlang, F#, Fortran, Haskell, Java,
       JavaScript, MATLAB, Nim, Norg, OCaml, Occam, PowerShell, R,
       Racket, TOML, Visual Basic, YAML.
+
+``:line-ending:`` (optional)
+   Whether to include semicolons at the end of statements.
+   Supported values:
+
+   ``semicolon``
+      Include semicolons.  This is the default for all languages.
+   ``none``
+      Omit semicolons.  Available for JavaScript, TypeScript.
 
 Example
 ~~~~~~~

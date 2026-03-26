@@ -257,6 +257,22 @@ def _trailing_comma_values() -> tuple[str, ...]:
     return tuple(sorted({fmt_value for _, fmt_value in _trailing_commas()}))
 
 
+@cache
+def _line_endings() -> dict[tuple[str, str], object]:
+    """Map (language_key, member_name) to LineEndings enum member."""
+    return {
+        (lang_name, member.name.lower()): member
+        for lang_name, lang_cls in _language_types().items()
+        for member in lang_cls.LineEndings
+    }
+
+
+@cache
+def _line_ending_values() -> tuple[str, ...]:
+    """Return sorted unique LineEndings member names."""
+    return tuple(sorted({fmt_value for _, fmt_value in _line_endings()}))
+
+
 @beartype
 def _lookup_format(
     language_name: str,
@@ -279,7 +295,7 @@ def _lookup_format(
 class _RenderingOptions:
     """Rendering options derived from directive flags."""
 
-    line_prefix: str
+    pre_indent_level: int
     include_delimiters: bool
     variable_name: str | None
     existing_variable: bool
@@ -293,9 +309,9 @@ class LiteralizerDirective(SphinxDirective):
 
         .. literalizer:: path/to/data.json
            :language: python
-           :prefix: 8
-           :prefix-char: spaces
+           :pre-indent-level: 2
            :indent: 4
+           :indent-char: spaces
            :include-delimiters:
            :date-format: python
            :datetime-format: python
@@ -312,6 +328,7 @@ class LiteralizerDirective(SphinxDirective):
            :numeric-separator: none
            :string-format: double
            :trailing-comma: yes
+           :line-ending: semicolon
     """
 
     required_arguments = 1
@@ -321,12 +338,12 @@ class LiteralizerDirective(SphinxDirective):
             argument=x,
             values=tuple(_language_types()),
         ),
-        "prefix": directives.nonnegative_int,
-        "prefix-char": lambda x: directives.choice(
+        "pre-indent-level": directives.nonnegative_int,
+        "indent": directives.nonnegative_int,
+        "indent-char": lambda x: directives.choice(
             argument=x,
             values=("spaces", "tabs"),
         ),
-        "indent": directives.nonnegative_int,
         "include-delimiters": directives.flag,
         "date-format": lambda x: directives.choice(
             argument=x,
@@ -381,6 +398,10 @@ class LiteralizerDirective(SphinxDirective):
         "trailing-comma": lambda x: directives.choice(
             argument=x,
             values=_trailing_comma_values(),
+        ),
+        "line-ending": lambda x: directives.choice(
+            argument=x,
+            values=_line_ending_values(),
         ),
     }
 
@@ -562,6 +583,18 @@ class LiteralizerDirective(SphinxDirective):
                 ),
             )
 
+        line_ending_value = self.options.get("line-ending")
+        if line_ending_value is not None:
+            constructor = partial(
+                constructor,
+                line_ending=_lookup_format(
+                    language_name=language_name,
+                    directive_name="line-ending",
+                    format_value=line_ending_value,
+                    formats=_line_endings(),
+                ),
+            )
+
         return constructor
 
     def _build_language(
@@ -573,8 +606,8 @@ class LiteralizerDirective(SphinxDirective):
         constructor = partial(language_cls)
 
         indent_count: int = self.options.get("indent", 4)
-        prefix_char_name: str = self.options.get("prefix-char", "spaces")
-        indent_char = "\t" if prefix_char_name == "tabs" else " "
+        indent_char_name: str = self.options.get("indent-char", "spaces")
+        indent_char = "\t" if indent_char_name == "tabs" else " "
         constructor = partial(
             constructor,
             indent=indent_char * indent_count,
@@ -592,15 +625,12 @@ class LiteralizerDirective(SphinxDirective):
 
     def _rendering_options(self) -> _RenderingOptions:
         """Return the rendering options derived from directive flags."""
-        prefix_count: int = self.options.get("prefix", 0)
-        prefix_char_name: str = self.options.get("prefix-char", "spaces")
-        prefix_char = "\t" if prefix_char_name == "tabs" else " "
-        line_prefix = prefix_char * prefix_count
+        pre_indent_level: int = self.options.get("pre-indent-level", 0)
         include_delimiters: bool = "include-delimiters" in self.options
         variable_name: str | None = self.options.get("variable-name")
         existing_variable: bool = "existing-variable" in self.options
         return _RenderingOptions(
-            line_prefix=line_prefix,
+            pre_indent_level=pre_indent_level,
             include_delimiters=include_delimiters,
             variable_name=variable_name,
             existing_variable=existing_variable,
@@ -627,7 +657,7 @@ class LiteralizerDirective(SphinxDirective):
         result = literalize_yaml(
             yaml_string=data_path.read_text(encoding="utf-8"),
             language=language_spec,
-            line_prefix=rendering.line_prefix,
+            pre_indent_level=rendering.pre_indent_level,
             include_delimiters=rendering.include_delimiters,
             variable_name=rendering.variable_name,
             new_variable=not rendering.existing_variable,
