@@ -206,13 +206,13 @@ Directive options
    ``:variable-name:``.
 
 ``:variable-type-hints:`` (optional)
-   Whether to add inline type hints to variable declarations.
+   Whether to add type hints to variable declarations.
    Supported values:
 
-   ``none``
-      Bare assignment, e.g. ``my_var = {...}`` (default).
-   ``inline``
-      With type annotation, e.g. ``my_var: dict[str, Any] = {...}``.
+   ``auto``
+      Type hints are added when the language requires them (default).
+   ``always``
+      Always add type annotation, e.g. ``my_var: dict[str, Any] = {...}``.
       Currently available for Python only.
 
 ``:comment-format:`` (optional)
@@ -360,6 +360,16 @@ Directive options
       Include semicolons.  This is the default for all languages.
    ``none``
       Omit semicolons.  Available for JavaScript, TypeScript.
+
+``:empty-dict-key:`` (optional)
+   How to handle empty string keys in dictionaries.
+   Supported values:
+
+   ``positional``
+      Use positional arguments for empty keys (default).
+      Available for R.
+   ``error``
+      Raise an error on empty keys.  Available for R.
 
 Example
 ~~~~~~~
