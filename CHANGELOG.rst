@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.03.26.1
+------------
+
+
 - Bumped ``literalizer`` to ``2026.3.26.1``.
 - Replaced ``:variable-type-hints: inline`` with ``:variable-type-hints: always``
   and ``:variable-type-hints: auto``, matching the upstream API change.
