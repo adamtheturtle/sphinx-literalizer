@@ -640,13 +640,15 @@ class LiteralizerDirective(SphinxDirective):
         """Build a Language instance from directive options."""
         constructor = partial(language_cls)
 
-        indent_count: int = self.options.get("indent", 4)
-        indent_char_name: str = self.options.get("indent-char", "spaces")
-        indent_char = "\t" if indent_char_name == "tabs" else " "
-        constructor = partial(
-            constructor,
-            indent=indent_char * indent_count,
-        )
+        indent_count = self.options.get("indent")
+        indent_char_name = self.options.get("indent-char")
+        if indent_count is not None or indent_char_name is not None:
+            resolved_count: int = 4 if indent_count is None else indent_count
+            resolved_char = "\t" if indent_char_name == "tabs" else " "
+            constructor = partial(
+                constructor,
+                indent=resolved_char * resolved_count,
+            )
 
         constructor = self._apply_serialization_options(
             language_name=language_name,
