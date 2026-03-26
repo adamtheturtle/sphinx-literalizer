@@ -171,12 +171,14 @@ def test_array_of_arrays_typescript(
     assert content_html == expected_html
 
 
-def test_prefix_spaces(
+def test_pre_indent_level_spaces(
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """The :prefix: option prepends spaces to each output line."""
+    """The :pre-indent-level: option prepends indentation to each
+    output line.
+    """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -190,7 +192,7 @@ def test_prefix_spaces(
 
         .. literalizer:: data.json
            :language: python
-           :prefix: 4
+           :pre-indent-level: 1
     """
         )
     )
@@ -225,12 +227,14 @@ def test_prefix_spaces(
     assert content_html == expected_html
 
 
-def test_prefix_tabs(
+def test_pre_indent_level_tabs(
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """The :prefix-char: tabs option prepends tab characters."""
+    """The :indent-char: tabs option uses tab characters for
+    indentation.
+    """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -244,8 +248,9 @@ def test_prefix_tabs(
 
         .. literalizer:: data.json
            :language: go
-           :prefix: 2
-           :prefix-char: tabs
+           :pre-indent-level: 2
+           :indent: 1
+           :indent-char: tabs
     """
         )
     )
@@ -2506,3 +2511,66 @@ def test_trailing_comma_no(
     no_app.cleanup()
 
     assert yes_html != no_html
+
+
+def test_line_ending_none(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :line-ending: option controls statement terminators."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1]),
+    )
+    source_file = source_directory / "index.rst"
+
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: javascript
+           :variable-name: x
+           :include-delimiters:
+           :line-ending: semicolon
+    """
+        )
+    )
+    semi_app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    semi_app.build()
+    assert semi_app.statuscode == 0
+    semi_html = (semi_app.outdir / "index.html").read_text()
+    semi_app.cleanup()
+
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: javascript
+           :variable-name: x
+           :include-delimiters:
+           :line-ending: none
+    """
+        )
+    )
+    none_app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    none_app.build()
+    assert none_app.statuscode == 0
+    none_html = (none_app.outdir / "index.html").read_text()
+    none_app.cleanup()
+
+    assert semi_html != none_html

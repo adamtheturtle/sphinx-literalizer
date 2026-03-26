@@ -4,6 +4,12 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.3.26``.
+- Replaced ``:prefix:`` and ``:prefix-char:`` directive options with
+  ``:pre-indent-level:`` and ``:indent-char:``, matching the upstream
+  API change from ``line_prefix`` to ``pre_indent_level``.
+- Added ``:line-ending:`` directive option.
+
 2026.03.25
 ----------
 
