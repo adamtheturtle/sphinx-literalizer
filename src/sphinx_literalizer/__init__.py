@@ -276,12 +276,13 @@ def _line_ending_values() -> tuple[str, ...]:
 @cache
 def _empty_dict_keys() -> dict[tuple[str, str], object]:
     """Map (language_key, member_name) to EmptyDictKey enum member."""
-    return {
-        (lang_name, member.name.lower()): member
-        for lang_name, lang_cls in _language_types().items()
-        if hasattr(lang_cls, "EmptyDictKey")
-        for member in lang_cls.EmptyDictKey
-    }
+    result: dict[tuple[str, str], object] = {}
+    for lang_name, lang_cls in _language_types().items():
+        enum_cls = getattr(lang_cls, "EmptyDictKey", None)
+        if enum_cls is not None:
+            for member in enum_cls:
+                result[(lang_name, member.name.lower())] = member
+    return result
 
 
 @cache
