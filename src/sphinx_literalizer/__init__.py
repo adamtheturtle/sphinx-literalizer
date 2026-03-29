@@ -22,18 +22,15 @@ from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
 
 
-def _language_key(lang_cls: LanguageCls) -> str:
-    """Derive the directive key for a language class."""
-    if lang_cls.pygments_name == "text":
-        return lang_cls.__name__.lower()
-    return lang_cls.pygments_name
-
-
 @cache
 def _language_types() -> dict[str, LanguageCls]:
     """Map directive language keys to their language classes."""
     return {
-        _language_key(lang_cls=lang_cls): lang_cls
+        (
+            lang_cls.__name__.lower()
+            if lang_cls.pygments_name == "text"
+            else lang_cls.pygments_name
+        ): lang_cls
         for lang_cls in ALL_LANGUAGES
     }
 
@@ -116,14 +113,6 @@ def _make_format_validator(
     return validator
 
 
-def _format_option_specs() -> dict[str, Callable[[str], str]]:
-    """Build option_spec entries for all format options."""
-    return {
-        option_name: _make_format_validator(option_name=option_name)
-        for option_name in _FORMAT_OPTION_GETTERS
-    }
-
-
 @dataclass(frozen=True)
 class _RenderingOptions:
     """Rendering options derived from directive flags."""
@@ -183,7 +172,10 @@ class LiteralizerDirective(SphinxDirective):
             values=("spaces", "tabs"),
         ),
         "include-delimiters": directives.flag,
-        **_format_option_specs(),
+        **{
+            option_name: _make_format_validator(option_name=option_name)
+            for option_name in _FORMAT_OPTION_GETTERS
+        },
         "variable-name": directives.unchanged,
         "existing-variable": directives.flag,
         "default-set-element-type": directives.unchanged,
