@@ -644,32 +644,35 @@ class LiteralizerDirective(SphinxDirective):
         constructor: partial[Language],
     ) -> partial[Language]:
         """Apply default element/key/value type options."""
-        type_option_map = {
+        type_option_map: dict[
+            str,
+            tuple[str, Callable[[LanguageCls], bool]],
+        ] = {
             "default-set-element-type": (
                 "default_set_element_type",
-                "supports_default_set_element_type",
+                lambda cls: cls.supports_default_set_element_type,
             ),
             "default-sequence-element-type": (
                 "default_sequence_element_type",
-                "supports_default_sequence_element_type",
+                lambda cls: cls.supports_default_sequence_element_type,
             ),
             "default-dict-key-type": (
                 "default_dict_key_type",
-                "supports_default_dict_key_type",
+                lambda cls: cls.supports_default_dict_key_type,
             ),
             "default-dict-value-type": (
                 "default_dict_value_type",
-                "supports_default_dict_value_type",
+                lambda cls: cls.supports_default_dict_value_type,
             ),
         }
         language_cls = _language_types()[language_name]
         for option_name, (
             param_name,
-            supports_attr,
+            supports_check,
         ) in type_option_map.items():
             value = self.options.get(option_name)
             if value is not None:
-                if not getattr(language_cls, supports_attr):
+                if not supports_check(language_cls):
                     msg = (
                         f"Language '{language_name}' does not support "
                         f"'{option_name}'."
