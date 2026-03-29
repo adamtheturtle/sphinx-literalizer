@@ -6,7 +6,6 @@ renders it as a native language literal block.
 
 import enum
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
 from functools import cache, partial
 from pathlib import Path
 from typing import Any, ClassVar
@@ -22,18 +21,15 @@ from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
 
 
-def _language_key(lang_cls: LanguageCls) -> str:
-    """Derive the directive key for a language class."""
-    if lang_cls.pygments_name == "text":
-        return lang_cls.__name__.lower()
-    return lang_cls.pygments_name
-
-
 @cache
 def _language_types() -> dict[str, LanguageCls]:
     """Map directive language keys to their language classes."""
     return {
-        _language_key(lang_cls=lang_cls): lang_cls
+        (
+            lang_cls.__name__.lower()
+            if lang_cls.pygments_name == "text"
+            else lang_cls.pygments_name
+        ): lang_cls
         for lang_cls in ALL_LANGUAGES
     }
 
@@ -116,24 +112,6 @@ def _make_format_validator(
     return validator
 
 
-def _format_option_specs() -> dict[str, Callable[[str], str]]:
-    """Build option_spec entries for all format options."""
-    return {
-        option_name: _make_format_validator(option_name=option_name)
-        for option_name in _FORMAT_OPTION_GETTERS
-    }
-
-
-@dataclass(frozen=True)
-class _RenderingOptions:
-    """Rendering options derived from directive flags."""
-
-    pre_indent_level: int
-    include_delimiters: bool
-    variable_name: str | None
-    existing_variable: bool
-
-
 @beartype
 class LiteralizerDirective(SphinxDirective):
     """Directive that converts a JSON file to a native literal block.
@@ -183,7 +161,10 @@ class LiteralizerDirective(SphinxDirective):
             values=("spaces", "tabs"),
         ),
         "include-delimiters": directives.flag,
-        **_format_option_specs(),
+        **{
+            option_name: _make_format_validator(option_name=option_name)
+            for option_name in _FORMAT_OPTION_GETTERS
+        },
         "variable-name": directives.unchanged,
         "existing-variable": directives.flag,
         "default-set-element-type": directives.unchanged,
@@ -290,19 +271,6 @@ class LiteralizerDirective(SphinxDirective):
         )
         return constructor()
 
-    def _rendering_options(self) -> _RenderingOptions:
-        """Return the rendering options derived from directive flags."""
-        pre_indent_level: int = self.options.get("pre-indent-level", 0)
-        include_delimiters: bool = "include-delimiters" in self.options
-        variable_name: str | None = self.options.get("variable-name")
-        existing_variable: bool = "existing-variable" in self.options
-        return _RenderingOptions(
-            pre_indent_level=pre_indent_level,
-            include_delimiters=include_delimiters,
-            variable_name=variable_name,
-            existing_variable=existing_variable,
-        )
-
     def run(self) -> list[nodes.Node]:
         """Read the data file and produce a literal block."""
         env = self.state.document.settings.env
@@ -317,17 +285,20 @@ class LiteralizerDirective(SphinxDirective):
             language_cls=language_cls,
         )
 
-        rendering = self._rendering_options()
+        pre_indent_level: int = self.options.get("pre-indent-level", 0)
+        include_delimiters: bool = "include-delimiters" in self.options
+        variable_name: str | None = self.options.get("variable-name")
+        existing_variable: bool = "existing-variable" in self.options
 
         # YAML is a superset of JSON, so literalize_yaml handles both
         # .yaml/.yml files and .json files without any format detection.
         result = literalize_yaml(
             yaml_string=data_path.read_text(encoding="utf-8"),
             language=language_spec,
-            pre_indent_level=rendering.pre_indent_level,
-            include_delimiters=rendering.include_delimiters,
-            variable_name=rendering.variable_name,
-            new_variable=not rendering.existing_variable,
+            pre_indent_level=pre_indent_level,
+            include_delimiters=include_delimiters,
+            variable_name=variable_name,
+            new_variable=not existing_variable,
             error_on_coercion=False,
         )
         text = result.code
