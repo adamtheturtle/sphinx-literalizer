@@ -4,7 +4,8 @@ Provides the ``literalizer`` directive, which reads a JSON file and
 renders it as a native language literal block.
 """
 
-from collections.abc import Callable
+import enum
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from functools import cache, partial
 from pathlib import Path
@@ -37,256 +38,49 @@ def _language_types() -> dict[str, LanguageCls]:
     }
 
 
+# Map from directive option name to a typed lambda getter for the enum class.
+_FORMAT_OPTION_GETTERS: dict[
+    str,
+    Callable[[LanguageCls], Iterable[enum.Enum]],
+] = {
+    "date-format": lambda cls: cls.DateFormats,
+    "datetime-format": lambda cls: cls.DatetimeFormats,
+    "sequence-format": lambda cls: cls.SequenceFormats,
+    "set-format": lambda cls: cls.SetFormats,
+    "bytes-format": lambda cls: cls.BytesFormats,
+    "comment-format": lambda cls: cls.CommentFormats,
+    "variable-type-hints": lambda cls: cls.VariableTypeHints,
+    "declaration-style": lambda cls: cls.DeclarationStyles,
+    "dict-format": lambda cls: cls.DictFormats,
+    "integer-format": lambda cls: cls.IntegerFormats,
+    "numeric-separator": lambda cls: cls.NumericSeparators,
+    "string-format": lambda cls: cls.StringFormats,
+    "trailing-comma": lambda cls: cls.TrailingCommas,
+    "line-ending": lambda cls: cls.LineEndings,
+    "empty-dict-key": lambda cls: cls.EmptyDictKey,
+}
+
+
 @cache
-def _date_formats() -> dict[tuple[str, str], object]:
-    """Map (language_key, member_name) to DateFormats enum member."""
+def _all_formats() -> dict[str, dict[tuple[str, str], object]]:
+    """Build format lookup dicts for all format options."""
     return {
-        (lang_name, member.name.lower()): member
-        for lang_name, lang_cls in _language_types().items()
-        for member in lang_cls.DateFormats
+        option_name: {
+            (lang_name, member.name.lower()): member
+            for lang_name, lang_cls in _language_types().items()
+            for member in getter(lang_cls)
+        }
+        for option_name, getter in _FORMAT_OPTION_GETTERS.items()
     }
 
 
 @cache
-def _date_format_values() -> tuple[str, ...]:
-    """Return sorted unique DateFormats member names."""
-    return tuple(sorted({fmt_value for _, fmt_value in _date_formats()}))
-
-
-@cache
-def _datetime_formats() -> dict[tuple[str, str], object]:
-    """Map (language_key, member_name) to DatetimeFormats enum member."""
+def _all_format_values() -> dict[str, tuple[str, ...]]:
+    """Build sorted unique value tuples for all format options."""
     return {
-        (lang_name, member.name.lower()): member
-        for lang_name, lang_cls in _language_types().items()
-        for member in lang_cls.DatetimeFormats
+        option_name: tuple(sorted({v for _, v in formats}))
+        for option_name, formats in _all_formats().items()
     }
-
-
-@cache
-def _datetime_format_values() -> tuple[str, ...]:
-    """Return sorted unique DatetimeFormats member names."""
-    return tuple(sorted({fmt_value for _, fmt_value in _datetime_formats()}))
-
-
-@cache
-def _sequence_formats() -> dict[tuple[str, str], object]:
-    """Map (language_key, member_name) to SequenceFormats enum member."""
-    return {
-        (lang_name, member.name.lower()): member
-        for lang_name, lang_cls in _language_types().items()
-        for member in lang_cls.SequenceFormats
-    }
-
-
-@cache
-def _sequence_format_values() -> tuple[str, ...]:
-    """Return sorted unique SequenceFormats member names."""
-    return tuple(sorted({fmt_value for _, fmt_value in _sequence_formats()}))
-
-
-@cache
-def _set_formats() -> dict[tuple[str, str], object]:
-    """Map (language_key, member_name) to SetFormats enum member."""
-    return {
-        (lang_name, member.name.lower()): member
-        for lang_name, lang_cls in _language_types().items()
-        for member in lang_cls.SetFormats
-    }
-
-
-@cache
-def _set_format_values() -> tuple[str, ...]:
-    """Return sorted unique SetFormats member names."""
-    return tuple(sorted({fmt_value for _, fmt_value in _set_formats()}))
-
-
-@cache
-def _bytes_formats() -> dict[tuple[str, str], object]:
-    """Map (language_key, member_name) to BytesFormats enum member."""
-    return {
-        (lang_name, member.name.lower()): member
-        for lang_name, lang_cls in _language_types().items()
-        for member in lang_cls.BytesFormats
-    }
-
-
-@cache
-def _bytes_format_values() -> tuple[str, ...]:
-    """Return sorted unique BytesFormats member names."""
-    return tuple(sorted({fmt_value for _, fmt_value in _bytes_formats()}))
-
-
-@cache
-def _comment_formats() -> dict[tuple[str, str], object]:
-    """Map (language_key, member_name) to CommentFormats enum member."""
-    return {
-        (lang_name, member.name.lower()): member
-        for lang_name, lang_cls in _language_types().items()
-        for member in lang_cls.CommentFormats
-    }
-
-
-@cache
-def _comment_format_values() -> tuple[str, ...]:
-    """Return sorted unique CommentFormats member names."""
-    return tuple(sorted({fmt_value for _, fmt_value in _comment_formats()}))
-
-
-@cache
-def _variable_type_hints_formats() -> dict[tuple[str, str], object]:
-    """Map (language_key, member_name) to VariableTypeHints enum
-    member.
-    """
-    return {
-        (lang_name, member.name.lower()): member
-        for lang_name, lang_cls in _language_types().items()
-        for member in lang_cls.VariableTypeHints
-    }
-
-
-@cache
-def _variable_type_hints_format_values() -> tuple[str, ...]:
-    """Return sorted unique VariableTypeHints member names."""
-    return tuple(
-        sorted({fmt_value for _, fmt_value in _variable_type_hints_formats()})
-    )
-
-
-@cache
-def _declaration_styles() -> dict[tuple[str, str], object]:
-    """Map (language_key, member_name) to DeclarationStyles enum
-    member.
-    """
-    return {
-        (lang_name, member.name.lower()): member
-        for lang_name, lang_cls in _language_types().items()
-        for member in lang_cls.DeclarationStyles
-    }
-
-
-@cache
-def _declaration_style_values() -> tuple[str, ...]:
-    """Return sorted unique DeclarationStyles member names."""
-    return tuple(sorted({fmt_value for _, fmt_value in _declaration_styles()}))
-
-
-@cache
-def _dict_formats() -> dict[tuple[str, str], object]:
-    """Map (language_key, member_name) to DictFormats enum member."""
-    return {
-        (lang_name, member.name.lower()): member
-        for lang_name, lang_cls in _language_types().items()
-        for member in lang_cls.DictFormats
-    }
-
-
-@cache
-def _dict_format_values() -> tuple[str, ...]:
-    """Return sorted unique DictFormats member names."""
-    return tuple(sorted({fmt_value for _, fmt_value in _dict_formats()}))
-
-
-@cache
-def _integer_formats() -> dict[tuple[str, str], object]:
-    """Map (language_key, member_name) to IntegerFormats enum
-    member.
-    """
-    return {
-        (lang_name, member.name.lower()): member
-        for lang_name, lang_cls in _language_types().items()
-        for member in lang_cls.IntegerFormats
-    }
-
-
-@cache
-def _integer_format_values() -> tuple[str, ...]:
-    """Return sorted unique IntegerFormats member names."""
-    return tuple(sorted({fmt_value for _, fmt_value in _integer_formats()}))
-
-
-@cache
-def _numeric_separators() -> dict[tuple[str, str], object]:
-    """Map (language_key, member_name) to NumericSeparators enum
-    member.
-    """
-    return {
-        (lang_name, member.name.lower()): member
-        for lang_name, lang_cls in _language_types().items()
-        for member in lang_cls.NumericSeparators
-    }
-
-
-@cache
-def _numeric_separator_values() -> tuple[str, ...]:
-    """Return sorted unique NumericSeparators member names."""
-    return tuple(sorted({fmt_value for _, fmt_value in _numeric_separators()}))
-
-
-@cache
-def _string_formats() -> dict[tuple[str, str], object]:
-    """Map (language_key, member_name) to StringFormats enum member."""
-    return {
-        (lang_name, member.name.lower()): member
-        for lang_name, lang_cls in _language_types().items()
-        for member in lang_cls.StringFormats
-    }
-
-
-@cache
-def _string_format_values() -> tuple[str, ...]:
-    """Return sorted unique StringFormats member names."""
-    return tuple(sorted({fmt_value for _, fmt_value in _string_formats()}))
-
-
-@cache
-def _trailing_commas() -> dict[tuple[str, str], object]:
-    """Map (language_key, member_name) to TrailingCommas enum
-    member.
-    """
-    return {
-        (lang_name, member.name.lower()): member
-        for lang_name, lang_cls in _language_types().items()
-        for member in lang_cls.TrailingCommas
-    }
-
-
-@cache
-def _trailing_comma_values() -> tuple[str, ...]:
-    """Return sorted unique TrailingCommas member names."""
-    return tuple(sorted({fmt_value for _, fmt_value in _trailing_commas()}))
-
-
-@cache
-def _line_endings() -> dict[tuple[str, str], object]:
-    """Map (language_key, member_name) to LineEndings enum member."""
-    return {
-        (lang_name, member.name.lower()): member
-        for lang_name, lang_cls in _language_types().items()
-        for member in lang_cls.LineEndings
-    }
-
-
-@cache
-def _line_ending_values() -> tuple[str, ...]:
-    """Return sorted unique LineEndings member names."""
-    return tuple(sorted({fmt_value for _, fmt_value in _line_endings()}))
-
-
-@cache
-def _empty_dict_keys() -> dict[tuple[str, str], object]:
-    """Map (language_key, member_name) to EmptyDictKey enum member."""
-    return {
-        (lang_name, member.name.lower()): member
-        for lang_name, lang_cls in _language_types().items()
-        for member in lang_cls.EmptyDictKey
-    }
-
-
-@cache
-def _empty_dict_key_values() -> tuple[str, ...]:
-    """Return sorted unique EmptyDictKey member names."""
-    return tuple(sorted({fmt_value for _, fmt_value in _empty_dict_keys()}))
 
 
 @beartype
@@ -305,6 +99,29 @@ def _lookup_format(
             f"{directive_name} '{format_value}'."
         )
         raise ExtensionError(message=msg) from None
+
+
+def _make_format_validator(
+    option_name: str,
+) -> Callable[[str], str]:
+    """Create a directive choice validator for a format option."""
+
+    def validator(x: str) -> str:
+        """Validate that *x* is a known value for this format option."""
+        return directives.choice(
+            argument=x,
+            values=_all_format_values()[option_name],
+        )
+
+    return validator
+
+
+def _format_option_specs() -> dict[str, Callable[[str], str]]:
+    """Build option_spec entries for all format options."""
+    return {
+        option_name: _make_format_validator(option_name=option_name)
+        for option_name in _FORMAT_OPTION_GETTERS
+    }
 
 
 @dataclass(frozen=True)
@@ -366,276 +183,37 @@ class LiteralizerDirective(SphinxDirective):
             values=("spaces", "tabs"),
         ),
         "include-delimiters": directives.flag,
-        "date-format": lambda x: directives.choice(
-            argument=x,
-            values=_date_format_values(),
-        ),
-        "datetime-format": lambda x: directives.choice(
-            argument=x,
-            values=_datetime_format_values(),
-        ),
+        **_format_option_specs(),
         "variable-name": directives.unchanged,
         "existing-variable": directives.flag,
-        "sequence-format": lambda x: directives.choice(
-            argument=x,
-            values=_sequence_format_values(),
-        ),
-        "set-format": lambda x: directives.choice(
-            argument=x,
-            values=_set_format_values(),
-        ),
-        "bytes-format": lambda x: directives.choice(
-            argument=x,
-            values=_bytes_format_values(),
-        ),
-        "comment-format": lambda x: directives.choice(
-            argument=x,
-            values=_comment_format_values(),
-        ),
-        "variable-type-hints": lambda x: directives.choice(
-            argument=x,
-            values=_variable_type_hints_format_values(),
-        ),
-        "declaration-style": lambda x: directives.choice(
-            argument=x,
-            values=_declaration_style_values(),
-        ),
-        "dict-format": lambda x: directives.choice(
-            argument=x,
-            values=_dict_format_values(),
-        ),
-        "integer-format": lambda x: directives.choice(
-            argument=x,
-            values=_integer_format_values(),
-        ),
-        "numeric-separator": lambda x: directives.choice(
-            argument=x,
-            values=_numeric_separator_values(),
-        ),
-        "string-format": lambda x: directives.choice(
-            argument=x,
-            values=_string_format_values(),
-        ),
-        "trailing-comma": lambda x: directives.choice(
-            argument=x,
-            values=_trailing_comma_values(),
-        ),
-        "line-ending": lambda x: directives.choice(
-            argument=x,
-            values=_line_ending_values(),
-        ),
-        "empty-dict-key": lambda x: directives.choice(
-            argument=x,
-            values=_empty_dict_key_values(),
-        ),
         "default-set-element-type": directives.unchanged,
         "default-sequence-element-type": directives.unchanged,
         "default-dict-key-type": directives.unchanged,
         "default-dict-value-type": directives.unchanged,
     }
 
-    def _apply_serialization_options(
+    def _apply_format_options(
         self,
         language_name: str,
         constructor: partial[Language],
     ) -> partial[Language]:
-        """Apply date, sequence, set, bytes, comment, and type-hint
-        options.
-        """
-        date_format_value = self.options.get("date-format")
-        if date_format_value is not None:
-            constructor = partial(
-                constructor,
-                date_format=_lookup_format(
-                    language_name=language_name,
-                    directive_name="date-format",
-                    format_value=date_format_value,
-                    formats=_date_formats(),
-                ),
-            )
-
-        datetime_format_value = self.options.get("datetime-format")
-        if datetime_format_value is not None:
-            constructor = partial(
-                constructor,
-                datetime_format=_lookup_format(
-                    language_name=language_name,
-                    directive_name="datetime-format",
-                    format_value=datetime_format_value,
-                    formats=_datetime_formats(),
-                ),
-            )
-
-        sequence_format_value = self.options.get("sequence-format")
-        if sequence_format_value is not None:
-            constructor = partial(
-                constructor,
-                sequence_format=_lookup_format(
-                    language_name=language_name,
-                    directive_name="sequence-format",
-                    format_value=sequence_format_value,
-                    formats=_sequence_formats(),
-                ),
-            )
-
-        set_format_value = self.options.get("set-format")
-        if set_format_value is not None:
-            constructor = partial(
-                constructor,
-                set_format=_lookup_format(
-                    language_name=language_name,
-                    directive_name="set-format",
-                    format_value=set_format_value,
-                    formats=_set_formats(),
-                ),
-            )
-
-        bytes_format_value = self.options.get("bytes-format")
-        if bytes_format_value is not None:
-            constructor = partial(
-                constructor,
-                bytes_format=_lookup_format(
-                    language_name=language_name,
-                    directive_name="bytes-format",
-                    format_value=bytes_format_value,
-                    formats=_bytes_formats(),
-                ),
-            )
-
-        comment_format_value = self.options.get("comment-format")
-        if comment_format_value is not None:
-            constructor = partial(
-                constructor,
-                comment_format=_lookup_format(
-                    language_name=language_name,
-                    directive_name="comment-format",
-                    format_value=comment_format_value,
-                    formats=_comment_formats(),
-                ),
-            )
-
-        variable_type_hints_value = self.options.get(
-            "variable-type-hints",
-        )
-        if variable_type_hints_value is not None:
-            constructor = partial(
-                constructor,
-                variable_type_hints=_lookup_format(
-                    language_name=language_name,
-                    directive_name="variable-type-hints",
-                    format_value=variable_type_hints_value,
-                    formats=_variable_type_hints_formats(),
-                ),
-            )
-
-        return constructor
-
-    def _apply_syntax_options(
-        self,
-        language_name: str,
-        constructor: partial[Language],
-    ) -> partial[Language]:
-        """Apply declaration, dict, integer, numeric, string, and
-        trailing-comma options.
-        """
-        declaration_style_value = self.options.get("declaration-style")
-        if declaration_style_value is not None:
-            constructor = partial(
-                constructor,
-                declaration_style=_lookup_format(
-                    language_name=language_name,
-                    directive_name="declaration-style",
-                    format_value=declaration_style_value,
-                    formats=_declaration_styles(),
-                ),
-            )
-
-        dict_format_value = self.options.get("dict-format")
-        if dict_format_value is not None:
-            constructor = partial(
-                constructor,
-                dict_format=_lookup_format(
-                    language_name=language_name,
-                    directive_name="dict-format",
-                    format_value=dict_format_value,
-                    formats=_dict_formats(),
-                ),
-            )
-
-        integer_format_value = self.options.get("integer-format")
-        if integer_format_value is not None:
-            constructor = partial(
-                constructor,
-                integer_format=_lookup_format(
-                    language_name=language_name,
-                    directive_name="integer-format",
-                    format_value=integer_format_value,
-                    formats=_integer_formats(),
-                ),
-            )
-
-        numeric_separator_value = self.options.get(
-            "numeric-separator",
-        )
-        if numeric_separator_value is not None:
-            constructor = partial(
-                constructor,
-                numeric_separator=_lookup_format(
-                    language_name=language_name,
-                    directive_name="numeric-separator",
-                    format_value=numeric_separator_value,
-                    formats=_numeric_separators(),
-                ),
-            )
-
-        string_format_value = self.options.get("string-format")
-        if string_format_value is not None:
-            constructor = partial(
-                constructor,
-                string_format=_lookup_format(
-                    language_name=language_name,
-                    directive_name="string-format",
-                    format_value=string_format_value,
-                    formats=_string_formats(),
-                ),
-            )
-
-        trailing_comma_value = self.options.get("trailing-comma")
-        if trailing_comma_value is not None:
-            constructor = partial(
-                constructor,
-                trailing_comma=_lookup_format(
-                    language_name=language_name,
-                    directive_name="trailing-comma",
-                    format_value=trailing_comma_value,
-                    formats=_trailing_commas(),
-                ),
-            )
-
-        line_ending_value = self.options.get("line-ending")
-        if line_ending_value is not None:
-            constructor = partial(
-                constructor,
-                line_ending=_lookup_format(
-                    language_name=language_name,
-                    directive_name="line-ending",
-                    format_value=line_ending_value,
-                    formats=_line_endings(),
-                ),
-            )
-
-        empty_dict_key_value = self.options.get("empty-dict-key")
-        if empty_dict_key_value is not None:
-            constructor = partial(
-                constructor,
-                empty_dict_key=_lookup_format(
-                    language_name=language_name,
-                    directive_name="empty-dict-key",
-                    format_value=empty_dict_key_value,
-                    formats=_empty_dict_keys(),
-                ),
-            )
-
+        """Apply all format/enum options."""
+        all_formats = _all_formats()
+        for option_name in _FORMAT_OPTION_GETTERS:
+            value = self.options.get(option_name)
+            if value is not None:
+                param_name = option_name.replace("-", "_")
+                constructor = partial(
+                    constructor,
+                    **{
+                        param_name: _lookup_format(
+                            language_name=language_name,
+                            directive_name=option_name,
+                            format_value=value,
+                            formats=all_formats[option_name],
+                        ),
+                    },
+                )
         return constructor
 
     def _apply_default_type_options(
@@ -702,11 +280,7 @@ class LiteralizerDirective(SphinxDirective):
                 indent=resolved_char * resolved_count,
             )
 
-        constructor = self._apply_serialization_options(
-            language_name=language_name,
-            constructor=constructor,
-        )
-        constructor = self._apply_syntax_options(
+        constructor = self._apply_format_options(
             language_name=language_name,
             constructor=constructor,
         )
