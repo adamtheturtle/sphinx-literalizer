@@ -276,13 +276,11 @@ def _line_ending_values() -> tuple[str, ...]:
 @cache
 def _empty_dict_keys() -> dict[tuple[str, str], object]:
     """Map (language_key, member_name) to EmptyDictKey enum member."""
-    result: dict[tuple[str, str], object] = {}
-    for lang_name, lang_cls in _language_types().items():
-        enum_cls = getattr(lang_cls, "EmptyDictKey", None)
-        if enum_cls is not None:
-            for member in enum_cls:
-                result[(lang_name, member.name.lower())] = member
-    return result
+    return {
+        (lang_name, member.name.lower()): member
+        for lang_name, lang_cls in _language_types().items()
+        for member in lang_cls.EmptyDictKey
+    }
 
 
 @cache
@@ -348,6 +346,10 @@ class LiteralizerDirective(SphinxDirective):
            :trailing-comma: yes
            :line-ending: semicolon
            :empty-dict-key: positional
+           :default-set-element-type: String
+           :default-sequence-element-type: String
+           :default-dict-key-type: String
+           :default-dict-value-type: String
     """
 
     required_arguments = 1
@@ -426,6 +428,10 @@ class LiteralizerDirective(SphinxDirective):
             argument=x,
             values=_empty_dict_key_values(),
         ),
+        "default-set-element-type": directives.unchanged,
+        "default-sequence-element-type": directives.unchanged,
+        "default-dict-key-type": directives.unchanged,
+        "default-dict-value-type": directives.unchanged,
     }
 
     def _apply_serialization_options(
@@ -632,6 +638,49 @@ class LiteralizerDirective(SphinxDirective):
 
         return constructor
 
+    def _apply_default_type_options(
+        self,
+        language_name: str,
+        constructor: partial[Language],
+    ) -> partial[Language]:
+        """Apply default element/key/value type options."""
+        type_option_map = {
+            "default-set-element-type": (
+                "default_set_element_type",
+                "supports_default_set_element_type",
+            ),
+            "default-sequence-element-type": (
+                "default_sequence_element_type",
+                "supports_default_sequence_element_type",
+            ),
+            "default-dict-key-type": (
+                "default_dict_key_type",
+                "supports_default_dict_key_type",
+            ),
+            "default-dict-value-type": (
+                "default_dict_value_type",
+                "supports_default_dict_value_type",
+            ),
+        }
+        language_cls = _language_types()[language_name]
+        for option_name, (
+            param_name,
+            supports_attr,
+        ) in type_option_map.items():
+            value = self.options.get(option_name)
+            if value is not None:
+                if not getattr(language_cls, supports_attr):
+                    msg = (
+                        f"Language '{language_name}' does not support "
+                        f"'{option_name}'."
+                    )
+                    raise ExtensionError(message=msg)
+                constructor = partial(
+                    constructor,
+                    **{param_name: value},
+                )
+        return constructor
+
     def _build_language(
         self,
         language_name: str,
@@ -655,6 +704,10 @@ class LiteralizerDirective(SphinxDirective):
             constructor=constructor,
         )
         constructor = self._apply_syntax_options(
+            language_name=language_name,
+            constructor=constructor,
+        )
+        constructor = self._apply_default_type_options(
             language_name=language_name,
             constructor=constructor,
         )
