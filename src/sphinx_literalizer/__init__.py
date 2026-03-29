@@ -6,7 +6,6 @@ renders it as a native language literal block.
 
 import enum
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
 from functools import cache, partial
 from pathlib import Path
 from typing import Any, ClassVar
@@ -111,16 +110,6 @@ def _make_format_validator(
         )
 
     return validator
-
-
-@dataclass(frozen=True)
-class _RenderingOptions:
-    """Rendering options derived from directive flags."""
-
-    pre_indent_level: int
-    include_delimiters: bool
-    variable_name: str | None
-    existing_variable: bool
 
 
 @beartype
@@ -282,19 +271,6 @@ class LiteralizerDirective(SphinxDirective):
         )
         return constructor()
 
-    def _rendering_options(self) -> _RenderingOptions:
-        """Return the rendering options derived from directive flags."""
-        pre_indent_level: int = self.options.get("pre-indent-level", 0)
-        include_delimiters: bool = "include-delimiters" in self.options
-        variable_name: str | None = self.options.get("variable-name")
-        existing_variable: bool = "existing-variable" in self.options
-        return _RenderingOptions(
-            pre_indent_level=pre_indent_level,
-            include_delimiters=include_delimiters,
-            variable_name=variable_name,
-            existing_variable=existing_variable,
-        )
-
     def run(self) -> list[nodes.Node]:
         """Read the data file and produce a literal block."""
         env = self.state.document.settings.env
@@ -309,17 +285,20 @@ class LiteralizerDirective(SphinxDirective):
             language_cls=language_cls,
         )
 
-        rendering = self._rendering_options()
+        pre_indent_level: int = self.options.get("pre-indent-level", 0)
+        include_delimiters: bool = "include-delimiters" in self.options
+        variable_name: str | None = self.options.get("variable-name")
+        existing_variable: bool = "existing-variable" in self.options
 
         # YAML is a superset of JSON, so literalize_yaml handles both
         # .yaml/.yml files and .json files without any format detection.
         result = literalize_yaml(
             yaml_string=data_path.read_text(encoding="utf-8"),
             language=language_spec,
-            pre_indent_level=rendering.pre_indent_level,
-            include_delimiters=rendering.include_delimiters,
-            variable_name=rendering.variable_name,
-            new_variable=not rendering.existing_variable,
+            pre_indent_level=pre_indent_level,
+            include_delimiters=include_delimiters,
+            variable_name=variable_name,
+            new_variable=not existing_variable,
             error_on_coercion=False,
         )
         text = result.code
