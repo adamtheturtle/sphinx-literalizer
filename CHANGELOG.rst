@@ -4,6 +4,12 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.3.30``.
+- Added ``:dict-entry-style:`` directive option.
+- Added ``:float-format:`` directive option.
+- Added ``:numeric-literal-suffix:`` directive option.
+- Added ``:default-ordered-map-value-type:`` directive option.
+
 2026.03.26.2
 ------------
 

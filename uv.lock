@@ -623,15 +623,15 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.3.29"
+version = "2026.3.30"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
     { name = "ruamel-yaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a0/2c/a67c7ae4d27755863ff4de6dd910c08858ca548fa9db48fd5218efb7c077/literalizer-2026.3.29.tar.gz", hash = "sha256:292d86ba4d7e3cd2e35de464e8b120d9f2c54bed73b1de1f86c8b642fed6ed87", size = 616704, upload-time = "2026-03-29T07:39:23.056Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6a/fd/a20a33e076b0013d64b8e2c583ab009e23464eff5a48aaf0bac05129b93a/literalizer-2026.3.30.tar.gz", hash = "sha256:2b2ab69d3d57cb9fcf07bd8412e90f4a4f85bf66b5f05456ddaaed08a7c0b8b5", size = 663851, upload-time = "2026-03-30T11:02:57.215Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9b/47/67a3505f194fa9e7fc0e74c16d5eaca1b2fa9c911d94cd6617214204fb2b/literalizer-2026.3.29-py3-none-any.whl", hash = "sha256:7c5f893988e042d4c93e67f126bae76cdc8f78ea92db120d8c91f540b7012615", size = 187083, upload-time = "2026-03-29T07:39:21.616Z" },
+    { url = "https://files.pythonhosted.org/packages/c9/0f/0c3391d6395d8d490bc764c89c5f527d306c9c6c2f53f33c2b23e3fedb4b/literalizer-2026.3.30-py3-none-any.whl", hash = "sha256:b89563bd10700865a3ce22c7639bbc48ec52934b4b28c679d0bfe6322a1a601a", size = 204629, upload-time = "2026-03-30T11:02:55.461Z" },
 ]
 
 [[package]]
@@ -1594,7 +1594,7 @@ requires-dist = [
     { name = "docutils" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
     { name = "interrogate", marker = "extra == 'dev'", specifier = "==1.7.0" },
-    { name = "literalizer", specifier = "==2026.3.29" },
+    { name = "literalizer", specifier = "==2026.3.30" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "==1.19.1" },
     { name = "mypy-strict-kwargs", marker = "extra == 'dev'", specifier = "==2026.1.12" },
     { name = "prek", marker = "extra == 'dev'", specifier = "==0.3.8" },

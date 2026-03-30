@@ -47,8 +47,11 @@ _FORMAT_OPTION_GETTERS: dict[
     "comment-format": lambda cls: cls.CommentFormats,
     "variable-type-hints": lambda cls: cls.VariableTypeHints,
     "declaration-style": lambda cls: cls.DeclarationStyles,
+    "dict-entry-style": lambda cls: cls.DictEntryStyles,
     "dict-format": lambda cls: cls.DictFormats,
+    "float-format": lambda cls: cls.FloatFormats,
     "integer-format": lambda cls: cls.IntegerFormats,
+    "numeric-literal-suffix": lambda cls: cls.NumericLiteralSuffixes,
     "numeric-separator": lambda cls: cls.NumericSeparators,
     "string-format": lambda cls: cls.StringFormats,
     "trailing-comma": lambda cls: cls.TrailingCommas,
@@ -134,8 +137,11 @@ class LiteralizerDirective(SphinxDirective):
            :comment-format: block
            :variable-type-hints: always
            :declaration-style: const
+           :dict-entry-style: rocket
            :dict-format: object
+           :float-format: repr
            :integer-format: decimal
+           :numeric-literal-suffix: none
            :numeric-separator: none
            :string-format: double
            :trailing-comma: yes
@@ -145,6 +151,7 @@ class LiteralizerDirective(SphinxDirective):
            :default-sequence-element-type: String
            :default-dict-key-type: String
            :default-dict-value-type: String
+           :default-ordered-map-value-type: any
     """
 
     required_arguments = 1
@@ -171,6 +178,7 @@ class LiteralizerDirective(SphinxDirective):
         "default-sequence-element-type": directives.unchanged,
         "default-dict-key-type": directives.unchanged,
         "default-dict-value-type": directives.unchanged,
+        "default-ordered-map-value-type": directives.unchanged,
     }
 
     def _apply_format_options(
@@ -222,6 +230,10 @@ class LiteralizerDirective(SphinxDirective):
             "default-dict-value-type": (
                 "default_dict_value_type",
                 lambda cls: cls.supports_default_dict_value_type,
+            ),
+            "default-ordered-map-value-type": (
+                "default_ordered_map_value_type",
+                lambda cls: cls.supports_default_ordered_map_value_type,
             ),
         }
         language_cls = _language_types()[language_name]
