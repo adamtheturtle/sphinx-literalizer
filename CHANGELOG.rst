@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.04.06
+----------
+
+
 - Bumped ``literalizer`` to ``2026.4.6``.
 - Added ``:input-format:`` directive option for explicit input format selection.
 - Added support for TOML (``.toml``) and JSON5 (``.json5``) input files with auto-detection by extension.
