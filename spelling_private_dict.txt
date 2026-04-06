@@ -1,5 +1,6 @@
 COBOL
 Changelog
+Dhall
 Fortran
 Initializer
 Lua
@@ -8,7 +9,11 @@ Mojo
 Nim
 Norg
 OCaml
+Odin
+PureScript
 Pygments
+Raku
+SystemVerilog
 Vec
 Zig
 datetimes
