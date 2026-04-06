@@ -3289,3 +3289,181 @@ def test_default_dict_value_type(
     app.build()
     assert app.statuscode == 0
     app.cleanup()
+
+
+def test_toml_input_format(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A .toml file is auto-detected and parsed as TOML."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.toml").write_text(data='key = "value"\n')
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.toml
+           :language: python
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    literal_blocks = list(doctree.findall(condition=nodes.literal_block))
+    (literal_block,) = literal_blocks
+    assert '"value"' in literal_block.astext()
+    app.cleanup()
+
+
+def test_json5_input_format(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A .json5 file is auto-detected and parsed as JSON5."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json5").write_text(data='{key: "value"}')
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json5
+           :language: python
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    literal_blocks = list(doctree.findall(condition=nodes.literal_block))
+    (literal_block,) = literal_blocks
+    assert '"value"' in literal_block.astext()
+    app.cleanup()
+
+
+def test_explicit_input_format_overrides_extension(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :input-format: option overrides file extension detection."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    # Write YAML content with a .txt extension
+    (source_directory / "data.txt").write_text(data="- 1\n- 2\n")
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.txt
+           :language: python
+           :input-format: yaml
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    app.cleanup()
+
+
+def test_unknown_extension_without_input_format_errors(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """An unrecognized extension without :input-format: raises an
+    error.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.dat").write_text(data="[1]")
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.dat
+           :language: python
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=r"Cannot determine input format for 'data\.dat'\.",
+    ):
+        app.build()
+
+
+def test_language_with_no_pygments_lexer(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Languages with pygments_name=None use 'text' for highlighting."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: dhall
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    literal_blocks = list(doctree.findall(condition=nodes.literal_block))
+    (literal_block,) = literal_blocks
+    assert literal_block["language"] == "text"
+    app.cleanup()

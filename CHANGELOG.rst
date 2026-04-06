@@ -4,7 +4,11 @@ Changelog
 Next
 ----
 
-- Bumped ``literalizer`` to ``2026.3.30``.
+- Bumped ``literalizer`` to ``2026.4.6``.
+- Added ``:input-format:`` directive option for explicit input format selection.
+- Added support for TOML (``.toml``) and JSON5 (``.json5``) input files with auto-detection by extension.
+- Added support for new output languages: Dhall, Odin, PureScript, Raku, Scheme, and SystemVerilog.
+- Fixed handling of languages with no Pygments lexer (``pygments_name=None``).
 - Added ``:dict-entry-style:`` directive option.
 - Added ``:float-format:`` directive option.
 - Added ``:numeric-literal-suffix:`` directive option.

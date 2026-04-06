@@ -7,7 +7,7 @@ requires = [
 
 [project]
 name = "sphinx-literalizer"
-description = "Sphinx extension for literalizer — convert JSON to native language literals"
+description = "Sphinx extension for literalizer — convert JSON, YAML, TOML, and JSON5 to native language literals"
 readme = { file = "README.rst", content-type = "text/x-rst" }
 keywords = [
     "extension",
@@ -35,7 +35,7 @@ dynamic = [
 dependencies = [
     "beartype==0.22.9",
     "docutils",
-    "literalizer==2026.3.30",
+    "literalizer==2026.4.6",
     "sphinx>=7.0",
 ]
 optional-dependencies.dev = [

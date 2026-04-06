@@ -1,6 +1,6 @@
 """Sphinx extension for literalizer.
 
-Provides the ``literalizer`` directive, which reads a JSON file and
+Provides the ``literalizer`` directive, which reads a data file and
 renders it as a native language literal block.
 """
 
@@ -13,7 +13,7 @@ from typing import Any, ClassVar
 from beartype import beartype
 from docutils import nodes
 from docutils.parsers.rst import directives
-from literalizer import Language, LanguageCls, literalize_yaml
+from literalizer import InputFormat, Language, LanguageCls, literalize
 from literalizer.languages import ALL_LANGUAGES
 from sphinx.application import Sphinx
 from sphinx.errors import ExtensionError
@@ -27,7 +27,7 @@ def _language_types() -> dict[str, LanguageCls]:
     return {
         (
             lang_cls.__name__.lower()
-            if lang_cls.pygments_name == "text"
+            if lang_cls.pygments_name is None
             else lang_cls.pygments_name
         ): lang_cls
         for lang_cls in ALL_LANGUAGES
@@ -117,12 +117,13 @@ def _make_format_validator(
 
 @beartype
 class LiteralizerDirective(SphinxDirective):
-    """Directive that converts a JSON file to a native literal block.
+    """Directive that converts a data file to a native literal block.
 
     Usage::
 
         .. literalizer:: path/to/data.json
            :language: python
+           :input-format: json
            :pre-indent-level: 2
            :indent: 4
            :indent-char: spaces
@@ -160,6 +161,10 @@ class LiteralizerDirective(SphinxDirective):
         "language": lambda x: directives.choice(
             argument=x,
             values=tuple(_language_types()),
+        ),
+        "input-format": lambda x: directives.choice(
+            argument=x,
+            values=("json", "json5", "yaml", "toml"),
         ),
         "pre-indent-level": directives.nonnegative_int,
         "indent": directives.nonnegative_int,
@@ -283,6 +288,31 @@ class LiteralizerDirective(SphinxDirective):
         )
         return constructor()
 
+    _EXTENSION_TO_INPUT_FORMAT: ClassVar[dict[str, InputFormat]] = {
+        ".json": InputFormat.JSON,
+        ".json5": InputFormat.JSON5,
+        ".yaml": InputFormat.YAML,
+        ".yml": InputFormat.YAML,
+        ".toml": InputFormat.TOML,
+    }
+
+    def _resolve_input_format(self, data_path: Path) -> InputFormat:
+        """Determine the input format from the option or file
+        extension.
+        """
+        explicit = self.options.get("input-format")
+        if explicit is not None:
+            return InputFormat[explicit.upper()]
+        suffix = data_path.suffix.lower()
+        try:
+            return self._EXTENSION_TO_INPUT_FORMAT[suffix]
+        except KeyError:
+            msg = (
+                f"Cannot determine input format for '{data_path.name}'. "
+                f"Use the :input-format: option."
+            )
+            raise ExtensionError(message=msg) from None
+
     def run(self) -> list[nodes.Node]:
         """Read the data file and produce a literal block."""
         env = self.state.document.settings.env
@@ -302,10 +332,10 @@ class LiteralizerDirective(SphinxDirective):
         variable_name: str | None = self.options.get("variable-name")
         existing_variable: bool = "existing-variable" in self.options
 
-        # YAML is a superset of JSON, so literalize_yaml handles both
-        # .yaml/.yml files and .json files without any format detection.
-        result = literalize_yaml(
-            yaml_string=data_path.read_text(encoding="utf-8"),
+        input_format = self._resolve_input_format(data_path=data_path)
+        result = literalize(
+            source=data_path.read_text(encoding="utf-8"),
+            input_format=input_format,
             language=language_spec,
             pre_indent_level=pre_indent_level,
             include_delimiters=include_delimiters,
@@ -326,7 +356,7 @@ class LiteralizerDirective(SphinxDirective):
             text,
             source=str(object=data_path),
         )
-        node["language"] = language_cls.pygments_name
+        node["language"] = language_cls.pygments_name or "text"
         self.add_name(node=node)
         return [node]
 

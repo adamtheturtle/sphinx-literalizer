@@ -1,8 +1,9 @@
 |project|
 =========
 
-|project| is a Sphinx extension for `literalizer`_, which converts JSON data
-structures to native language literal syntax (Python, TypeScript, Go, etc.).
+|project| is a Sphinx extension for `literalizer`_, which converts JSON, YAML,
+TOML, and JSON5 data structures to native language literal syntax (Python,
+TypeScript, Go, etc.).
 
 Installation
 ------------
@@ -33,23 +34,30 @@ Then use the ``literalizer`` directive in your ``.rst`` files:
    .. literalizer:: path/to/data.json
       :language: python
 
-This reads the JSON file and renders its contents as a native Python literal
-in a code block.
+This reads the data file and renders its contents as a native Python literal
+in a code block. Input format is auto-detected from the file extension
+(``.json``, ``.yaml``/``.yml``, ``.toml``, ``.json5``), or can be set
+explicitly with ``:input-format:``.
 
 Directive options
 ~~~~~~~~~~~~~~~~~
 
 ``:language:`` (required)
-   Target language name (Pygments language name).
+   Target language name.
    Supported values: ``ada``, ``bash``, ``c``, ``clojure``, ``cobol``,
    ``common-lisp``, ``cpp``, ``crystal``, ``csharp``, ``d``, ``dart``,
-   ``elixir``, ``erlang``, ``fortran``, ``fsharp``, ``go``, ``groovy``,
-   ``haskell``, ``hcl``, ``java``, ``javascript``, ``julia``, ``kotlin``,
-   ``lua``, ``matlab``, ``mojo``, ``nim``, ``norg``, ``objective-c``,
-   ``ocaml``, ``occam``, ``perl``, ``php``,
-   ``powershell``, ``python``, ``r``, ``racket``, ``ruby``, ``rust``,
-   ``scala``, ``swift``, ``toml``, ``typescript``, ``vb.net``,
-   ``yaml``, ``zig``.
+   ``dhall``, ``elixir``, ``elm``, ``erlang``, ``fortran``, ``fsharp``,
+   ``gleam``, ``go``, ``groovy``, ``haskell``, ``hcl``, ``java``,
+   ``javascript``, ``json5``, ``jsonnet``, ``julia``, ``kotlin``, ``lua``,
+   ``matlab``, ``mojo``, ``nim``, ``norg``, ``objective-c``, ``ocaml``,
+   ``occam``, ``odin``, ``perl``, ``php``, ``powershell``, ``purescript``,
+   ``python``, ``r``, ``racket``, ``raku``, ``ruby``, ``rust``, ``scala``,
+   ``scheme``, ``swift``, ``systemverilog``, ``toml``, ``typescript``,
+   ``vb.net``, ``yaml``, ``zig``.
+
+``:input-format:`` (optional)
+   Input data format. If not specified, auto-detected from the file extension.
+   Supported values: ``json``, ``json5``, ``yaml``, ``toml``.
 
 ``:pre-indent-level:`` (optional)
    Number of indent levels to prepend to each output line.
