@@ -436,6 +436,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             language_cls=language_cls,
         )
 
+        pre_indent_level: int = self.options.get("pre-indent-level", 0)
         include_preamble: bool = "include-preamble" in self.options
         call_function: str = self.options["call-function"]
         call_params = [
@@ -452,10 +453,18 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             call_params=call_params,
             per_element=per_element,
         )
+
+        code = result.code
+        if pre_indent_level > 0:
+            indent = language_spec.indent * pre_indent_level
+            code = "\n".join(
+                indent + line if line else line for line in code.splitlines()
+            )
+
         parts: list[str] = []
         if include_preamble and result.preamble:
             parts.append("\n".join(result.preamble))
-        parts.append(result.code)
+        parts.append(code)
         text = "\n\n".join(parts)
 
         return self._make_node(

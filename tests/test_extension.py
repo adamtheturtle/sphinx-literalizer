@@ -55,6 +55,49 @@ def test_source_attribute_is_absolute(
     app.cleanup()
 
 
+def test_literalizer_call_pre_indent_level(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :pre-indent-level: option indents the generated calls."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[True, 42]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: python
+           :call-function: f
+           :call-params: flag,count
+           :per-element:
+           :pre-indent-level: 2
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    literal_blocks = list(doctree.findall(condition=nodes.literal_block))
+    (literal_block,) = literal_blocks
+    text = literal_block.astext()
+    assert text.startswith("        f(")
+    app.cleanup()
+
+
 def test_boolean_array_python(
     *,
     make_app: Callable[..., SphinxTestApp],
