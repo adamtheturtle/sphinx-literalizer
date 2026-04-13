@@ -55,6 +55,49 @@ def test_source_attribute_is_absolute(
     app.cleanup()
 
 
+def test_literalizer_call_pre_indent_level(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :pre-indent-level: option indents the generated calls."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[True, 42]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: python
+           :call-function: f
+           :call-params: flag,count
+           :per-element:
+           :pre-indent-level: 2
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    literal_blocks = list(doctree.findall(condition=nodes.literal_block))
+    (literal_block,) = literal_blocks
+    text = literal_block.astext()
+    assert text.startswith("        f(")
+    app.cleanup()
+
+
 def test_boolean_array_python(
     *,
     make_app: Callable[..., SphinxTestApp],
@@ -3613,4 +3656,248 @@ def test_no_include_preamble_by_default(
     text = literal_block.astext()
     assert not text.startswith("package main")
     assert "x := map[string]string{" in text
+    app.cleanup()
+
+
+def test_literalizer_call_basic_python(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The literalizer-call directive renders function calls matching
+    an equivalent code-block.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[True, 42, "hello"], [False, 99, "world"]]),
+    )
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: python
+           :call-function: my_func
+           :call-params: flag,count,name
+           :per-element:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. code-block:: python
+
+           my_func(flag=True, count=42, name="hello")
+           my_func(flag=False, count=99, name="world")
+    """
+        )
+    )
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
+
+
+def test_literalizer_call_go(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The literalizer-call directive renders positional-style calls
+    for Go.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[True, 42], [False, 99]]),
+    )
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: go
+           :call-function: myFunc
+           :call-params: flag,count
+           :per-element:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    literal_blocks = list(
+        doctree.findall(condition=nodes.literal_block),
+    )
+    (literal_block,) = literal_blocks
+    text = literal_block.astext()
+    assert "myFunc(true, 42)" in text
+    assert "myFunc(false, 99)" in text
+    app.cleanup()
+
+
+def test_literalizer_call_without_per_element(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Without :per-element:, the whole value is passed as a single
+    argument.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2, 3]),
+    )
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: python
+           :call-function: my_func
+           :call-params: x
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    literal_blocks = list(
+        doctree.findall(condition=nodes.literal_block),
+    )
+    (literal_block,) = literal_blocks
+    text = literal_block.astext()
+    assert "my_func" in text
+    app.cleanup()
+
+
+def test_literalizer_call_include_preamble(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :include-preamble: option works with literalizer-call."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[True, 42]]),
+    )
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: go
+           :call-function: myFunc
+           :call-params: flag,count
+           :per-element:
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    literal_blocks = list(
+        doctree.findall(condition=nodes.literal_block),
+    )
+    (literal_block,) = literal_blocks
+    text = literal_block.astext()
+    assert "package main" in text
+    assert "myFunc(true, 42)" in text
+    app.cleanup()
+
+
+def test_literalizer_call_source_is_absolute(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The literal_block node's source attribute is an absolute path."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[1]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: python
+           :call-function: f
+           :call-params: x
+           :per-element:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    literal_blocks = list(doctree.findall(condition=nodes.literal_block))
+    (literal_block,) = literal_blocks
+    source = literal_block["source"]
+    assert Path(source).is_absolute()
     app.cleanup()

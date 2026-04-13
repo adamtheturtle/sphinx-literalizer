@@ -416,6 +416,73 @@ renders as a code block containing:
    ]
 
 
+``literalizer-call`` directive
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``literalizer-call`` directive converts data files into function call
+expressions.  Each top-level list element becomes a separate call (when
+``:per-element:`` is set), with its values mapped positionally to the
+given parameter names.
+
+.. code-block:: rst
+
+   .. literalizer-call:: calls.json
+      :language: python
+      :call-function: my_func
+      :call-params: flag,count,name
+      :per-element:
+
+Given a file ``calls.json`` containing:
+
+.. code-block:: json
+
+   [[true, 42, "hello"], [false, 99, "world"]]
+
+This renders as a code block containing::
+
+   my_func(flag=True, count=42, name="hello")
+   my_func(flag=False, count=99, name="world")
+
+For positional-call languages like Go, the same data renders as:
+
+.. code-block:: rst
+
+   .. literalizer-call:: calls.json
+      :language: go
+      :call-function: myFunc
+      :call-params: flag,count
+      :per-element:
+
+.. code-block:: go
+
+   myFunc(true, 42);
+   myFunc(false, 99);
+
+``literalizer-call`` directive options
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``:call-function:`` (required)
+   The function expression to call (e.g. ``my_func`` or
+   ``throttler.should_send_notification``).
+
+``:call-params:`` (required)
+   Comma-separated parameter names, positionally mapped to each
+   element in each row.  For positional-call languages (like Go) these
+   are unused in the output but still determine how many values to
+   expect per row.
+
+``:per-element:`` (optional flag)
+   When set, each top-level list element becomes a separate function
+   call.  Without this flag, the whole literalized value is passed as a
+   single argument.
+
+The ``literalizer-call`` directive also supports these shared options
+from the ``literalizer`` directive: ``:language:``, ``:input-format:``,
+``:pre-indent-level:``, ``:indent:``, ``:indent-char:``,
+``:include-preamble:``, and all format options (e.g. ``:string-format:``,
+``:trailing-comma:``, etc.).
+
+
 Reference
 ---------
 

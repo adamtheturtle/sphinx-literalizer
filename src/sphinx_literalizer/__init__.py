@@ -1,7 +1,7 @@
 """Sphinx extension for literalizer.
 
-Provides the ``literalizer`` directive, which reads a data file and
-renders it as a native language literal block.
+Provides the ``literalizer`` and ``literalizer-call`` directives, which
+read data files and render them as native language code blocks.
 """
 
 import enum
@@ -13,7 +13,13 @@ from typing import Any, ClassVar
 from beartype import beartype
 from docutils import nodes
 from docutils.parsers.rst import directives
-from literalizer import InputFormat, Language, LanguageCls, literalize
+from literalizer import (
+    InputFormat,
+    Language,
+    LanguageCls,
+    literalize,
+    literalize_call,
+)
 from literalizer.languages import ALL_LANGUAGES
 from sphinx.application import Sphinx
 from sphinx.errors import ExtensionError
@@ -115,78 +121,48 @@ def _make_format_validator(
     return validator
 
 
+_COMMON_OPTIONS: dict[str, Callable[[str], Any]] = {
+    "language": lambda x: directives.choice(
+        argument=x,
+        values=tuple(_language_types()),
+    ),
+    "input-format": lambda x: directives.choice(
+        argument=x,
+        values=("json", "json5", "yaml", "toml"),
+    ),
+    "pre-indent-level": directives.nonnegative_int,
+    "indent": directives.nonnegative_int,
+    "indent-char": lambda x: directives.choice(
+        argument=x,
+        values=("spaces", "tabs"),
+    ),
+    "include-preamble": directives.flag,
+    **{
+        option_name: _make_format_validator(option_name=option_name)
+        for option_name in _FORMAT_OPTION_GETTERS
+    },
+    "default-set-element-type": directives.unchanged,
+    "default-sequence-element-type": directives.unchanged,
+    "default-dict-key-type": directives.unchanged,
+    "default-dict-value-type": directives.unchanged,
+    "default-ordered-map-value-type": directives.unchanged,
+}
+
+_EXTENSION_TO_INPUT_FORMAT: dict[str, InputFormat] = {
+    ".json": InputFormat.JSON,
+    ".json5": InputFormat.JSON5,
+    ".yaml": InputFormat.YAML,
+    ".yml": InputFormat.YAML,
+    ".toml": InputFormat.TOML,
+}
+
+
 @beartype
-class LiteralizerDirective(SphinxDirective):
-    """Directive that converts a data file to a native literal block.
-
-    Usage::
-
-        .. literalizer:: path/to/data.json
-           :language: python
-           :input-format: json
-           :pre-indent-level: 2
-           :indent: 4
-           :indent-char: spaces
-           :include-delimiters:
-           :include-preamble:
-           :date-format: python
-           :datetime-format: python
-           :variable-name: my_var
-           :existing-variable:
-           :sequence-format: list
-           :set-format: frozenset
-           :bytes-format: python
-           :comment-format: block
-           :variable-type-hints: always
-           :declaration-style: const
-           :dict-entry-style: rocket
-           :dict-format: object
-           :float-format: repr
-           :integer-format: decimal
-           :numeric-literal-suffix: none
-           :numeric-separator: none
-           :string-format: double
-           :trailing-comma: yes
-           :line-ending: semicolon
-           :empty-dict-key: positional
-           :default-set-element-type: String
-           :default-sequence-element-type: String
-           :default-dict-key-type: String
-           :default-dict-value-type: String
-           :default-ordered-map-value-type: any
-    """
+class _BaseLiteralizerDirective(SphinxDirective):
+    """Shared logic for literalizer directives."""
 
     required_arguments = 1
     has_content = False
-    option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
-        "language": lambda x: directives.choice(
-            argument=x,
-            values=tuple(_language_types()),
-        ),
-        "input-format": lambda x: directives.choice(
-            argument=x,
-            values=("json", "json5", "yaml", "toml"),
-        ),
-        "pre-indent-level": directives.nonnegative_int,
-        "indent": directives.nonnegative_int,
-        "indent-char": lambda x: directives.choice(
-            argument=x,
-            values=("spaces", "tabs"),
-        ),
-        "include-delimiters": directives.flag,
-        "include-preamble": directives.flag,
-        **{
-            option_name: _make_format_validator(option_name=option_name)
-            for option_name in _FORMAT_OPTION_GETTERS
-        },
-        "variable-name": directives.unchanged,
-        "existing-variable": directives.flag,
-        "default-set-element-type": directives.unchanged,
-        "default-sequence-element-type": directives.unchanged,
-        "default-dict-key-type": directives.unchanged,
-        "default-dict-value-type": directives.unchanged,
-        "default-ordered-map-value-type": directives.unchanged,
-    }
 
     def _apply_format_options(
         self,
@@ -290,14 +266,6 @@ class LiteralizerDirective(SphinxDirective):
         )
         return constructor()
 
-    _EXTENSION_TO_INPUT_FORMAT: ClassVar[dict[str, InputFormat]] = {
-        ".json": InputFormat.JSON,
-        ".json5": InputFormat.JSON5,
-        ".yaml": InputFormat.YAML,
-        ".yml": InputFormat.YAML,
-        ".toml": InputFormat.TOML,
-    }
-
     def _resolve_input_format(self, data_path: Path) -> InputFormat:
         """Determine the input format from the option or file
         extension.
@@ -307,13 +275,78 @@ class LiteralizerDirective(SphinxDirective):
             return InputFormat[explicit.upper()]
         suffix = data_path.suffix.lower()
         try:
-            return self._EXTENSION_TO_INPUT_FORMAT[suffix]
+            return _EXTENSION_TO_INPUT_FORMAT[suffix]
         except KeyError:
             msg = (
                 f"Cannot determine input format for '{data_path.name}'. "
                 f"Use the :input-format: option."
             )
             raise ExtensionError(message=msg) from None
+
+    def _make_node(
+        self,
+        text: str,
+        data_path: Path,
+        language_cls: LanguageCls,
+    ) -> list[nodes.Node]:
+        """Create a literal_block node."""
+        node = nodes.literal_block(
+            text,
+            text,
+            source=str(object=data_path),
+        )
+        node["language"] = language_cls.pygments_name or "text"
+        self.add_name(node=node)
+        return [node]
+
+
+@beartype
+class LiteralizerDirective(_BaseLiteralizerDirective):
+    """Directive that converts a data file to a native literal block.
+
+    Usage::
+
+        .. literalizer:: path/to/data.json
+           :language: python
+           :input-format: json
+           :pre-indent-level: 2
+           :indent: 4
+           :indent-char: spaces
+           :include-delimiters:
+           :include-preamble:
+           :date-format: python
+           :datetime-format: python
+           :variable-name: my_var
+           :existing-variable:
+           :sequence-format: list
+           :set-format: frozenset
+           :bytes-format: python
+           :comment-format: block
+           :variable-type-hints: always
+           :declaration-style: const
+           :dict-entry-style: rocket
+           :dict-format: object
+           :float-format: repr
+           :integer-format: decimal
+           :numeric-literal-suffix: none
+           :numeric-separator: none
+           :string-format: double
+           :trailing-comma: yes
+           :line-ending: semicolon
+           :empty-dict-key: positional
+           :default-set-element-type: String
+           :default-sequence-element-type: String
+           :default-dict-key-type: String
+           :default-dict-value-type: String
+           :default-ordered-map-value-type: any
+    """
+
+    option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
+        **_COMMON_OPTIONS,
+        "include-delimiters": directives.flag,
+        "variable-name": directives.unchanged,
+        "existing-variable": directives.flag,
+    }
 
     def run(self) -> list[nodes.Node]:
         """Read the data file and produce a literal block."""
@@ -358,20 +391,97 @@ class LiteralizerDirective(SphinxDirective):
         # Sphinx's built-in LiteralInclude directive, which also stores an
         # absolute path so that downstream code can rely on it without having
         # to resolve relative→absolute itself.
-        node = nodes.literal_block(
-            text,
-            text,
-            source=str(object=data_path),
+        return self._make_node(
+            text=text,
+            data_path=data_path,
+            language_cls=language_cls,
         )
-        node["language"] = language_cls.pygments_name or "text"
-        self.add_name(node=node)
-        return [node]
+
+
+@beartype
+class LiteralizerCallDirective(_BaseLiteralizerDirective):
+    """Directive that converts a data file to function call expressions.
+
+    Usage::
+
+        .. literalizer-call:: path/to/data.json
+           :language: python
+           :call-function: my_func
+           :call-params: flag,count,name
+           :per-element:
+           :input-format: json
+           :indent: 4
+           :indent-char: spaces
+           :include-preamble:
+    """
+
+    option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
+        **_COMMON_OPTIONS,
+        "call-function": directives.unchanged_required,
+        "call-params": directives.unchanged_required,
+        "per-element": directives.flag,
+    }
+
+    def run(self) -> list[nodes.Node]:
+        """Read the data file and produce function call expressions."""
+        env = self.state.document.settings.env
+        data_path = (Path(env.srcdir) / self.arguments[0]).resolve()
+
+        env.note_dependency(str(object=data_path))
+
+        language_name: str = self.options["language"]
+        language_cls = _language_types()[language_name]
+        language_spec = self._build_language(
+            language_name=language_name,
+            language_cls=language_cls,
+        )
+
+        pre_indent_level: int = self.options.get("pre-indent-level", 0)
+        include_preamble: bool = "include-preamble" in self.options
+        call_function: str = self.options["call-function"]
+        call_params = [
+            p.strip() for p in self.options["call-params"].split(",")
+        ]
+        per_element: bool = "per-element" in self.options
+
+        input_format = self._resolve_input_format(data_path=data_path)
+        result = literalize_call(
+            source=data_path.read_text(encoding="utf-8"),
+            input_format=input_format,
+            language=language_spec,
+            call_function=call_function,
+            call_params=call_params,
+            per_element=per_element,
+        )
+
+        code = result.code
+        if pre_indent_level > 0:
+            indent = language_spec.indent * pre_indent_level
+            code = "\n".join(
+                indent + line if line else line for line in code.splitlines()
+            )
+
+        parts: list[str] = []
+        if include_preamble and result.preamble:
+            parts.append("\n".join(result.preamble))
+        parts.append(code)
+        text = "\n\n".join(parts)
+
+        return self._make_node(
+            text=text,
+            data_path=data_path,
+            language_cls=language_cls,
+        )
 
 
 @beartype
 def setup(app: Sphinx) -> ExtensionMetadata:
     """Register the extension with Sphinx."""
     app.add_directive(name="literalizer", cls=LiteralizerDirective)
+    app.add_directive(
+        name="literalizer-call",
+        cls=LiteralizerCallDirective,
+    )
     return {
         "version": "0.1.0",
         "parallel_read_safe": True,
