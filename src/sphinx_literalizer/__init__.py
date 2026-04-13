@@ -128,6 +128,7 @@ class LiteralizerDirective(SphinxDirective):
            :indent: 4
            :indent-char: spaces
            :include-delimiters:
+           :include-preamble:
            :date-format: python
            :datetime-format: python
            :variable-name: my_var
@@ -173,6 +174,7 @@ class LiteralizerDirective(SphinxDirective):
             values=("spaces", "tabs"),
         ),
         "include-delimiters": directives.flag,
+        "include-preamble": directives.flag,
         **{
             option_name: _make_format_validator(option_name=option_name)
             for option_name in _FORMAT_OPTION_GETTERS
@@ -329,6 +331,7 @@ class LiteralizerDirective(SphinxDirective):
 
         pre_indent_level: int = self.options.get("pre-indent-level", 0)
         include_delimiters: bool = "include-delimiters" in self.options
+        include_preamble: bool = "include-preamble" in self.options
         variable_name: str | None = self.options.get("variable-name")
         existing_variable: bool = "existing-variable" in self.options
 
@@ -343,7 +346,11 @@ class LiteralizerDirective(SphinxDirective):
             new_variable=not existing_variable,
             error_on_coercion=False,
         )
-        text = result.code
+        parts: list[str] = []
+        if include_preamble and result.preamble:
+            parts.append("\n".join(result.preamble))
+        parts.append(result.code)
+        text = "\n\n".join(parts)
 
         # First positional arg sets rawsource; Sphinx requires
         # rawsource == astext() for syntax highlighting to apply.
