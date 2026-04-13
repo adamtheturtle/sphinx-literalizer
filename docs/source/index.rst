@@ -74,6 +74,12 @@ Directive options
    Include collection delimiters in the output
    (``[`` … ``]`` for arrays, ``{`` … ``}`` for dicts).
 
+``:include-preamble:`` (optional flag)
+   Include language preamble lines (imports, package declarations, etc.)
+   before the generated code.  For example, Go code will be preceded by
+   ``package main``, Rust by ``use std::collections::HashMap;``, etc.
+   Has no effect when the language does not require a preamble.
+
 ``:date-format:`` (optional)
    How to render YAML dates.  Not all values are valid for every
    language.  Supported values:

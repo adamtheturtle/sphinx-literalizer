@@ -3467,3 +3467,150 @@ def test_language_with_no_pygments_lexer(
     (literal_block,) = literal_blocks
     assert literal_block["language"] == "text"
     app.cleanup()
+
+
+def test_include_preamble_go(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :include-preamble: flag prepends import / package lines."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"key": "value"}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: go
+           :include-delimiters:
+           :include-preamble:
+           :variable-name: x
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    literal_blocks = list(
+        doctree.findall(condition=nodes.literal_block),
+    )
+    (literal_block,) = literal_blocks
+    text = literal_block.astext()
+    assert text.startswith("package main\n\n")
+    assert "x := map[string]string{" in text
+    app.cleanup()
+
+
+def test_include_preamble_no_effect_python(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :include-preamble: flag has no effect when the language has
+    no preamble.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. code-block:: python
+
+           1,
+    """
+        )
+    )
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
+
+
+def test_no_include_preamble_by_default(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Without :include-preamble:, the preamble is not in the output
+    even for languages that have one.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"key": "value"}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: go
+           :include-delimiters:
+           :variable-name: x
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    literal_blocks = list(
+        doctree.findall(condition=nodes.literal_block),
+    )
+    (literal_block,) = literal_blocks
+    text = literal_block.astext()
+    assert not text.startswith("package main")
+    assert "x := map[string]string{" in text
+    app.cleanup()
