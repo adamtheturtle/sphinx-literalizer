@@ -409,6 +409,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :target-function: my_func
            :parameter-names: flag,count,name
            :per-element:
+           :call-transform: print($0)
            :input-format: json
            :indent: 4
            :indent-char: spaces
@@ -420,6 +421,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         "target-function": directives.unchanged_required,
         "parameter-names": directives.unchanged_required,
         "per-element": directives.flag,
+        "call-transform": directives.unchanged_required,
     }
 
     def run(self) -> list[nodes.Node]:
@@ -444,6 +446,19 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         ]
         per_element: bool = "per-element" in self.options
 
+        call_transform_template: str | None = self.options.get(
+            "call-transform",
+        )
+        call_transform: Callable[[str], str] | None = None
+        if call_transform_template is not None:
+            template = call_transform_template
+
+            def _call_transform(call_str: str) -> str:
+                """Replace ``$0`` with the call expression."""
+                return template.replace("$0", call_str)
+
+            call_transform = _call_transform
+
         input_format = self._resolve_input_format(data_path=data_path)
         result = literalize_call(
             source=data_path.read_text(encoding="utf-8"),
@@ -451,6 +466,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             language=language_spec,
             target_function=target_function,
             parameter_names=parameter_names,
+            call_transform=call_transform,
             per_element=per_element,
         )
 
