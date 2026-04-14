@@ -75,8 +75,8 @@ def test_literalizer_call_pre_indent_level(
 
         .. literalizer-call:: data.json
            :language: python
-           :call-function: f
-           :call-params: flag,count
+           :target-function: f
+           :parameter-names: flag,count
            :per-element:
            :pre-indent-level: 2
     """
@@ -3682,8 +3682,8 @@ def test_literalizer_call_basic_python(
 
         .. literalizer-call:: data.json
            :language: python
-           :call-function: my_func
-           :call-params: flag,count,name
+           :target-function: my_func
+           :parameter-names: flag,count,name
            :per-element:
     """
         )
@@ -3743,8 +3743,8 @@ def test_literalizer_call_go(
 
         .. literalizer-call:: data.json
            :language: go
-           :call-function: myFunc
-           :call-params: flag,count
+           :target-function: myFunc
+           :parameter-names: flag,count
            :per-element:
     """
         )
@@ -3791,8 +3791,8 @@ def test_literalizer_call_without_per_element(
 
         .. literalizer-call:: data.json
            :language: python
-           :call-function: my_func
-           :call-params: x
+           :target-function: my_func
+           :parameter-names: x
     """
         )
     )
@@ -3835,8 +3835,8 @@ def test_literalizer_call_include_preamble(
 
         .. literalizer-call:: data.json
            :language: go
-           :call-function: myFunc
-           :call-params: flag,count
+           :target-function: myFunc
+           :parameter-names: flag,count
            :per-element:
            :include-preamble:
     """
@@ -3881,8 +3881,8 @@ def test_literalizer_call_source_is_absolute(
 
         .. literalizer-call:: data.json
            :language: python
-           :call-function: f
-           :call-params: x
+           :target-function: f
+           :parameter-names: x
            :per-element:
     """
         )

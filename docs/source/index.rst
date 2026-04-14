@@ -428,8 +428,8 @@ given parameter names.
 
    .. literalizer-call:: calls.json
       :language: python
-      :call-function: my_func
-      :call-params: flag,count,name
+      :target-function: my_func
+      :parameter-names: flag,count,name
       :per-element:
 
 Given a file ``calls.json`` containing:
@@ -449,8 +449,8 @@ For positional-call languages like Go, the same data renders as:
 
    .. literalizer-call:: calls.json
       :language: go
-      :call-function: myFunc
-      :call-params: flag,count
+      :target-function: myFunc
+      :parameter-names: flag,count
       :per-element:
 
 .. code-block:: go
@@ -461,11 +461,11 @@ For positional-call languages like Go, the same data renders as:
 ``literalizer-call`` directive options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``:call-function:`` (required)
+``:target-function:`` (required)
    The function expression to call (e.g. ``my_func`` or
    ``throttler.should_send_notification``).
 
-``:call-params:`` (required)
+``:parameter-names:`` (required)
    Comma-separated parameter names, positionally mapped to each
    element in each row.  For positional-call languages (like Go) these
    are unused in the output but still determine how many values to
