@@ -4,6 +4,11 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.4.14``.
+- Added support for Nix output language.
+- Renamed ``:call-function:`` directive option to ``:target-function:``.
+- Renamed ``:call-params:`` directive option to ``:parameter-names:``.
+
 2026.04.06
 ----------
 

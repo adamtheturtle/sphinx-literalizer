@@ -406,8 +406,8 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
         .. literalizer-call:: path/to/data.json
            :language: python
-           :call-function: my_func
-           :call-params: flag,count,name
+           :target-function: my_func
+           :parameter-names: flag,count,name
            :per-element:
            :input-format: json
            :indent: 4
@@ -417,8 +417,8 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
         **_COMMON_OPTIONS,
-        "call-function": directives.unchanged_required,
-        "call-params": directives.unchanged_required,
+        "target-function": directives.unchanged_required,
+        "parameter-names": directives.unchanged_required,
         "per-element": directives.flag,
     }
 
@@ -438,9 +438,9 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
         pre_indent_level: int = self.options.get("pre-indent-level", 0)
         include_preamble: bool = "include-preamble" in self.options
-        call_function: str = self.options["call-function"]
-        call_params = [
-            p.strip() for p in self.options["call-params"].split(",")
+        target_function: str = self.options["target-function"]
+        parameter_names = [
+            p.strip() for p in self.options["parameter-names"].split(",")
         ]
         per_element: bool = "per-element" in self.options
 
@@ -449,8 +449,8 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             source=data_path.read_text(encoding="utf-8"),
             input_format=input_format,
             language=language_spec,
-            call_function=call_function,
-            call_params=call_params,
+            target_function=target_function,
+            parameter_names=parameter_names,
             per_element=per_element,
         )
 
