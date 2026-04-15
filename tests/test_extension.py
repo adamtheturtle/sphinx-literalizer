@@ -2643,6 +2643,41 @@ def test_numeric_separator_underscore(
     app.cleanup()
 
 
+def test_numeric_style_explicit(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :numeric-style: option controls numeric literal style."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[42]),
+    )
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: haskell
+           :numeric-style: explicit
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    app.cleanup()
+
+
 def test_string_format_single(
     *,
     make_app: Callable[..., SphinxTestApp],

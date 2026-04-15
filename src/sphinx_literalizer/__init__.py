@@ -14,9 +14,11 @@ from beartype import beartype
 from docutils import nodes
 from docutils.parsers.rst import directives
 from literalizer import (
+    ExistingVariable,
     InputFormat,
     Language,
     LanguageCls,
+    NewVariable,
     literalize,
     literalize_call,
 )
@@ -59,6 +61,7 @@ _FORMAT_OPTION_GETTERS: dict[
     "integer-format": lambda cls: cls.IntegerFormats,
     "numeric-literal-suffix": lambda cls: cls.NumericLiteralSuffixes,
     "numeric-separator": lambda cls: cls.NumericSeparators,
+    "numeric-style": lambda cls: cls.NumericStyles,
     "string-format": lambda cls: cls.StringFormats,
     "trailing-comma": lambda cls: cls.TrailingCommas,
     "line-ending": lambda cls: cls.LineEndings,
@@ -330,6 +333,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :integer-format: decimal
            :numeric-literal-suffix: none
            :numeric-separator: none
+           :numeric-style: overloaded
            :string-format: double
            :trailing-comma: yes
            :line-ending: semicolon
@@ -368,6 +372,14 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         variable_name: str | None = self.options.get("variable-name")
         existing_variable: bool = "existing-variable" in self.options
 
+        variable_form = None
+        if variable_name is not None:
+            variable_form = (
+                ExistingVariable(name=variable_name)
+                if existing_variable
+                else NewVariable(name=variable_name)
+            )
+
         input_format = self._resolve_input_format(data_path=data_path)
         result = literalize(
             source=data_path.read_text(encoding="utf-8"),
@@ -375,8 +387,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
             language=language_spec,
             pre_indent_level=pre_indent_level,
             include_delimiters=include_delimiters,
-            variable_name=variable_name,
-            new_variable=not existing_variable,
+            variable_form=variable_form,
             error_on_coercion=False,
         )
         parts: list[str] = []
