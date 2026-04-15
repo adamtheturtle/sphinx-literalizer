@@ -343,6 +343,15 @@ Directive options
       Underscore separators (e.g. ``1_000_000``).  Available for
       JavaScript.
 
+``:numeric-style:`` (optional)
+   The numeric literal style.  Supported values:
+
+   ``overloaded``
+      Use overloaded numeric type classes (default for Haskell).
+   ``explicit``
+      Wrap every numeric literal in an explicit constructor.
+      Available for Haskell.
+
 ``:string-format:`` (optional)
    How to render string values.  Supported values:
 
