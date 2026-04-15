@@ -175,8 +175,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
         """Apply all format/enum options."""
         all_formats = _all_formats()
         for option_name in _FORMAT_OPTION_GETTERS:
-            value = self.options.get(option_name)
-            if value is not None:
+            if (value := self.options.get(option_name)) is not None:
                 param_name = option_name.replace("-", "_")
                 constructor = partial(
                     constructor,
@@ -227,8 +226,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
             param_name,
             supports_check,
         ) in type_option_map.items():
-            value = self.options.get(option_name)
-            if value is not None:
+            if (value := self.options.get(option_name)) is not None:
                 if not supports_check(language_cls):
                     msg = (
                         f"Language '{language_name}' does not support "
