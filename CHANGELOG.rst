@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.04.15
+----------
+
+
 
 - Bumped ``literalizer`` to ``2026.4.15``.
 - Adopted the new ``variable_form`` parameter (``NewVariable`` / ``ExistingVariable``) replacing ``variable_name`` / ``new_variable``.
