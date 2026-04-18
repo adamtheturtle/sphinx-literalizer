@@ -4,6 +4,9 @@ Changelog
 Next
 ----
 
+
+- Bumped ``literalizer`` to ``2026.4.18``.
+
 2026.04.15
 ----------
 
