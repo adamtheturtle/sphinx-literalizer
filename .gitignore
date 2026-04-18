@@ -32,3 +32,6 @@ htmlcov/
 
 # Docs build
 docs/build/
+
+# Claude
+.claude/scheduled_tasks.lock
