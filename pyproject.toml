@@ -79,6 +79,9 @@ optional-dependencies.release = [
 urls.Documentation = "https://adamtheturtle.github.io/sphinx-literalizer/"
 urls.Source = "https://github.com/adamtheturtle/sphinx-literalizer"
 
+[dependency-groups]
+dev = []
+
 [tool.setuptools]
 zip-safe = false
 package-data.sphinx_literalizer = [
@@ -265,6 +268,3 @@ exclude = [
 [tool.yamlfix]
 section_whitelines = 1
 whitelines = 1
-
-[dependency-groups]
-dev = []
