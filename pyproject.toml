@@ -56,6 +56,7 @@ optional-dependencies.dev = [
     "pyright==1.1.408",
     "pyroma==5.0.1",
     "pytest==9.0.3",
+    "pytest-beartype-tests==2026.4.19.1",
     "pytest-cov==7.1.0",
     "ruff==0.15.11",
     "shellcheck-py==0.11.0.1",
@@ -222,7 +223,6 @@ linewrap-full-docstring = true
 [tool.vulture]
 ignore_names = [
     # pytest configuration
-    "pytest_collection_modifyitems",
     "pytest_plugins",
     # pytest fixtures - we name fixtures like this for this purpose
     "fixture_*",
@@ -265,3 +265,6 @@ exclude = [
 [tool.yamlfix]
 section_whitelines = 1
 whitelines = 1
+
+[dependency-groups]
+dev = []
