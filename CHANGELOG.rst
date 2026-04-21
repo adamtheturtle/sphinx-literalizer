@@ -4,6 +4,14 @@ Changelog
 Next
 ----
 
+2026.04.21.3
+------------
+
+- Bumped ``literalizer`` to ``2026.4.21.3``.
+- Added ``:heterogeneous-strategy:`` directive option, exposing
+  language-level heterogeneous-scalar strategies such as Rust's
+  ``tagged_enum``.
+
 2026.04.21
 ----------
 

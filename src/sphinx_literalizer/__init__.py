@@ -66,6 +66,7 @@ _FORMAT_OPTION_GETTERS: dict[
     "trailing-comma": lambda cls: cls.TrailingCommas,
     "line-ending": lambda cls: cls.LineEndings,
     "empty-dict-key": lambda cls: cls.EmptyDictKey,
+    "heterogeneous-strategy": lambda cls: cls.HeterogeneousStrategies,
 }
 
 
@@ -358,6 +359,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :trailing-comma: yes
            :line-ending: semicolon
            :empty-dict-key: positional
+           :heterogeneous-strategy: tagged_enum
            :default-set-element-type: String
            :default-sequence-element-type: String
            :default-dict-key-type: String

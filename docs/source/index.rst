@@ -408,6 +408,18 @@ Directive options
    ``error``
       Raise an error on empty keys.  Available for R.
 
+``:heterogeneous-strategy:`` (optional)
+   How to render scalar collections whose elements have more than one
+   language-level type.  Supported values:
+
+   ``error``
+      Raise an error when a collection mixes scalar types (default for
+      all languages).
+   ``tagged_enum``
+      Emit a minimal tagged ``enum`` in the preamble and wrap each
+      heterogeneous value at the call site (e.g. ``Value::I32(1)``).
+      Available for Rust.
+
 Example
 ~~~~~~~
 

@@ -3090,6 +3090,89 @@ def test_empty_dict_key_positional(
     app.cleanup()
 
 
+def test_heterogeneous_strategy_unsupported_value(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :heterogeneous-strategy: option rejects values a language
+    does not support.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :heterogeneous-strategy: tagged_enum
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=(
+            r"Language 'python' does not support "
+            r"heterogeneous-strategy 'tagged_enum'\."
+        ),
+    ):
+        app.build()
+
+
+def test_heterogeneous_strategy_tagged_enum(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Rust's :heterogeneous-strategy: tagged_enum renders mixed scalars
+    via a generated tagged enum.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, "hello"]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+           :heterogeneous-strategy: tagged_enum
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "enum Value {" in text
+    assert "Value::I32(1)" in text
+    assert 'Value::Str("hello")' in text
+    app.cleanup()
+
+
 def test_unsupported_default_set_element_type_error(
     *,
     make_app: Callable[..., SphinxTestApp],
