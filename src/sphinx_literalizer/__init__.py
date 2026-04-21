@@ -109,6 +109,28 @@ def _lookup_format(
         raise ExtensionError(message=msg) from None
 
 
+def _parse_modifiers(
+    language_name: str,
+    language_cls: LanguageCls,
+    value: str,
+) -> frozenset[enum.Enum]:
+    """Parse a comma-separated list of modifier names for the language."""
+    result: set[enum.Enum] = set()
+    for raw in value.split(sep=","):
+        name = raw.strip()
+        if not name:
+            continue
+        try:
+            result.add(language_cls.Modifiers[name.upper()])
+        except KeyError:
+            msg = (
+                f"Language '{language_name}' does not support "
+                f"modifier '{name}'."
+            )
+            raise ExtensionError(message=msg) from None
+    return frozenset(result)
+
+
 def _make_format_validator(
     option_name: str,
 ) -> Callable[[str], str]:
@@ -341,6 +363,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :default-dict-key-type: String
            :default-dict-value-type: String
            :default-ordered-map-value-type: any
+           :modifiers: public,static,final
     """
 
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
@@ -348,6 +371,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         "include-delimiters": directives.flag,
         "variable-name": directives.unchanged,
         "existing-variable": directives.flag,
+        "modifiers": directives.unchanged,
     }
 
     def run(self) -> list[nodes.Node]:
@@ -369,13 +393,31 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         include_preamble: bool = "include-preamble" in self.options
         variable_name: str | None = self.options.get("variable-name")
         existing_variable: bool = "existing-variable" in self.options
+        modifiers_value: str | None = self.options.get("modifiers")
+
+        if modifiers_value is not None and variable_name is None:
+            msg = "':modifiers:' requires ':variable-name:'."
+            raise ExtensionError(message=msg)
+        if modifiers_value is not None and existing_variable:
+            msg = (
+                "':modifiers:' cannot be combined with ':existing-variable:'."
+            )
+            raise ExtensionError(message=msg)
+
+        modifiers: frozenset[enum.Enum] = frozenset()
+        if modifiers_value is not None:
+            modifiers = _parse_modifiers(
+                language_name=language_name,
+                language_cls=language_cls,
+                value=modifiers_value,
+            )
 
         variable_form = None
         if variable_name is not None:
             variable_form = (
                 ExistingVariable(name=variable_name)
                 if existing_variable
-                else NewVariable(name=variable_name)
+                else NewVariable(name=variable_name, modifiers=modifiers)
             )
 
         input_format = self._resolve_input_format(data_path=data_path)
@@ -386,7 +428,6 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
             pre_indent_level=pre_indent_level,
             include_delimiters=include_delimiters,
             variable_form=variable_form,
-            error_on_coercion=False,
         )
         parts: list[str] = []
         if include_preamble and result.preamble:

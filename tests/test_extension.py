@@ -1277,6 +1277,183 @@ def test_existing_variable_dart(
     assert content_html != new_variable_html
 
 
+def test_modifiers_java(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :modifiers: option adds modifiers to a new variable
+    declaration.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: java
+           :include-delimiters:
+           :variable-name: myList
+           :modifiers: public, static, final,
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    (source_directory / "expected.java").write_text(
+        data=(
+            "public static final int[] myList = new int[]{\n"
+            "    1,\n"
+            "    2\n"
+            "};\n"
+        )
+    )
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalinclude:: expected.java
+           :language: java
+    """
+        )
+    )
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
+
+
+def test_unsupported_modifier_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """An unsupported modifier raises a clear ExtensionError."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :variable-name: my_list
+           :modifiers: public
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=r"^Language 'python' does not support modifier 'public'\.$",
+    ):
+        app.build()
+
+
+def test_modifiers_without_variable_name_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Using :modifiers: without :variable-name: raises an
+    ExtensionError.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: java
+           :modifiers: public
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=r"^':modifiers:' requires ':variable-name:'\.$",
+    ):
+        app.build()
+
+
+def test_modifiers_with_existing_variable_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Combining :modifiers: with :existing-variable: raises an
+    ExtensionError.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: java
+           :variable-name: myList
+           :existing-variable:
+           :modifiers: public
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=(
+            r"^':modifiers:' cannot be combined with "
+            r"':existing-variable:'\.$"
+        ),
+    ):
+        app.build()
+
+
 def test_rust_language(
     *,
     make_app: Callable[..., SphinxTestApp],
@@ -1892,7 +2069,9 @@ def test_fortran_language(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    (source_directory / "expected.f90").write_text(data="fint(1),\nfint(2)\n")
+    (source_directory / "expected.f90").write_text(
+        data="fint(1_int64),\nfint(2_int64)\n"
+    )
     source_file.write_text(
         data=dedent(
             text="""\
