@@ -3152,6 +3152,7 @@ def test_heterogeneous_strategy_tagged_enum(
         .. literalizer:: data.json
            :language: rust
            :heterogeneous-strategy: tagged_enum
+           :include-delimiters:
            :include-preamble:
     """
         )
@@ -3166,10 +3167,19 @@ def test_heterogeneous_strategy_tagged_enum(
 
     doctree = app.env.get_doctree(docname="index")
     (literal_block,) = doctree.findall(condition=nodes.literal_block)
-    text = literal_block.astext()
-    assert "enum Value {" in text
-    assert "Value::I32(1)" in text
-    assert 'Value::Str("hello")' in text
+    expected = dedent(
+        text="""\
+        enum Value {
+            I32(i32),
+            Str(&'static str),
+        }
+
+        vec![
+            Value::I32(1),
+            Value::Str("hello"),
+        ]"""
+    )
+    assert literal_block.astext() == expected
     app.cleanup()
 
 
