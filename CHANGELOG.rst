@@ -4,6 +4,13 @@ Changelog
 Next
 ----
 
+
+- Bumped ``literalizer`` to ``2026.4.21.1``.
+- Added ``:modifiers:`` directive option for declaring variables with
+  language-specific keywords (e.g. ``public,static,final`` for Java).
+- Removed the now-unused ``error_on_coercion`` argument from the
+  ``literalize`` call, matching the upstream API change.
+
 2026.04.18
 ----------
 

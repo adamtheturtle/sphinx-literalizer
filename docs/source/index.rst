@@ -219,6 +219,20 @@ Directive options
    declaration (e.g. ``final x = ...`` in Dart).  Has no effect without
    ``:variable-name:``.
 
+``:modifiers:`` (optional)
+   Comma-separated modifier keywords to add to a new variable
+   declaration, e.g. ``public,static,final``.  Requires
+   ``:variable-name:`` and cannot be combined with
+   ``:existing-variable:``.  Supported values depend on the language:
+
+   ``C++``
+      ``static``, ``const``.
+   ``C#``
+      ``public``, ``private``, ``protected``, ``static``, ``const``,
+      ``readonly``.
+   ``Java``
+      ``public``, ``private``, ``protected``, ``static``, ``final``.
+
 ``:variable-type-hints:`` (optional)
    Whether to add type hints to variable declarations.
    Supported values:
