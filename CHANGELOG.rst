@@ -4,6 +4,19 @@ Changelog
 Next
 ----
 
+2026.04.21.4
+------------
+
+- Bumped ``literalizer`` to ``2026.4.21.4``.
+- ``literalizer-call`` now reports a parameter/value count mismatch as
+  an ``ExtensionError`` naming the ``:parameter-names:`` option, rather
+  than surfacing literalizer's ``ParameterCountMismatchError`` as a
+  traceback.
+- Picked up the upstream fix for ``pre_indent_level`` interaction with
+  ``:variable-name:``: multi-line values are now uniformly indented
+  under the declaration rather than inserting the pre-indent between
+  ``=`` and the value.
+
 2026.04.21.1
 ------------
 

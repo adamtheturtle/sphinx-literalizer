@@ -22,6 +22,7 @@ from literalizer import (
     literalize,
     literalize_call,
 )
+from literalizer.exceptions import ParameterCountMismatchError
 from literalizer.languages import ALL_LANGUAGES
 from sphinx.application import Sphinx
 from sphinx.errors import ExtensionError
@@ -512,15 +513,22 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             call_transform = _call_transform
 
         input_format = self._resolve_input_format(data_path=data_path)
-        result = literalize_call(
-            source=data_path.read_text(encoding="utf-8"),
-            input_format=input_format,
-            language=language_spec,
-            target_function=target_function,
-            parameter_names=parameter_names,
-            call_transform=call_transform,
-            per_element=per_element,
-        )
+        try:
+            result = literalize_call(
+                source=data_path.read_text(encoding="utf-8"),
+                input_format=input_format,
+                language=language_spec,
+                target_function=target_function,
+                parameter_names=parameter_names,
+                call_transform=call_transform,
+                per_element=per_element,
+            )
+        except ParameterCountMismatchError as exc:
+            msg = (
+                f"':parameter-names:' has {len(parameter_names)} entries "
+                f"but the data provides a different number of values: {exc}"
+            )
+            raise ExtensionError(message=msg) from exc
 
         code = result.code
         if pre_indent_level > 0:

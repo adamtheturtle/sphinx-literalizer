@@ -4270,3 +4270,47 @@ def test_literalizer_call_call_transform(
     expected_app.cleanup()
 
     assert content_html == expected_html
+
+
+def test_parameter_count_mismatch_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A row whose value count differs from :parameter-names: raises a
+    clear ExtensionError instead of a raw traceback.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[1, 2, 3]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: python
+           :target-function: f
+           :parameter-names: a,b
+           :per-element:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=(
+            r"':parameter-names:' has 2 entries but the data provides "
+            r"a different number of values: "
+            r"Expected 2 parameters but got 3 values"
+        ),
+    ):
+        app.build()
