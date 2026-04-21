@@ -14,8 +14,8 @@ Next
   traceback.
 - Picked up the upstream fix for ``pre_indent_level`` interaction with
   ``:variable-name:``: multi-line values are now uniformly indented
-  under the declaration rather than inserting the pre-indent between
-  ``=`` and the value.
+  under the declaration rather than inserting the ``pre_indent_level``
+  whitespace between ``=`` and the value.
 
 2026.04.21.1
 ------------
