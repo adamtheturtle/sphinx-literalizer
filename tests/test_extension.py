@@ -1372,7 +1372,7 @@ def test_unsupported_modifier_error(
     )
     with pytest.raises(
         expected_exception=ExtensionError,
-        match=r"Language 'python' does not support modifier 'public'\.",
+        match=r"^Language 'python' does not support modifier 'public'\.$",
     ):
         app.build()
 
@@ -1408,7 +1408,7 @@ def test_modifiers_without_variable_name_error(
     )
     with pytest.raises(
         expected_exception=ExtensionError,
-        match=r"':modifiers:' requires ':variable-name:'\.",
+        match=r"^':modifiers:' requires ':variable-name:'\.$",
     ):
         app.build()
 
@@ -1447,8 +1447,8 @@ def test_modifiers_with_existing_variable_error(
     with pytest.raises(
         expected_exception=ExtensionError,
         match=(
-            r"':modifiers:' cannot be combined with "
-            r"':existing-variable:'\."
+            r"^':modifiers:' cannot be combined with "
+            r"':existing-variable:'\.$"
         ),
     ):
         app.build()
