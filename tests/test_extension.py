@@ -1300,7 +1300,7 @@ def test_modifiers_java(
            :language: java
            :include-delimiters:
            :variable-name: myList
-           :modifiers: public,static,final
+           :modifiers: public, static, final,
     """
         )
     )
