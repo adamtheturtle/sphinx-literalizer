@@ -4,6 +4,22 @@ Changelog
 Next
 ----
 
+2026.04.21.5
+------------
+
+- Bumped ``literalizer`` to ``2026.4.21.5``.
+- ``:declaration-style: lazy_static`` is now available for Rust,
+  wrapping the value in ``std::sync::LazyLock`` so module-level
+  ``HashMap``, ``BTreeMap``, ``Vec``, and similar collections can be
+  declared with a runtime-initialized literal.
+- ``literalizer-call`` now renders Racket and Common Lisp calls as
+  S-expressions with prefixed keyword arguments (``(process #:flag #t
+  #:count 42)`` and ``(process :flag t :count 42)`` respectively).
+- ``literalizer-call`` without ``:per-element:`` now respects the
+  language's call style, so Swift gets calls with keyword labels
+  (``process(data: [1, 2, 3])``) instead of an unlabeled positional
+  argument.
+
 2026.04.21.2
 ------------
 

@@ -2712,6 +2712,54 @@ def test_declaration_style_let(
     app.cleanup()
 
 
+def test_declaration_style_lazy_static_rust(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Rust's :declaration-style: lazy_static wraps the value in
+    ``LazyLock`` and adds the matching ``use`` to the preamble.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"a": 1, "b": 2}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+           :variable-name: CONFIG
+           :declaration-style: lazy_static
+           :include-delimiters:
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "use std::sync::LazyLock;" in text
+    assert (
+        "static CONFIG: LazyLock<HashMap<&str, i32>> = "
+        "LazyLock::new(|| HashMap::from([" in text
+    )
+    app.cleanup()
+
+
 def test_dict_format_map(
     *,
     make_app: Callable[..., SphinxTestApp],
@@ -4270,6 +4318,136 @@ def test_literalizer_call_call_transform(
     expected_app.cleanup()
 
     assert content_html == expected_html
+
+
+def test_literalizer_call_racket(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The literalizer-call directive renders Racket S-expression calls
+    with prefixed keyword arguments.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[True, 42], [False, 99]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: racket
+           :target-function: process
+           :parameter-names: flag,count
+           :per-element:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "(process #:flag #t #:count 42)" in text
+    assert "(process #:flag #f #:count 99)" in text
+    app.cleanup()
+
+
+def test_literalizer_call_common_lisp(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The literalizer-call directive renders Common Lisp calls with
+    ``:keyword`` arguments.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[True, 42], [False, 99]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: common-lisp
+           :target-function: process
+           :parameter-names: flag,count
+           :per-element:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "(process :flag t :count 42)" in text
+    assert "(process :flag nil :count 99)" in text
+    app.cleanup()
+
+
+def test_literalizer_call_without_per_element_uses_call_style(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Without :per-element:, the call uses the language's call style
+    (e.g. Swift's keyword labels) rather than a positional argument.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2, 3]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: swift
+           :target-function: process
+           :parameter-names: data
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "process(data: [1, 2, 3])" in text
+    app.cleanup()
 
 
 def test_parameter_count_mismatch_error(
