@@ -4408,6 +4408,90 @@ def test_literalizer_call_common_lisp(
     app.cleanup()
 
 
+def test_call_style_positional_typescript(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :call-style: positional option overrides TypeScript's default
+    OBJECT style so the call drops the parameter-name object wrapper.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"flag": True, "count": 42}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: typescript
+           :target-function: myFunc
+           :parameter-names: obj
+           :call-style: positional
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert 'myFunc({"flag": true, "count": 42});' in text
+    assert "obj:" not in text
+    app.cleanup()
+
+
+def test_call_style_unsupported_value(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :call-style: option rejects values a language does not
+    support.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"flag": True}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: python
+           :target-function: f
+           :parameter-names: obj
+           :call-style: object
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=r"Language 'python' does not support call-style 'object'\.",
+    ):
+        app.build()
+
+
 def test_literalizer_call_without_per_element_uses_call_style(
     *,
     make_app: Callable[..., SphinxTestApp],
