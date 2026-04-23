@@ -420,6 +420,35 @@ Directive options
       heterogeneous value at the call site (e.g. ``Value::I32(1)``).
       Available for Rust.
 
+``:call-style:`` (optional)
+   How ``literalizer-call`` renders function calls.  Each language
+   offers its own set of call styles; using a value a language does not
+   support raises an error.  Supported values:
+
+   ``positional``
+      Pass arguments by position (e.g. ``myFunc({...})``).  Available
+      for C, C#, C++, Crystal, D, F#, Go, Groovy, HCL, Haskell, Java,
+      JavaScript, Julia, Kotlin, Lua, Perl, PHP, Python, R, Ruby, Rust,
+      Scala, TypeScript.
+   ``keyword``
+      Pass arguments by keyword (e.g. ``my_func(flag=True)``).
+      Available for Crystal, Groovy, Jsonnet, Julia, Kotlin, PHP,
+      Python, R, Ruby, Scala, Swift.
+   ``named``
+      Pass arguments by named colon syntax (e.g.
+      ``MyFunc(flag: true)``).  Available for C#.
+   ``object``
+      Pass arguments as a single object literal (e.g.
+      ``myFunc({ obj: {...} })``).  Available for JavaScript,
+      TypeScript.
+   ``prefix_keyword``
+      Pass arguments as prefixed keyword pairs in an S-expression
+      (e.g. ``(process :flag t)``).  Available for Common Lisp,
+      Racket.
+   ``postfix``
+      Push arguments before naming the function (e.g. ``1 2 ADD``).
+      Available for Forth.
+
 Example
 ~~~~~~~
 

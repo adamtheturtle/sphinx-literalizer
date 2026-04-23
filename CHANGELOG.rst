@@ -4,6 +4,11 @@ Changelog
 Next
 ----
 
+- Added a ``:call-style:`` option to select a non-default call style for
+  the ``literalizer-call`` directive (e.g. ``:call-style: positional``
+  for TypeScript to render ``myFunc({...})`` instead of
+  ``myFunc({ obj: {...} })``).
+
 2026.04.22
 ----------
 

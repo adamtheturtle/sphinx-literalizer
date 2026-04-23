@@ -68,6 +68,7 @@ _FORMAT_OPTION_GETTERS: dict[
     "line-ending": lambda cls: cls.LineEndings,
     "empty-dict-key": lambda cls: cls.EmptyDictKey,
     "heterogeneous-strategy": lambda cls: cls.HeterogeneousStrategies,
+    "call-style": lambda cls: cls.CallStyles,
 }
 
 
@@ -462,6 +463,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :target-function: my_func
            :parameter-names: flag,count,name
            :per-element:
+           :call-style: keyword
            :call-transform: print($0)
            :input-format: json
            :indent: 4
