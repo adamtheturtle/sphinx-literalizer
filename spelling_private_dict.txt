@@ -3,6 +3,7 @@ Changelog
 Dhall
 Fortran
 Initializer
+Jsonnet
 Lua
 MATLAB
 Mojo
