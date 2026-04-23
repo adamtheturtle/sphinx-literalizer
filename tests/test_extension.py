@@ -3231,6 +3231,96 @@ def test_heterogeneous_strategy_tagged_enum(
     app.cleanup()
 
 
+def test_heterogeneous_strategy_object_variant_nim(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Nim's :heterogeneous-strategy: object_variant renders mixed
+    scalars via a generated object variant type.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, "hello"]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: nim
+           :heterogeneous-strategy: object_variant
+           :include-delimiters:
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "case kind: ValueKind" in text
+    assert "Value(kind: vkInt, intVal: 1)" in text
+    assert 'Value(kind: vkStr, strVal: "hello")' in text
+    app.cleanup()
+
+
+def test_heterogeneous_strategy_union_type_dhall(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Dhall's :heterogeneous-strategy: union_type renders mixed scalars
+    via a generated Dhall union type.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, "hello"]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: dhall
+           :heterogeneous-strategy: union_type
+           :include-delimiters:
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "let Value = < Int : Integer | Str : Text > in" in text
+    assert "Value.Int +1" in text
+    assert 'Value.Str "hello"' in text
+    app.cleanup()
+
+
 def test_unsupported_default_set_element_type_error(
     *,
     make_app: Callable[..., SphinxTestApp],
@@ -4405,6 +4495,187 @@ def test_literalizer_call_common_lisp(
     text = literal_block.astext()
     assert "(process :flag t :count 42)" in text
     assert "(process :flag nil :count 99)" in text
+    app.cleanup()
+
+
+def test_literalizer_call_clojure(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The literalizer-call directive renders Clojure calls as
+    S-expressions with ``:keyword`` arguments.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[True, 42], [False, 99]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: clojure
+           :target-function: process
+           :parameter-names: flag,count
+           :per-element:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "(process :flag true :count 42)" in text
+    assert "(process :flag false :count 99)" in text
+    app.cleanup()
+
+
+def test_literalizer_call_objective_c(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The literalizer-call directive renders Objective-C calls as
+    positional C-style calls with boxed scalars.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[True, 42], [False, 99]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: objective-c
+           :target-function: process
+           :parameter-names: flag,count
+           :per-element:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "process(@YES, @(42));" in text
+    assert "process(@NO, @(99));" in text
+    app.cleanup()
+
+
+def test_literalizer_call_perl(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The literalizer-call directive renders Perl calls as positional
+    subroutine invocations.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[True, 42], [False, 99]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: perl
+           :target-function: process
+           :parameter-names: flag,count
+           :per-element:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "process(1, 42);" in text
+    assert "process(0, 99);" in text
+    app.cleanup()
+
+
+def test_literalizer_call_ref_marker(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """``{"$ref": "name"}`` markers at argument positions emit the name
+    as a bare identifier rather than formatting it as a literal.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(
+            obj=[
+                [{"$ref": "user_obj"}, 42],
+                [{"$ref": "admin"}, 99],
+            ],
+        ),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: python
+           :target-function: process
+           :parameter-names: user,count
+           :per-element:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "process(user=user_obj, count=42)" in text
+    assert "process(user=admin, count=99)" in text
     app.cleanup()
 
 

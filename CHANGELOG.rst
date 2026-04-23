@@ -4,6 +4,24 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.4.23``.
+- ``:heterogeneous-strategy: object_variant`` is now available for Nim,
+  auto-generating a Nim object variant in the preamble for dicts,
+  lists, or sibling-list pairs that hold scalars of more than one Nim
+  type.
+- ``:heterogeneous-strategy: union_type`` is now available for Dhall,
+  auto-generating a Dhall union type in the preamble for mixed-scalar
+  containers.
+- ``literalizer-call`` now renders Clojure, Objective-C, and Perl
+  calls: Clojure as ``(process :flag true :count 42)``, Objective-C
+  as ``process(@YES, @(42));`` with boxed scalars, and Perl as
+  ``process(1, 42);``.
+- ``literalizer-call`` now recognizes ``{"$ref": "name"}`` markers at
+  argument positions in the data file, emitting ``name`` as a bare
+  identifier (``process(user=user_obj, count=42)``) rather than
+  formatting the marker dict as a literal.  Refs and literal values
+  can be mixed in the same call across JSON, JSON5, YAML, and TOML.
+
 2026.04.23
 ----------
 
