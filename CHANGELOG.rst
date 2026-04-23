@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.04.23.1
+------------
+
+
 - Bumped ``literalizer`` to ``2026.4.23``.
 - ``:heterogeneous-strategy: object_variant`` is now available for Nim,
   auto-generating a Nim object variant in the preamble for dicts,
