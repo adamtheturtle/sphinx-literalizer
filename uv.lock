@@ -627,7 +627,7 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.4.23"
+version = "2026.4.24"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
@@ -635,9 +635,9 @@ dependencies = [
     { name = "ruamel-yaml" },
     { name = "tomlkit" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3b/88/af0e694d9b914a09e1c3b6e12ad41a50aa9b303bdec8f29b3f1d2a0a4879/literalizer-2026.4.23.tar.gz", hash = "sha256:9ee5425692f9eb9740c900f1a180b7bbbb66cfed8a334012698308b4822b0913", size = 1276168, upload-time = "2026-04-23T16:50:27.865Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7b/bb/918190a5bd7c0263052c6f3e3c5dc275a0315901afb5196d8cf9fed1772c/literalizer-2026.4.24.tar.gz", hash = "sha256:b1b7ddf725a8fa451c745c9b544c3edc6d3b91fedd7942aed5de3bbf70718905", size = 1277645, upload-time = "2026-04-24T03:00:42.219Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/aa/3d/8cc2ef6063aad5525406005769d50262f52cacbf4592ca13a22a092b181f/literalizer-2026.4.23-py3-none-any.whl", hash = "sha256:5c936fd9b986afb92acf0f3973843c3b5aaac0b827c2c850cb25ce18cbdc79db", size = 408234, upload-time = "2026-04-23T16:50:25.992Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/f2/22468589673ffe765a4da98cdd62faa83cb70bad63d24e6a6dbe08fd1d66/literalizer-2026.4.24-py3-none-any.whl", hash = "sha256:5426009fbc2a958ea566488bf45e9521f6c3b5111a8e191c9c32fdb3cbf9b22d", size = 408615, upload-time = "2026-04-24T03:00:39.407Z" },
 ]
 
 [[package]]
@@ -1218,15 +1218,15 @@ wheels = [
 
 [[package]]
 name = "pyright"
-version = "1.1.408"
+version = "1.1.409"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nodeenv" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/74/b2/5db700e52554b8f025faa9c3c624c59f1f6c8841ba81ab97641b54322f16/pyright-1.1.408.tar.gz", hash = "sha256:f28f2321f96852fa50b5829ea492f6adb0e6954568d1caa3f3af3a5f555eb684", size = 4400578, upload-time = "2026-01-08T08:07:38.795Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/51/4e/3aa27f74211522dba7e9cbc3e74de779c6d4b654c54e50a4840623be8014/pyright-1.1.409.tar.gz", hash = "sha256:986ee05beca9e077c165758ad123667c679e050059a2546aa02473930394bc93", size = 4430434, upload-time = "2026-04-23T11:02:03.799Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0c/82/a2c93e32800940d9573fb28c346772a14778b84ba7524e691b324620ab89/pyright-1.1.408-py3-none-any.whl", hash = "sha256:090b32865f4fdb1e0e6cd82bf5618480d48eecd2eb2e70f960982a3d9a4c17c1", size = 6399144, upload-time = "2026-01-08T08:07:37.082Z" },
+    { url = "https://files.pythonhosted.org/packages/16/6b/330d8ebae582b30c2959a1ef4c3bc344ebde48c2ff0c3f113c4710735e11/pyright-1.1.409-py3-none-any.whl", hash = "sha256:aa3ea228cab90c845c7a60d28db7a844c04315356392aa09fafcee98c8c22fb3", size = 6438161, upload-time = "2026-04-23T11:02:01.309Z" },
 ]
 
 [[package]]
@@ -1713,7 +1713,7 @@ requires-dist = [
     { name = "docutils" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
     { name = "interrogate", marker = "extra == 'dev'", specifier = "==1.7.0" },
-    { name = "literalizer", specifier = "==2026.4.23" },
+    { name = "literalizer", specifier = "==2026.4.24" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "==1.20.2" },
     { name = "mypy-strict-kwargs", marker = "extra == 'dev'", specifier = "==2026.1.12" },
     { name = "prek", marker = "extra == 'dev'", specifier = "==0.3.10" },
@@ -1721,7 +1721,7 @@ requires-dist = [
     { name = "pylint", marker = "extra == 'dev'", specifier = "==4.0.5" },
     { name = "pyproject-fmt", marker = "extra == 'dev'", specifier = "==2.21.1" },
     { name = "pyrefly", marker = "extra == 'dev'", specifier = "==0.62.0" },
-    { name = "pyright", marker = "extra == 'dev'", specifier = "==1.1.408" },
+    { name = "pyright", marker = "extra == 'dev'", specifier = "==1.1.409" },
     { name = "pyroma", marker = "extra == 'dev'", specifier = "==5.0.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==9.0.3" },
     { name = "pytest-beartype-tests", marker = "extra == 'dev'", specifier = "==2026.4.20" },

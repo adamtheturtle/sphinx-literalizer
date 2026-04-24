@@ -4,6 +4,17 @@ Changelog
 Next
 ----
 
+2026.04.24
+----------
+
+
+- Bumped ``literalizer`` to ``2026.4.24``.
+- ``literalizer-call`` with ``:per-element:`` for Rust now widens
+  ``:heterogeneous-strategy: tagged_enum`` scalar wrapping across
+  sibling calls at matching argument slots, so a homogeneous sibling
+  no longer emits an unwrapped scalar that mismatches the parameter
+  type implied by a heterogeneous sibling.
+
 2026.04.23.1
 ------------
 
