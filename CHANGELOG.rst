@@ -8,6 +8,10 @@ Next
 ----------
 
 
+2026.04.24
+----------
+
+
 - Bumped ``literalizer`` to ``2026.4.24``.
 - ``literalizer-call`` with ``:per-element:`` for Rust now widens
   ``:heterogeneous-strategy: tagged_enum`` scalar wrapping across
