@@ -4,9 +4,36 @@ Changelog
 Next
 ----
 
-2026.04.24
-----------
+2026.04.24.1
+------------
 
+
+- Bumped ``literalizer`` to ``2026.4.24.1``.
+- Added ``:ref-case:`` option to ``literalizer-call`` that converts
+  ``{"$ref": "name"}`` identifiers to the target language's idiomatic
+  case at render time (``snake``, ``camel``, ``pascal``,
+  ``upper_snake``, ``kebab``).  Using a case the language does not
+  support raises an ``ExtensionError``.
+- Added ``:wrap-in-file:`` flag to ``literalizer-call`` that injects a
+  no-op stub for the target function into the generated source so it
+  compiles against strict checkers on its own.
+- ``literalizer-call`` now renders Bash command invocations
+  (``target arg1 arg2``) via Bash's ``command`` call style, and
+  translates ``CallArgNotSupportedError`` (raised for lists, dicts, or
+  sets passed as Bash call arguments) into an ``ExtensionError``.
+- ``literalizer-call`` now renders Erlang positional calls and Gleam
+  positional calls (dotted Gleam targets like ``app.client.fetch``
+  are flattened to ``app_client_fetch``).
+- ``:heterogeneous-strategy: variant`` is now available for Mojo,
+  auto-generating a ``comptime Value = Variant[...]`` alias in the
+  preamble for dicts, lists, or sibling-list pairs that hold scalars
+  of more than one Mojo type.
+- Errors raised by ``literalizer-call`` when the selected language has
+  no call support (``CallsNotSupportedByLanguageError`` for data/markup
+  formats and ``CallsNotSupportedByToolError`` for programming
+  languages that literalizer does not yet implement calls for) are now
+  translated into an ``ExtensionError`` instead of surfacing as a
+  traceback.
 
 2026.04.24
 ----------

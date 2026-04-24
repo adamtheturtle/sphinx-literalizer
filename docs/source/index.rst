@@ -415,21 +415,38 @@ Directive options
    ``error``
       Raise an error when a collection mixes scalar types (default for
       all languages).
+   ``object_variant``
+      Emit a Nim object variant in the preamble and wrap each
+      heterogeneous value at the call site (e.g.
+      ``Value(kind: vkInt, intVal: 1)``).  Available for Nim.
    ``tagged_enum``
       Emit a minimal tagged ``enum`` in the preamble and wrap each
       heterogeneous value at the call site (e.g. ``Value::I32(1)``).
       Available for Rust.
+   ``union_type``
+      Emit a Dhall union type in the preamble and wrap each
+      heterogeneous value at the call site (e.g. ``Value.Int 1``).
+      Available for Dhall.
+   ``variant``
+      Emit a Mojo ``Variant`` type alias in the preamble and wrap each
+      heterogeneous value at the call site (e.g. ``Value(1)``).
+      Available for Mojo.
 
 ``:call-style:`` (optional)
    How ``literalizer-call`` renders function calls.  Each language
    offers its own set of call styles; using a value a language does not
    support raises an error.  Supported values:
 
+   ``command``
+      Render calls as a command invocation with space-separated
+      arguments and no surrounding parentheses (e.g.
+      ``target arg1 arg2``).  Available for Bash.
    ``positional``
       Pass arguments by position (e.g. ``myFunc({...})``).  Available
-      for C, C#, C++, Crystal, D, F#, Go, Groovy, HCL, Haskell, Java,
-      JavaScript, Julia, Kotlin, Lua, Perl, PHP, Python, R, Ruby, Rust,
-      Scala, TypeScript.
+      for C, C#, C++, Clojure-style languages that support it, Crystal,
+      D, Erlang, F#, Gleam, Go, Groovy, HCL, Haskell, Java, JavaScript,
+      Julia, Kotlin, Lua, Objective-C, Perl, PHP, Python, R, Ruby,
+      Rust, Scala, TypeScript.
    ``keyword``
       Pass arguments by keyword (e.g. ``my_func(flag=True)``).
       Available for Crystal, Groovy, Jsonnet, Julia, Kotlin, PHP,
@@ -443,8 +460,8 @@ Directive options
       TypeScript.
    ``prefix_keyword``
       Pass arguments as prefixed keyword pairs in an S-expression
-      (e.g. ``(process :flag t)``).  Available for Common Lisp,
-      Racket.
+      (e.g. ``(process :flag t)``).  Available for Clojure, Common
+      Lisp, Racket.
    ``postfix``
       Push arguments before naming the function (e.g. ``1 2 ADD``).
       Available for Forth.
@@ -539,6 +556,32 @@ For positional-call languages like Go, the same data renders as:
    When set, each top-level list element becomes a separate function
    call.  Without this flag, the whole literalized value is passed as a
    single argument.
+
+``:ref-case:`` (optional)
+   Convert ``{"$ref": "name"}`` ref identifiers to the target
+   language's idiomatic identifier case at render time.  When not set,
+   ref names are emitted verbatim.  Each language exposes only the
+   subset of cases it understands; passing an unsupported case raises
+   an ``ExtensionError``.  Supported values:
+
+   ``snake``
+      Convert to ``snake_case`` (e.g. ``user_obj``).
+   ``camel``
+      Convert to ``camelCase`` (e.g. ``userObj``).
+   ``pascal``
+      Convert to ``PascalCase`` (e.g. ``UserObj``).
+   ``upper_snake``
+      Convert to ``UPPER_SNAKE_CASE`` (e.g. ``USER_OBJ``).
+   ``kebab``
+      Convert to ``kebab-case`` (e.g. ``user-obj``).
+
+``:wrap-in-file:`` (optional flag)
+   When set, ``literalizer-call`` emits a complete source file for the
+   target language, including a no-op stub definition of the target
+   function so the generated source compiles against strict checkers on
+   its own.  Callers that supply ``:call-transform:`` remain
+   responsible for providing the wrapper function introduced by the
+   transform.
 
 The ``literalizer-call`` directive also supports these shared options
 from the ``literalizer`` directive: ``:language:``, ``:input-format:``,

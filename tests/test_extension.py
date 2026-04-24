@@ -4847,3 +4847,348 @@ def test_parameter_count_mismatch_error(
         ),
     ):
         app.build()
+
+
+def test_literalizer_call_ref_case(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :ref-case: option converts ``$ref`` identifiers to the
+    target language's idiomatic case.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[{"$ref": "user_obj"}, 42]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: go
+           :target-function: process
+           :parameter-names: user,count
+           :per-element:
+           :ref-case: pascal
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "process(UserObj, 42)" in text
+    app.cleanup()
+
+
+def test_literalizer_call_ref_case_unsupported(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Using a ``:ref-case:`` value the language does not understand
+    raises an ``ExtensionError``.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[{"$ref": "user_obj"}]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: erlang
+           :target-function: f
+           :parameter-names: user
+           :per-element:
+           :ref-case: camel
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=r"Language 'erlang' does not support ref-case 'camel'\.",
+    ):
+        app.build()
+
+
+def test_literalizer_call_wrap_in_file(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :wrap-in-file: flag emits a stub definition for the target
+    function alongside the call expression.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[1, 2]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: python
+           :target-function: f
+           :parameter-names: a,b
+           :per-element:
+           :wrap-in-file:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "def f(" in text
+    assert "f(a=1, b=2)" in text
+    app.cleanup()
+
+
+def test_literalizer_call_bash_command_style(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Bash ``literalizer-call`` renders command-style invocations
+    (space-separated arguments, no parentheses).
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[1, 2]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: bash
+           :target-function: mycmd
+           :parameter-names: a,b
+           :per-element:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "mycmd 1 2" in text
+    app.cleanup()
+
+
+def test_literalizer_call_bash_rejects_list_arg(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Bash has no inline compound-literal syntax in command
+    invocations, so passing a list as an argument raises an
+    ``ExtensionError``.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[[1, 2, 3]]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: bash
+           :target-function: cmd
+           :parameter-names: a
+           :per-element:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=r"Language 'bash' does not support the given call argument",
+    ):
+        app.build()
+
+
+def test_literalizer_call_erlang(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Erlang ``literalizer-call`` renders positional calls separated
+    by ``,`` and terminated by ``.``.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[1, 2], [3, 4]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: erlang
+           :target-function: my_func
+           :parameter-names: a,b
+           :per-element:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "my_func(1, 2)" in text
+    assert "my_func(3, 4)" in text
+    app.cleanup()
+
+
+def test_literalizer_call_gleam(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Gleam ``literalizer-call`` renders positional calls, and
+    flattens dotted targets to underscored identifiers.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[1, 2]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: gleam
+           :target-function: app.client.fetch
+           :parameter-names: a,b
+           :per-element:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "app_client_fetch(" in text
+    app.cleanup()
+
+
+def test_heterogeneous_strategy_variant_mojo(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :heterogeneous-strategy: variant option for Mojo wraps
+    mixed scalars in an auto-generated ``Variant`` type alias.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"a": 1, "b": "x"}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: mojo
+           :heterogeneous-strategy: variant
+           :include-delimiters:
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "Variant" in text
+    assert "Value(1)" in text
+    app.cleanup()

@@ -15,6 +15,7 @@ from docutils import nodes
 from docutils.parsers.rst import directives
 from literalizer import (
     ExistingVariable,
+    IdentifierCase,
     InputFormat,
     Language,
     LanguageCls,
@@ -22,7 +23,13 @@ from literalizer import (
     literalize,
     literalize_call,
 )
-from literalizer.exceptions import ParameterCountMismatchError
+from literalizer.exceptions import (
+    CallArgNotSupportedError,
+    CallsNotSupportedByLanguageError,
+    CallsNotSupportedByToolError,
+    ParameterCountMismatchError,
+    UnsupportedIdentifierCaseError,
+)
 from literalizer.languages import ALL_LANGUAGES
 from sphinx.application import Sphinx
 from sphinx.errors import ExtensionError
@@ -465,6 +472,8 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :per-element:
            :call-style: keyword
            :call-transform: print($0)
+           :ref-case: snake
+           :wrap-in-file:
            :input-format: json
            :indent: 4
            :indent-char: spaces
@@ -477,6 +486,11 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         "parameter-names": directives.unchanged_required,
         "per-element": directives.flag,
         "call-transform": directives.unchanged_required,
+        "ref-case": lambda x: directives.choice(
+            argument=x,
+            values=tuple(member.value for member in IdentifierCase),
+        ),
+        "wrap-in-file": directives.flag,
     }
 
     def run(self) -> list[nodes.Node]:
@@ -514,6 +528,13 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
             call_transform = _call_transform
 
+        ref_case_value: str | None = self.options.get("ref-case")
+        ref_case: IdentifierCase | None = None
+        if ref_case_value is not None:
+            ref_case = IdentifierCase(value=ref_case_value)
+
+        wrap_in_file: bool = "wrap-in-file" in self.options
+
         input_format = self._resolve_input_format(data_path=data_path)
         try:
             result = literalize_call(
@@ -524,11 +545,34 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
                 parameter_names=parameter_names,
                 call_transform=call_transform,
                 per_element=per_element,
+                wrap_in_file=wrap_in_file,
+                ref_case=ref_case,
             )
         except ParameterCountMismatchError as exc:
             msg = (
                 f"':parameter-names:' has {len(parameter_names)} entries "
                 f"but the data provides a different number of values: {exc}"
+            )
+            raise ExtensionError(message=msg) from exc
+        except UnsupportedIdentifierCaseError as exc:
+            msg = (
+                f"Language '{language_name}' does not support "
+                f"ref-case '{ref_case_value}'."
+            )
+            raise ExtensionError(message=msg) from exc
+        except CallArgNotSupportedError as exc:
+            msg = (
+                f"Language '{language_name}' does not support the given "
+                f"call argument: {exc}"
+            )
+            raise ExtensionError(message=msg) from exc
+        except (
+            CallsNotSupportedByLanguageError,
+            CallsNotSupportedByToolError,
+        ) as exc:
+            msg = (
+                f"Language '{language_name}' does not support "
+                f"'literalizer-call': {exc}"
             )
             raise ExtensionError(message=msg) from exc
 
