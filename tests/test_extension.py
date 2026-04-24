@@ -4630,6 +4630,59 @@ def test_literalizer_call_perl(
     app.cleanup()
 
 
+def test_literalizer_call_ref_case_camel(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """``:ref-case: camel`` converts ``{"$ref": "name"}`` identifiers
+    to camelCase in the rendered call.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(
+            obj=[
+                [{"$ref": "user_obj"}, 42],
+                [{"$ref": "admin_user"}, 99],
+            ],
+        ),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: typescript
+           :target-function: process
+           :parameter-names: user,count
+           :per-element:
+           :ref-case: camel
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    expected = (
+        "process({ user: userObj, count: 42 });\n"
+        "process({ user: adminUser, count: 99 });"
+    )
+    assert text == expected
+    app.cleanup()
+
+
 def test_literalizer_call_ref_marker(
     *,
     make_app: Callable[..., SphinxTestApp],
