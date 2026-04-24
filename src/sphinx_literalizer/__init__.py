@@ -15,6 +15,7 @@ from docutils import nodes
 from docutils.parsers.rst import directives
 from literalizer import (
     ExistingVariable,
+    IdentifierCase,
     InputFormat,
     Language,
     LanguageCls,
@@ -70,6 +71,11 @@ _FORMAT_OPTION_GETTERS: dict[
     "heterogeneous-strategy": lambda cls: cls.HeterogeneousStrategies,
     "call-style": lambda cls: cls.CallStyles,
 }
+
+
+_IDENTIFIER_CASE_VALUES: tuple[str, ...] = tuple(
+    sorted(m.name.lower() for m in IdentifierCase)
+)
 
 
 @cache
@@ -469,6 +475,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :indent: 4
            :indent-char: spaces
            :include-preamble:
+           :ref-case: camel
     """
 
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
@@ -477,6 +484,10 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         "parameter-names": directives.unchanged_required,
         "per-element": directives.flag,
         "call-transform": directives.unchanged_required,
+        "ref-case": lambda x: directives.choice(
+            argument=x,
+            values=_IDENTIFIER_CASE_VALUES,
+        ),
     }
 
     def run(self) -> list[nodes.Node]:
@@ -514,6 +525,13 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
             call_transform = _call_transform
 
+        ref_case_value: str | None = self.options.get("ref-case")
+        ref_case: IdentifierCase | None = (
+            None
+            if ref_case_value is None
+            else IdentifierCase[ref_case_value.upper()]
+        )
+
         input_format = self._resolve_input_format(data_path=data_path)
         try:
             result = literalize_call(
@@ -524,6 +542,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
                 parameter_names=parameter_names,
                 call_transform=call_transform,
                 per_element=per_element,
+                ref_case=ref_case,
             )
         except ParameterCountMismatchError as exc:
             msg = (
