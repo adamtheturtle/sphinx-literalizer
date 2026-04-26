@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.04.26
+----------
+
+
 - Bumped ``literalizer`` to ``2026.4.24.1``.
 - ``literalizer-call`` now accepts ``:ref-case:`` (``snake``, ``camel``,
   ``pascal``, ``upper_snake``, or ``kebab``) to convert
