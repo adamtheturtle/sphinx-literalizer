@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.04.29
+----------
+
+
 - Bumped ``literalizer`` to ``2026.4.29``.
 - Added ``:wrap-in-file:`` to the ``literalizer`` directive, exposing
   literalizer's ``wrap_in_file`` parameter so generated output can be
