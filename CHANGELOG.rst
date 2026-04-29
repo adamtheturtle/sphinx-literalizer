@@ -4,6 +4,24 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.4.29``.
+- Added ``:wrap-in-file:`` to the ``literalizer`` directive, exposing
+  literalizer's ``wrap_in_file`` parameter so generated output can be
+  emitted as a self-contained compilable file.
+- Added ``:module-name:`` to both directives.  When the selected language
+  has a named-scope wrapper (``C``, ``Cpp``, ``D``, ``Erlang``,
+  ``Fortran``, ``FSharp``, ``Java``, ``ObjectiveC``, ``Occam``,
+  ``SystemVerilog``, ``Ada``, ``Crystal``, ``Scala``, ``Haskell``), the
+  value is passed to the language constructor's ``module_name``
+  argument.  Languages that do not accept ``module_name`` raise a clear
+  ``ExtensionError``.
+- ``:ref-case:`` is now also accepted by the ``literalizer`` directive
+  (previously only ``literalizer-call``), letting top-level or nested
+  ``{"$ref": "name"}`` mappings render as case-converted bare
+  identifiers in plain literal output.
+- Roc is now available as a ``:language: roc`` target via
+  literalizer's new Roc backend.
+
 2026.04.26
 ----------
 

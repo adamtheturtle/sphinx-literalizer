@@ -14,9 +14,12 @@ Odin
 PureScript
 Pygments
 Raku
+Roc
 SystemVerilog
 Vec
 Zig
+backend
+compilable
 datetimes
 dicts
 literalizer
