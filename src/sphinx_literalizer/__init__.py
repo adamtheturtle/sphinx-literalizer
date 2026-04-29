@@ -180,7 +180,26 @@ _COMMON_OPTIONS: dict[str, Callable[[str], Any]] = {
     "default-dict-key-type": directives.unchanged,
     "default-dict-value-type": directives.unchanged,
     "default-ordered-map-value-type": directives.unchanged,
+    "module-name": directives.unchanged,
+    "wrap-in-file": directives.flag,
+    "ref-case": lambda x: directives.choice(
+        argument=x,
+        values=_IDENTIFIER_CASE_VALUES,
+    ),
 }
+
+
+@cache
+def _languages_supporting_module_name() -> frozenset[str]:
+    """Return directive language keys whose class accepts
+    ``module_name``.
+    """
+    return frozenset(
+        name
+        for name, lang_cls in _language_types().items()
+        if "module_name" in getattr(lang_cls, "__dataclass_fields__", {})
+    )
+
 
 _EXTENSION_TO_INPUT_FORMAT: dict[str, InputFormat] = {
     ".json": InputFormat.JSON,
@@ -296,6 +315,17 @@ class _BaseLiteralizerDirective(SphinxDirective):
             language_name=language_name,
             constructor=constructor,
         )
+
+        module_name = self.options.get("module-name")
+        if module_name is not None:
+            if language_name not in _languages_supporting_module_name():
+                msg = (
+                    f"Language '{language_name}' does not support "
+                    f"':module-name:'."
+                )
+                raise ExtensionError(message=msg)
+            constructor = partial(constructor, module_name=module_name)
+
         return constructor()
 
     def _resolve_input_format(self, data_path: Path) -> InputFormat:
@@ -374,6 +404,9 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :default-dict-value-type: String
            :default-ordered-map-value-type: any
            :modifiers: public,static,final
+           :module-name: MyModule
+           :wrap-in-file:
+           :ref-case: camel
     """
 
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
@@ -430,6 +463,14 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
                 else NewVariable(name=variable_name, modifiers=modifiers)
             )
 
+        wrap_in_file: bool = "wrap-in-file" in self.options
+        ref_case_value: str | None = self.options.get("ref-case")
+        ref_case: IdentifierCase | None = (
+            None
+            if ref_case_value is None
+            else IdentifierCase[ref_case_value.upper()]
+        )
+
         input_format = self._resolve_input_format(data_path=data_path)
         result = literalize(
             source=data_path.read_text(encoding="utf-8"),
@@ -438,6 +479,8 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
             pre_indent_level=pre_indent_level,
             include_delimiters=include_delimiters,
             variable_form=variable_form,
+            wrap_in_file=wrap_in_file,
+            ref_case=ref_case,
         )
         parts: list[str] = []
         if include_preamble and result.preamble:
@@ -476,6 +519,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :indent-char: spaces
            :include-preamble:
            :ref-case: camel
+           :module-name: MyModule
     """
 
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
@@ -484,10 +528,6 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         "parameter-names": directives.unchanged_required,
         "per-element": directives.flag,
         "call-transform": directives.unchanged_required,
-        "ref-case": lambda x: directives.choice(
-            argument=x,
-            values=_IDENTIFIER_CASE_VALUES,
-        ),
     }
 
     def run(self) -> list[nodes.Node]:

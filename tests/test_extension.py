@@ -2303,8 +2303,8 @@ def test_objective_c_language(
 
         .. code-block:: objective-c
 
-           @(1),
-           @(2),
+           @1,
+           @2,
     """
         )
     )
@@ -4581,8 +4581,7 @@ def test_literalizer_call_objective_c(
     doctree = app.env.get_doctree(docname="index")
     (literal_block,) = doctree.findall(condition=nodes.literal_block)
     text = literal_block.astext()
-    assert "process(@YES, @(42));" in text
-    assert "process(@NO, @(99));" in text
+    assert text == "process(@YES, @42);\nprocess(@NO, @99);"
     app.cleanup()
 
 
@@ -4898,5 +4897,79 @@ def test_parameter_count_mismatch_error(
             r"a different number of values: "
             r"Expected 2 parameters but got 3 values"
         ),
+    ):
+        app.build()
+
+
+def test_module_name_java(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :module-name: option overrides the wrapper module name."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: java
+           :wrap-in-file:
+           :module-name: Foo
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "class Foo" in text
+    app.cleanup()
+
+
+def test_module_name_unsupported_language_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Using :module-name: with a language that lacks a named scope
+    raises a clear ExtensionError.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :module-name: Foo
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=r"Language 'python' does not support ':module-name:'\.",
     ):
         app.build()
