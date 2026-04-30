@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.04.30.3
+------------
+
+
 - Bumped ``literalizer`` to ``2026.4.30.3``.
 - New languages Tcl, Nix, SML, V, Wren, and Forth are now available via
   the ``:language:`` option, provided by literalizer's new backends.
