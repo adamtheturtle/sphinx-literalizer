@@ -5134,3 +5134,47 @@ def test_both_variable_forms_incompatible_with_existing_variable(
         ),
     ):
         app.build()
+
+
+def test_literalizer_call_consumable_refs(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """:consumable-refs: causes refs used exactly once to be consumed
+    (e.g. wrapped in ``std::move`` for C++).
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[{"$ref": "my_vec"}, 42]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: cpp
+           :target-function: process
+           :parameter-names: data,count
+           :per-element:
+           :consumable-refs: my_vec
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "std::move(my_vec)" in text
+    app.cleanup()

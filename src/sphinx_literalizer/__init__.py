@@ -548,6 +548,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :include-preamble:
            :ref-case: camel
            :module-name: MyModule
+           :consumable-refs: my_var,other_var
     """
 
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
@@ -556,6 +557,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         "parameter-names": directives.unchanged_required,
         "per-element": directives.flag,
         "call-transform": directives.unchanged_required,
+        "consumable-refs": directives.unchanged,
     }
 
     def run(self) -> list[nodes.Node]:
@@ -600,6 +602,17 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             else IdentifierCase[ref_case_value.upper()]
         )
 
+        consumable_refs_value: str | None = self.options.get("consumable-refs")
+        consumable_refs: frozenset[str] = (
+            frozenset()
+            if consumable_refs_value is None
+            else frozenset(
+                r.strip()
+                for r in consumable_refs_value.split(sep=",")
+                if r.strip()
+            )
+        )
+
         input_format = self._resolve_input_format(data_path=data_path)
         try:
             result = literalize_call(
@@ -611,6 +624,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
                 call_transform=call_transform,
                 per_element=per_element,
                 ref_case=ref_case,
+                consumable_refs=consumable_refs,
             )
         except ParameterCountMismatchError as exc:
             msg = (
