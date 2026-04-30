@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.04.30.2
+------------
+
+
 - Bumped ``literalizer`` to ``2026.4.30.2``.
 - Added ``:consumable-refs:`` option to the ``literalizer-call`` directive.
   Accepts a comma-separated list of variable names that may be consumed
