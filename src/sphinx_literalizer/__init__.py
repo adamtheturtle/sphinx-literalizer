@@ -608,7 +608,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             if consumable_refs_value is None
             else frozenset(
                 r.strip()
-                for r in consumable_refs_value.split(",")
+                for r in consumable_refs_value.split(sep=",")
                 if r.strip()
             )
         )
