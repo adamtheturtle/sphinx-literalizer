@@ -4,6 +4,15 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.4.30.3``.
+- New languages Tcl, Nix, SML, V, Wren, and Forth are now available via
+  the ``:language:`` option, provided by literalizer's new backends.
+- The ``:module-name:`` value is now automatically converted to the
+  case expected by the target language (e.g. ``my_module`` becomes
+  ``MyModule`` for Java, which requires PascalCase class names), using
+  the ``module_name_case`` attribute introduced in literalizer
+  ``2026.4.30.3``.
+
 2026.04.30.2
 ------------
 

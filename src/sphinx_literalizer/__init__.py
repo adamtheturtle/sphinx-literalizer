@@ -327,6 +327,9 @@ class _BaseLiteralizerDirective(SphinxDirective):
                     f"':module-name:'."
                 )
                 raise ExtensionError(message=msg)
+            module_name = language_cls.module_name_case.convert(
+                name=module_name,
+            )
             constructor = partial(constructor, module_name=module_name)
 
         return constructor()
