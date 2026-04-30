@@ -21,6 +21,7 @@ from literalizer import (
     Language,
     LanguageCls,
     NewVariable,
+    VariableForm,
     literalize,
     literalize_call,
 )
@@ -474,7 +475,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
                 value=modifiers_value,
             )
 
-        variable_form = None
+        variable_form: VariableForm | None = None
         if variable_name is not None:
             if existing_variable:
                 variable_form = ExistingVariable(name=variable_name)
