@@ -7,6 +7,7 @@ read data files and render them as native language code blocks.
 import enum
 from collections.abc import Callable, Iterable
 from functools import cache, partial
+from importlib.metadata import version
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -620,7 +621,7 @@ def setup(app: Sphinx) -> ExtensionMetadata:
         cls=LiteralizerCallDirective,
     )
     return {
-        "version": "0.1.0",
+        "version": version(distribution_name="sphinx-literalizer"),
         "parallel_read_safe": True,
         "parallel_write_safe": True,
     }
