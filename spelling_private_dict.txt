@@ -15,10 +15,14 @@ PureScript
 Pygments
 Raku
 Roc
+SML
 SystemVerilog
+Tcl
 Vec
+Wren
 Zig
 backend
+backends
 compilable
 datetimes
 dicts
