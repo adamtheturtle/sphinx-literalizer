@@ -200,7 +200,7 @@ def _languages_supporting_module_name() -> frozenset[str]:
     return frozenset(
         name
         for name, lang_cls in _language_types().items()
-        if "module_name" in getattr(lang_cls, "__dataclass_fields__", {})
+        if lang_cls.supports_module_name
     )
 
 
