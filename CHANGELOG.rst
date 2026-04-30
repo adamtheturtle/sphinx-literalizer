@@ -4,6 +4,11 @@ Changelog
 Next
 ----
 
+- Added ``:both-variable-forms:`` to the ``literalizer`` directive.
+  When combined with ``:variable-name:`` and ``:wrap-in-file:``, it uses
+  literalizer's ``BothVariableForms`` to emit both a declaration and an
+  assignment in a single output block.
+
 2026.04.30
 ----------
 

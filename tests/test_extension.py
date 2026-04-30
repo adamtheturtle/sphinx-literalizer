@@ -4973,3 +4973,122 @@ def test_module_name_unsupported_language_error(
         match=r"Language 'python' does not support ':module-name:'\.",
     ):
         app.build()
+
+
+def test_both_variable_forms_csharp(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :both-variable-forms: flag emits declaration and assignment."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj={"x": 1}))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: csharp
+           :variable-name: my_var
+           :both-variable-forms:
+           :wrap-in-file:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert "var my_var" in text
+    assert "my_var =" in text
+    app.cleanup()
+
+
+def test_both_variable_forms_requires_variable_name(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Using :both-variable-forms: without :variable-name: raises an
+    ExtensionError.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj={"x": 1}))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :both-variable-forms:
+           :wrap-in-file:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=r"^':both-variable-forms:' requires ':variable-name:'\.$",
+    ):
+        app.build()
+
+
+def test_both_variable_forms_incompatible_with_existing_variable(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Combining :both-variable-forms: with :existing-variable: raises an
+    ExtensionError.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj={"x": 1}))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :variable-name: my_var
+           :existing-variable:
+           :both-variable-forms:
+           :wrap-in-file:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=(
+            r"^':both-variable-forms:' cannot be combined with "
+            r"':existing-variable:'\.$"
+        ),
+    ):
+        app.build()

@@ -14,6 +14,7 @@ from beartype import beartype
 from docutils import nodes
 from docutils.parsers.rst import directives
 from literalizer import (
+    BothVariableForms,
     ExistingVariable,
     IdentifierCase,
     InputFormat,
@@ -380,6 +381,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :datetime-format: python
            :variable-name: my_var
            :existing-variable:
+           :both-variable-forms:
            :sequence-format: list
            :set-format: frozenset
            :bytes-format: python
@@ -414,6 +416,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         "include-delimiters": directives.flag,
         "variable-name": directives.unchanged,
         "existing-variable": directives.flag,
+        "both-variable-forms": directives.flag,
         "modifiers": directives.unchanged,
     }
 
@@ -436,6 +439,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         include_preamble: bool = "include-preamble" in self.options
         variable_name: str | None = self.options.get("variable-name")
         existing_variable: bool = "existing-variable" in self.options
+        both_variable_forms: bool = "both-variable-forms" in self.options
         modifiers_value: str | None = self.options.get("modifiers")
 
         if modifiers_value is not None and variable_name is None:
@@ -444,6 +448,21 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         if modifiers_value is not None and existing_variable:
             msg = (
                 "':modifiers:' cannot be combined with ':existing-variable:'."
+            )
+            raise ExtensionError(message=msg)
+        if modifiers_value is not None and both_variable_forms:
+            msg = (
+                "':modifiers:' cannot be combined with "
+                "':both-variable-forms:'."
+            )
+            raise ExtensionError(message=msg)
+        if both_variable_forms and variable_name is None:
+            msg = "':both-variable-forms:' requires ':variable-name:'."
+            raise ExtensionError(message=msg)
+        if both_variable_forms and existing_variable:
+            msg = (
+                "':both-variable-forms:' cannot be combined with "
+                "':existing-variable:'."
             )
             raise ExtensionError(message=msg)
 
@@ -457,11 +476,18 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
 
         variable_form = None
         if variable_name is not None:
-            variable_form = (
-                ExistingVariable(name=variable_name)
-                if existing_variable
-                else NewVariable(name=variable_name, modifiers=modifiers)
-            )
+            if existing_variable:
+                variable_form = ExistingVariable(name=variable_name)
+            elif both_variable_forms:
+                variable_form = BothVariableForms(
+                    name=variable_name,
+                    modifiers=modifiers,
+                )
+            else:
+                variable_form = NewVariable(
+                    name=variable_name,
+                    modifiers=modifiers,
+                )
 
         wrap_in_file: bool = "wrap-in-file" in self.options
         ref_case_value: str | None = self.options.get("ref-case")
