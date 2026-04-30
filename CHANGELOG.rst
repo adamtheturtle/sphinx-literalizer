@@ -4,6 +4,13 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.4.30.2``.
+- Added ``:consumable-refs:`` option to the ``literalizer-call`` directive.
+  Accepts a comma-separated list of variable names that may be consumed
+  (moved) when they appear as ``$ref`` markers in exactly one call argument
+  across all rendered calls. For languages such as C++ and Mojo, this causes
+  the matching ``std::move``/``^`` transfer to be emitted.
+
 2026.04.30.1
 ------------
 
