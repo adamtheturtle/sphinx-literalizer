@@ -1454,6 +1454,48 @@ def test_modifiers_with_existing_variable_error(
         app.build()
 
 
+def test_modifiers_with_both_variable_forms_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Combining :modifiers: with :both-variable-forms: raises an
+    ExtensionError.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: java
+           :variable-name: myList
+           :both-variable-forms:
+           :modifiers: public
+           :wrap-in-file:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=(
+            r"^':modifiers:' cannot be combined with "
+            r"':both-variable-forms:'\.$"
+        ),
+    ):
+        app.build()
+
+
 def test_rust_language(
     *,
     make_app: Callable[..., SphinxTestApp],
