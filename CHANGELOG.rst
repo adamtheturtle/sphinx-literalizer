@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+- Added ``:omit-code:`` to ``literalizer-call`` so callers can combine it
+  with ``:include-preamble:`` to render imports or other preamble lines
+  without also rendering generated calls.
+
 2026.05.01
 ----------
 
