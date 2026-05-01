@@ -4348,6 +4348,52 @@ def test_literalizer_call_include_preamble(
     app.cleanup()
 
 
+def test_literalizer_call_omit_code(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :omit-code: option omits generated calls."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text(
+        data="- 2024-01-15T10:30:00Z\n",
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.yaml
+           :language: java
+           :target-function: billingSystem.recordDelivery
+           :parameter-names: delivered_at
+           :per-element:
+           :datetime-format: instant
+           :include-preamble:
+           :omit-code:
+    """
+        ),
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    literal_blocks = list(
+        doctree.findall(condition=nodes.literal_block),
+    )
+    (literal_block,) = literal_blocks
+    assert literal_block.astext() == "import java.time.Instant;"
+    app.cleanup()
+
+
 def test_literalizer_call_source_is_absolute(
     *,
     make_app: Callable[..., SphinxTestApp],

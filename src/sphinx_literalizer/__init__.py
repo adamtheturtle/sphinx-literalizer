@@ -564,6 +564,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :indent: 4
            :indent-char: spaces
            :include-preamble:
+           :omit-code:
            :ref-case: camel
            :ref-key: $reference
            :module-name: MyModule
@@ -577,6 +578,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         "per-element": directives.flag,
         "call-transform": directives.unchanged_required,
         "consumable-refs": directives.unchanged,
+        "omit-code": directives.flag,
     }
 
     def run(self) -> list[nodes.Node]:
@@ -595,6 +597,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
         pre_indent_level: int = self.options.get("pre-indent-level", 0)
         include_preamble: bool = "include-preamble" in self.options
+        omit_code: bool = "omit-code" in self.options
         target_function: str = self.options["target-function"]
         parameter_names = [
             p.strip() for p in self.options["parameter-names"].split(",")
@@ -658,7 +661,8 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         parts: list[str] = []
         if include_preamble and result.preamble:
             parts.append("\n".join(result.preamble))
-        parts.append(code)
+        if not omit_code:
+            parts.append(code)
         text = "\n\n".join(parts)
 
         return self._make_node(

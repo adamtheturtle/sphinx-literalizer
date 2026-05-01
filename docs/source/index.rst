@@ -567,6 +567,12 @@ For positional-call languages like Go, the same data renders as:
    call.  Without this flag, the whole literalized value is passed as a
    single argument.
 
+``:omit-code:`` (optional flag)
+   Omit the generated call expressions.  Combine this with
+   ``:include-preamble:`` to render only imports or other preamble lines,
+   which is useful when a later ``literalizer-call`` block needs preamble
+   lines at the top of a combined snippet.
+
 The ``literalizer-call`` directive also supports these shared options
 from the ``literalizer`` directive: ``:language:``, ``:input-format:``,
 ``:pre-indent-level:``, ``:indent:``, ``:indent-char:``,
