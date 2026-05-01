@@ -4,6 +4,14 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.5.1``.
+- Added ``:ref-key:`` to both directives, exposing literalizer's
+  configurable reference marker key.
+- Added ``:language-version:`` to both directives, exposing each target
+  language's ``VersionFormats`` enum.
+- ``Roc`` is now selected with ``:language: roc`` while still using
+  ``text`` syntax highlighting.
+
 2026.04.30.3
 ------------
 

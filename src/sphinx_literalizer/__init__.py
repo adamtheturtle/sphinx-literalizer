@@ -34,15 +34,19 @@ from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
 
 
+def _language_name(lang_cls: LanguageCls) -> str:
+    """Return the directive language key for a language class."""
+    pygments_name = lang_cls.pygments_name
+    if pygments_name is None or pygments_name == "text":
+        return lang_cls.__name__.lower()
+    return pygments_name
+
+
 @cache
 def _language_types() -> dict[str, LanguageCls]:
     """Map directive language keys to their language classes."""
     return {
-        (
-            lang_cls.__name__.lower()
-            if lang_cls.pygments_name is None
-            else lang_cls.pygments_name
-        ): lang_cls
+        _language_name(lang_cls=lang_cls): lang_cls
         for lang_cls in ALL_LANGUAGES
     }
 
@@ -70,6 +74,7 @@ _FORMAT_OPTION_GETTERS: dict[
     "string-format": lambda cls: cls.StringFormats,
     "trailing-comma": lambda cls: cls.TrailingCommas,
     "line-ending": lambda cls: cls.LineEndings,
+    "language-version": lambda cls: cls.VersionFormats,
     "empty-dict-key": lambda cls: cls.EmptyDictKey,
     "heterogeneous-strategy": lambda cls: cls.HeterogeneousStrategies,
     "call-style": lambda cls: cls.CallStyles,
@@ -189,6 +194,7 @@ _COMMON_OPTIONS: dict[str, Callable[[str], Any]] = {
         argument=x,
         values=_IDENTIFIER_CASE_VALUES,
     ),
+    "ref-key": directives.unchanged_required,
 }
 
 
@@ -367,6 +373,17 @@ class _BaseLiteralizerDirective(SphinxDirective):
         self.add_name(node=node)
         return [node]
 
+    def _resolve_ref_options(self) -> tuple[IdentifierCase | None, str]:
+        """Resolve reference marker options."""
+        ref_case_value: str | None = self.options.get("ref-case")
+        ref_case: IdentifierCase | None = (
+            None
+            if ref_case_value is None
+            else IdentifierCase[ref_case_value.upper()]
+        )
+        ref_key: str = self.options.get("ref-key", "$ref")
+        return ref_case, ref_key
+
 
 @beartype
 class LiteralizerDirective(_BaseLiteralizerDirective):
@@ -403,6 +420,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :string-format: double
            :trailing-comma: yes
            :line-ending: semicolon
+           :language-version: py_3_12
            :empty-dict-key: positional
            :heterogeneous-strategy: tagged_enum
            :default-set-element-type: String
@@ -414,6 +432,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :module-name: MyModule
            :wrap-in-file:
            :ref-case: camel
+           :ref-key: $reference
     """
 
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
@@ -495,12 +514,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
                 )
 
         wrap_in_file: bool = "wrap-in-file" in self.options
-        ref_case_value: str | None = self.options.get("ref-case")
-        ref_case: IdentifierCase | None = (
-            None
-            if ref_case_value is None
-            else IdentifierCase[ref_case_value.upper()]
-        )
+        ref_case, ref_key = self._resolve_ref_options()
 
         input_format = self._resolve_input_format(data_path=data_path)
         result = literalize(
@@ -512,6 +526,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
             variable_form=variable_form,
             wrap_in_file=wrap_in_file,
             ref_case=ref_case,
+            ref_key=ref_key,
         )
         parts: list[str] = []
         if include_preamble and result.preamble:
@@ -550,6 +565,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :indent-char: spaces
            :include-preamble:
            :ref-case: camel
+           :ref-key: $reference
            :module-name: MyModule
            :consumable-refs: my_var,other_var
     """
@@ -598,12 +614,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
             call_transform = _call_transform
 
-        ref_case_value: str | None = self.options.get("ref-case")
-        ref_case: IdentifierCase | None = (
-            None
-            if ref_case_value is None
-            else IdentifierCase[ref_case_value.upper()]
-        )
+        ref_case, ref_key = self._resolve_ref_options()
 
         consumable_refs_value: str | None = self.options.get("consumable-refs")
         consumable_refs: frozenset[str] = (
@@ -628,6 +639,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
                 per_element=per_element,
                 ref_case=ref_case,
                 consumable_refs=consumable_refs,
+                ref_key=ref_key,
             )
         except ParameterCountMismatchError as exc:
             msg = (
