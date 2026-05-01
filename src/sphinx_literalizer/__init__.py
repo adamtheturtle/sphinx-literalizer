@@ -16,6 +16,7 @@ from docutils import nodes
 from docutils.parsers.rst import directives
 from literalizer import (
     BothVariableForms,
+    CollectionLayout,
     ExistingVariable,
     IdentifierCase,
     InputFormat,
@@ -83,6 +84,9 @@ _FORMAT_OPTION_GETTERS: dict[
 
 _IDENTIFIER_CASE_VALUES: tuple[str, ...] = tuple(
     sorted(m.name.lower() for m in IdentifierCase)
+)
+_COLLECTION_LAYOUT_VALUES: tuple[str, ...] = tuple(
+    sorted(m.name.lower() for m in CollectionLayout)
 )
 
 
@@ -195,6 +199,10 @@ _COMMON_OPTIONS: dict[str, Callable[[str], Any]] = {
         values=_IDENTIFIER_CASE_VALUES,
     ),
     "ref-key": directives.unchanged_required,
+    "collection-layout": lambda x: directives.choice(
+        argument=x,
+        values=_COLLECTION_LAYOUT_VALUES,
+    ),
 }
 
 
@@ -384,6 +392,14 @@ class _BaseLiteralizerDirective(SphinxDirective):
         ref_key: str = self.options.get("ref-key", "$ref")
         return ref_case, ref_key
 
+    def _resolve_collection_layout(self) -> CollectionLayout:
+        """Resolve the nested collection layout option."""
+        collection_layout_value: str = self.options.get(
+            "collection-layout",
+            "compact",
+        )
+        return CollectionLayout[collection_layout_value.upper()]
+
 
 @beartype
 class LiteralizerDirective(_BaseLiteralizerDirective):
@@ -433,6 +449,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :wrap-in-file:
            :ref-case: camel
            :ref-key: $reference
+           :collection-layout: multiline
     """
 
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
@@ -515,6 +532,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
 
         wrap_in_file: bool = "wrap-in-file" in self.options
         ref_case, ref_key = self._resolve_ref_options()
+        collection_layout = self._resolve_collection_layout()
 
         input_format = self._resolve_input_format(data_path=data_path)
         result = literalize(
@@ -527,6 +545,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
             wrap_in_file=wrap_in_file,
             ref_case=ref_case,
             ref_key=ref_key,
+            collection_layout=collection_layout,
         )
         parts: list[str] = []
         if include_preamble and result.preamble:
@@ -569,6 +588,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :ref-key: $reference
            :module-name: MyModule
            :consumable-refs: my_var,other_var
+           :collection-layout: multiline
     """
 
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
@@ -618,6 +638,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             call_transform = _call_transform
 
         ref_case, ref_key = self._resolve_ref_options()
+        collection_layout = self._resolve_collection_layout()
 
         consumable_refs_value: str | None = self.options.get("consumable-refs")
         consumable_refs: frozenset[str] = (
@@ -643,6 +664,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
                 ref_case=ref_case,
                 consumable_refs=consumable_refs,
                 ref_key=ref_key,
+                collection_layout=collection_layout,
             )
         except ParameterCountMismatchError as exc:
             msg = (

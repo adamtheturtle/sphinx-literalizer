@@ -627,7 +627,7 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.5.1"
+version = "2026.5.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
@@ -637,9 +637,9 @@ dependencies = [
     { name = "ruamel-yaml-clib", marker = "platform_python_implementation == 'CPython'" },
     { name = "tomlkit" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fe/91/8ef9a6896ad813d82641251e0f6968784da30826a18250b05d8468c7e834/literalizer-2026.5.1.tar.gz", hash = "sha256:b0b14735a6c58a2687f5b71665fee2ac77066b276c98dba98f68d4d1e73f5402", size = 1732577, upload-time = "2026-05-01T05:10:43.543Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7c/27/f6bc09b4e9f5db3d76c4857887366827460b916ad839048a8eb57defa43a/literalizer-2026.5.1.1.tar.gz", hash = "sha256:edc4deb52a4f901901000b906cef899b58569f009e8099ec633114418c616303", size = 1788992, upload-time = "2026-05-01T09:34:36.539Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0f/cb/eb96d4c8d721d1a3ac6c287bc29272e36a8f3c3270cdf09e1cf2d0268b6d/literalizer-2026.5.1-py3-none-any.whl", hash = "sha256:ef2cff0982ec8c2d063b92ec798967d800a67dfa2357c64b223ba61edefe6dae", size = 501912, upload-time = "2026-05-01T05:10:41.265Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/ba/1601284678763bf6bd4300dbfde73c39cd2a1455345c21a6b28569632fb6/literalizer-2026.5.1.1-py3-none-any.whl", hash = "sha256:a9910f4635e6c7404f62fedbf9dfc4c1c1faa458e4352a0a6490f0c9751bfda8", size = 503690, upload-time = "2026-05-01T09:34:34.874Z" },
 ]
 
 [[package]]
@@ -1762,7 +1762,7 @@ requires-dist = [
     { name = "docutils" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
     { name = "interrogate", marker = "extra == 'dev'", specifier = "==1.7.0" },
-    { name = "literalizer", specifier = "==2026.5.1" },
+    { name = "literalizer", specifier = "==2026.5.1.1" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "==1.20.2" },
     { name = "mypy-strict-kwargs", marker = "extra == 'dev'", specifier = "==2026.1.12" },
     { name = "prek", marker = "extra == 'dev'", specifier = "==0.3.11" },

@@ -4,6 +4,12 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.5.1.1``.
+- Added ``:collection-layout:`` to both directives, exposing
+  literalizer's nested collection layout control.
+- Go output now follows literalizer's idiomatic no-semicolon default
+  line ending unless ``:line-ending: semicolon`` is selected.
+
 2026.05.01.1
 ------------
 
