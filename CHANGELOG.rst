@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.05.01.2
+------------
+
+
 - Bumped ``literalizer`` to ``2026.5.1.1``.
 - Added ``:collection-layout:`` to both directives, exposing
   literalizer's nested collection layout control.
