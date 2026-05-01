@@ -47,13 +47,14 @@ Directive options
    Supported values: ``ada``, ``bash``, ``c``, ``clojure``, ``cobol``,
    ``common-lisp``, ``cpp``, ``crystal``, ``csharp``, ``d``, ``dart``,
    ``dhall``, ``elixir``, ``elm``, ``erlang``, ``fortran``, ``fsharp``,
-   ``gleam``, ``go``, ``groovy``, ``haskell``, ``hcl``, ``java``,
-   ``javascript``, ``json5``, ``jsonnet``, ``julia``, ``kotlin``, ``lua``,
-   ``matlab``, ``mojo``, ``nim``, ``norg``, ``objective-c``, ``ocaml``,
-   ``occam``, ``odin``, ``perl``, ``php``, ``powershell``, ``purescript``,
-   ``python``, ``r``, ``racket``, ``raku``, ``ruby``, ``rust``, ``scala``,
-   ``scheme``, ``swift``, ``systemverilog``, ``toml``, ``typescript``,
-   ``vb.net``, ``yaml``, ``zig``.
+   ``forth``, ``gleam``, ``go``, ``groovy``, ``haskell``, ``hcl``,
+   ``java``, ``javascript``, ``json5``, ``jsonnet``, ``julia``,
+   ``kotlin``, ``lua``, ``matlab``, ``mojo``, ``nim``, ``nix``,
+   ``norg``, ``objective-c``, ``ocaml``, ``occam``, ``odin``, ``perl``,
+   ``php``, ``powershell``, ``purescript``, ``python``, ``r``,
+   ``racket``, ``raku``, ``roc``, ``ruby``, ``rust``, ``scala``,
+   ``scheme``, ``sml``, ``swift``, ``systemverilog``, ``tcl``, ``toml``,
+   ``typescript``, ``v``, ``vb.net``, ``wren``, ``yaml``, ``zig``.
 
 ``:input-format:`` (optional)
    Input data format. If not specified, auto-detected from the file extension.
@@ -79,6 +80,32 @@ Directive options
    before the generated code.  For example, Go code will be preceded by
    ``package main``, Rust by ``use std::collections::HashMap;``, etc.
    Has no effect when the language does not require a preamble.
+
+``:language-version:`` (optional)
+   Target language version.  Values are language-specific enum member
+   names in lowercase, e.g. ``py_3_12`` for Python, ``jdk_11`` for Java,
+   and ``ada_2022`` for Ada.  Each language currently exposes one
+   default version; unsupported values raise an error.
+
+``:ref-case:`` (optional)
+   Case conversion for reference markers in the input data.  Supported
+   values: ``camel``, ``kebab``, ``pascal``, ``snake``, ``upper_snake``.
+   When set, a single-key mapping such as ``{"$ref": "user_obj"}``
+   renders as a bare identifier instead of a literal dictionary.
+
+``:ref-key:`` (optional)
+   Marker key used with ``:ref-case:`` to detect references.  Defaults
+   to ``$ref``.  For example, with ``:ref-key: $reference`` the mapping
+   ``{"$reference": "user_obj"}`` is treated as a reference marker.
+
+``:module-name:`` (optional)
+   Module or wrapper name used by languages whose ``:wrap-in-file:``
+   output introduces a named scope.  The value is converted to the case
+   expected by the selected language.
+
+``:wrap-in-file:`` (optional flag)
+   Wrap the generated code in a complete file/module when the selected
+   language supports that mode.
 
 ``:date-format:`` (optional)
    How to render YAML dates.  Not all values are valid for every
@@ -543,8 +570,9 @@ For positional-call languages like Go, the same data renders as:
 The ``literalizer-call`` directive also supports these shared options
 from the ``literalizer`` directive: ``:language:``, ``:input-format:``,
 ``:pre-indent-level:``, ``:indent:``, ``:indent-char:``,
-``:include-preamble:``, and all format options (e.g. ``:string-format:``,
-``:trailing-comma:``, etc.).
+``:include-preamble:``, ``:language-version:``, ``:ref-case:``,
+``:ref-key:``, ``:module-name:``, ``:wrap-in-file:``, and all format
+options (e.g. ``:string-format:``, ``:trailing-comma:``, etc.).
 
 
 Reference
