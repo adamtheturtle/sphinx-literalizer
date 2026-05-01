@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.05.01
+----------
+
+
 - Bumped ``literalizer`` to ``2026.5.1``.
 - Added ``:ref-key:`` to both directives, exposing literalizer's
   configurable reference marker key.
