@@ -75,6 +75,15 @@ Directive options
    Include collection delimiters in the output
    (``[`` … ``]`` for arrays, ``{`` … ``}`` for dicts).
 
+``:collection-layout:`` (optional)
+   How to render collections nested inside other collections.
+   Supported values:
+
+   ``compact``
+      Keep nested collections on one line (default).
+   ``multiline``
+      Render non-empty nested collections with one element per line.
+
 ``:include-preamble:`` (optional flag)
    Include language preamble lines (imports, package declarations, etc.)
    before the generated code.  For example, Go code will be preceded by
@@ -417,13 +426,15 @@ Directive options
       Racket, TOML, Visual Basic, YAML.
 
 ``:line-ending:`` (optional)
-   Whether to include semicolons at the end of statements.
+   Whether to include semicolons at the end of statements.  The default
+   depends on the selected language; for example, Go defaults to
+   ``none``.
    Supported values:
 
    ``semicolon``
-      Include semicolons.  This is the default for all languages.
+      Include semicolons where supported.
    ``none``
-      Omit semicolons.  Available for JavaScript, TypeScript.
+      Omit semicolons.  Available for Go, JavaScript, TypeScript.
 
 ``:empty-dict-key:`` (optional)
    How to handle empty string keys in dictionaries.
@@ -577,8 +588,9 @@ The ``literalizer-call`` directive also supports these shared options
 from the ``literalizer`` directive: ``:language:``, ``:input-format:``,
 ``:pre-indent-level:``, ``:indent:``, ``:indent-char:``,
 ``:include-preamble:``, ``:language-version:``, ``:ref-case:``,
-``:ref-key:``, ``:module-name:``, ``:wrap-in-file:``, and all format
-options (e.g. ``:string-format:``, ``:trailing-comma:``, etc.).
+``:ref-key:``, ``:module-name:``, ``:wrap-in-file:``,
+``:collection-layout:``, and all format options (e.g.
+``:string-format:``, ``:trailing-comma:``, etc.).
 
 
 Reference

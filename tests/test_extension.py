@@ -3108,6 +3108,149 @@ def test_line_ending_none(
     assert semi_html != none_html
 
 
+def test_go_line_ending_defaults_to_none(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Go uses its idiomatic no-semicolon default line ending."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"key": "value"}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: go
+           :include-delimiters:
+           :variable-name: x
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        'x := map[string]string{\n\t"key": "value",\n}'
+    )
+    app.cleanup()
+
+
+def test_collection_layout_literalizer_multiline(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :collection-layout: option controls nested literal layout."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[1, 2], [3, 4]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :include-delimiters:
+           :collection-layout: multiline
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        "(\n"
+        "    (\n"
+        "        1,\n"
+        "        2,\n"
+        "    ),\n"
+        "    (\n"
+        "        3,\n"
+        "        4,\n"
+        "    ),\n"
+        ")"
+    )
+    app.cleanup()
+
+
+def test_collection_layout_literalizer_call_multiline(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :collection-layout: option applies inside call arguments."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[[[1, 2], [3, 4]]]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: python
+           :target-function: handle
+           :parameter-names: items
+           :per-element:
+           :collection-layout: multiline
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        "handle(items=(\n"
+        "    (\n"
+        "        1,\n"
+        "        2,\n"
+        "    ),\n"
+        "    (\n"
+        "        3,\n"
+        "        4,\n"
+        "    ),\n"
+        "))"
+    )
+    app.cleanup()
+
+
 def test_empty_dict_key_error(
     *,
     make_app: Callable[..., SphinxTestApp],
