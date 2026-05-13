@@ -4,6 +4,7 @@ Provides the ``literalizer`` and ``literalizer-call`` directives, which
 read data files and render them as native language code blocks.
 """
 
+import dataclasses
 import enum
 from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
@@ -240,8 +241,9 @@ _EXTENSION_TO_INPUT_FORMAT: dict[str, InputFormat] = {
 
 def _dataclass_field_names(language_cls: LanguageCls) -> frozenset[str]:
     """Return the dataclass field names accepted by ``language_cls``."""
-    fields = getattr(language_cls, "__dataclass_fields__", {})
-    return frozenset(fields)
+    if not dataclasses.is_dataclass(language_cls):
+        return frozenset()
+    return frozenset(field.name for field in dataclasses.fields(language_cls))
 
 
 # Literalizer exceptions that signal a directive option combination the
