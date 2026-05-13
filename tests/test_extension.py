@@ -3045,69 +3045,6 @@ def test_trailing_comma_no(
     assert yes_html != no_html
 
 
-def test_line_ending_none(
-    *,
-    make_app: Callable[..., SphinxTestApp],
-    tmp_path: Path,
-) -> None:
-    """The :line-ending: option controls statement terminators."""
-    source_directory = tmp_path / "source"
-    source_directory.mkdir()
-    (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
-        data=json.dumps(obj=[1]),
-    )
-    source_file = source_directory / "index.rst"
-
-    source_file.write_text(
-        data=dedent(
-            text="""\
-        Test
-        ====
-
-        .. literalizer:: data.json
-           :language: javascript
-           :variable-name: x
-           :include-delimiters:
-           :line-ending: semicolon
-    """
-        )
-    )
-    semi_app = make_app(
-        srcdir=source_directory,
-        confoverrides={"extensions": ["sphinx_literalizer"]},
-    )
-    semi_app.build()
-    assert semi_app.statuscode == 0
-    semi_html = (semi_app.outdir / "index.html").read_text()
-    semi_app.cleanup()
-
-    source_file.write_text(
-        data=dedent(
-            text="""\
-        Test
-        ====
-
-        .. literalizer:: data.json
-           :language: javascript
-           :variable-name: x
-           :include-delimiters:
-           :line-ending: none
-    """
-        )
-    )
-    none_app = make_app(
-        srcdir=source_directory,
-        confoverrides={"extensions": ["sphinx_literalizer"]},
-    )
-    none_app.build()
-    assert none_app.statuscode == 0
-    none_html = (none_app.outdir / "index.html").read_text()
-    none_app.cleanup()
-
-    assert semi_html != none_html
-
-
 def test_go_line_ending_defaults_to_none(
     *,
     make_app: Callable[..., SphinxTestApp],
@@ -5151,6 +5088,7 @@ def test_module_name_java(
         .. literalizer:: data.json
            :language: java
            :wrap-in-file:
+           :variable-name: x
            :module-name: Foo
     """
         )
@@ -5611,6 +5549,7 @@ def test_module_name_auto_cased(
         .. literalizer:: data.json
            :language: java
            :wrap-in-file:
+           :variable-name: x
            :module-name: my_module
     """
         )

@@ -425,17 +425,6 @@ Directive options
       JavaScript, MATLAB, Nim, Norg, OCaml, Occam, PowerShell, R,
       Racket, TOML, Visual Basic, YAML.
 
-``:line-ending:`` (optional)
-   Whether to include semicolons at the end of statements.  The default
-   depends on the selected language; for example, Go defaults to
-   ``none``.
-   Supported values:
-
-   ``semicolon``
-      Include semicolons where supported.
-   ``none``
-      Omit semicolons.  Available for Go, JavaScript, TypeScript.
-
 ``:empty-dict-key:`` (optional)
    How to handle empty string keys in dictionaries.
    Supported values:
