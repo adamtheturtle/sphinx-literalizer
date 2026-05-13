@@ -4,6 +4,36 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.5.13.1``.
+- Removed the ``:line-ending:`` directive option.  Upstream
+  ``literalizer`` removed the corresponding ``LineEndings`` enum;
+  statement terminators now follow each language's idiomatic default.
+- Languages whose ``wrap_in_file`` introduces a named scope (e.g.
+  Java, C, C++, D, Erlang, Fortran, F#, Objective-C, Occam,
+  SystemVerilog) now require ``:variable-name:`` when ``:wrap-in-file:``
+  is set.  Upstream ``literalizer`` raises
+  ``WrapInFileWithoutVariableNotSupportedError`` for languages that
+  cannot represent a bare value at file-statement scope.
+- The ``:variable-type-hints:`` option exposes upstream's new ``safe``
+  value, and the previous ``auto`` value is now spelled ``never`` (the
+  rendered output is unchanged for languages that did not previously
+  distinguish the two).
+- The ``:call-style:`` option exposes the new ``curried`` value for
+  F#, Haskell, OCaml, and SML.  Elm ``literalizer-call`` output now
+  emits curried-application calls in place of the prior tuple form.
+- The new upstream typed exceptions raised by directive option
+  combinations a language cannot represent
+  (``WrapInFileWithoutVariableNotSupportedError``,
+  ``WrapCombinedInFileNotSupportedError``,
+  ``VariableNameNotSupportedError``, ``UnsupportedCallShapeError``,
+  ``UnsupportedIdentifierCaseError``,
+  ``DottedCallTargetNotSupportedError``,
+  ``DottedCallStubNotSupportedError``,
+  ``FreeFunctionCallNotSupportedError``, and
+  ``CallArgNotSupportedError``) are now caught and re-raised as
+  ``ExtensionError`` so the offending directive is reported as a
+  build error rather than a traceback.
+
 2026.05.01.2
 ------------
 
