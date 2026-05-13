@@ -5765,3 +5765,43 @@ def test_unsupported_language_version_error(
         ),
     ):
         app.build()
+
+
+def test_wrap_in_file_without_variable_raises_extension_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Languages that cannot wrap a bare value at file scope surface a
+    clean ``ExtensionError`` (rather than a literalizer traceback) when
+    ``:wrap-in-file:`` is set without ``:variable-name:``.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: java
+           :wrap-in-file:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=(
+            r"Java cannot wrap a bare value \(without a variable_form\) "
+            r"at file scope"
+        ),
+    ):
+        app.build()

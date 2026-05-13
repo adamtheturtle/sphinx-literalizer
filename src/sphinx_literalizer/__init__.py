@@ -4,9 +4,9 @@ Provides the ``literalizer`` and ``literalizer-call`` directives, which
 read data files and render them as native language code blocks.
 """
 
-import dataclasses
 import enum
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Generator, Iterable
+from contextlib import contextmanager
 from functools import cache, partial
 from importlib.metadata import version
 from pathlib import Path
@@ -28,7 +28,18 @@ from literalizer import (
     literalize,
     literalize_call,
 )
-from literalizer.exceptions import ParameterCountMismatchError
+from literalizer.exceptions import (
+    CallArgNotSupportedError,
+    DottedCallStubNotSupportedError,
+    DottedCallTargetNotSupportedError,
+    FreeFunctionCallNotSupportedError,
+    ParameterCountMismatchError,
+    UnsupportedCallShapeError,
+    UnsupportedIdentifierCaseError,
+    VariableNameNotSupportedError,
+    WrapCombinedInFileNotSupportedError,
+    WrapInFileWithoutVariableNotSupportedError,
+)
 from literalizer.languages import ALL_LANGUAGES
 from sphinx.application import Sphinx
 from sphinx.errors import ExtensionError
@@ -227,6 +238,40 @@ _EXTENSION_TO_INPUT_FORMAT: dict[str, InputFormat] = {
 }
 
 
+def _dataclass_field_names(language_cls: LanguageCls) -> frozenset[str]:
+    """Return the dataclass field names accepted by ``language_cls``."""
+    fields = getattr(language_cls, "__dataclass_fields__", {})
+    return frozenset(fields)
+
+
+# Literalizer exceptions that signal a directive option combination the
+# selected language cannot represent.  Surfacing these as a clean
+# ``ExtensionError`` (rather than a traceback) lets the build report the
+# offending directive and continue under ``-W``.
+_USER_FACING_LITERALIZER_ERRORS: tuple[type[Exception], ...] = (
+    CallArgNotSupportedError,
+    DottedCallStubNotSupportedError,
+    DottedCallTargetNotSupportedError,
+    FreeFunctionCallNotSupportedError,
+    UnsupportedCallShapeError,
+    UnsupportedIdentifierCaseError,
+    VariableNameNotSupportedError,
+    WrapCombinedInFileNotSupportedError,
+    WrapInFileWithoutVariableNotSupportedError,
+)
+
+
+@contextmanager
+def _literalize_errors_as_extension_errors() -> Generator[None]:
+    """Convert user-facing literalizer exceptions into
+    ``ExtensionError``.
+    """
+    try:
+        yield
+    except _USER_FACING_LITERALIZER_ERRORS as exc:
+        raise ExtensionError(message=str(object=exc)) from exc
+
+
 @beartype
 class _BaseLiteralizerDirective(SphinxDirective):
     """Shared logic for literalizer directives."""
@@ -273,10 +318,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
             ),
         }
         language_cls = _language_types()[language_name]
-        accepted_params = {
-            field.name
-            for field in dataclasses.fields(class_or_instance=language_cls)  # type: ignore[arg-type]  # pyright: ignore[reportArgumentType]
-        }
+        accepted_params = _dataclass_field_names(language_cls=language_cls)
         for option_name, param_name in type_option_map.items():
             if (value := self.options.get(option_name)) is not None:
                 if param_name not in accepted_params:
@@ -445,23 +487,12 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         "modifiers": directives.unchanged,
     }
 
-    def run(self) -> list[nodes.Node]:
-        """Read the data file and produce a literal block."""
-        env = self.state.document.settings.env
-        data_path = (Path(env.srcdir) / self.arguments[0]).resolve()
-
-        env.note_dependency(str(object=data_path))
-
-        language_name: str = self.options["language"]
-        language_cls = _language_types()[language_name]
-        language_spec = self._build_language(
-            language_name=language_name,
-            language_cls=language_cls,
-        )
-
-        pre_indent_level: int = self.options.get("pre-indent-level", 0)
-        include_delimiters: bool = "include-delimiters" in self.options
-        include_preamble: bool = "include-preamble" in self.options
+    def _resolve_variable_form(
+        self,
+        language_name: str,
+        language_cls: LanguageCls,
+    ) -> VariableForm | None:
+        """Resolve the variable-form options into a ``VariableForm``."""
         variable_name: str | None = self.options.get("variable-name")
         existing_variable: bool = "existing-variable" in self.options
         both_variable_forms: bool = "both-variable-forms" in self.options
@@ -491,46 +522,64 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
             )
             raise ExtensionError(message=msg)
 
-        modifiers: frozenset[enum.Enum] = frozenset()
-        if modifiers_value is not None:
-            modifiers = _parse_modifiers(
+        if variable_name is None:
+            return None
+
+        modifiers: frozenset[enum.Enum] = (
+            frozenset()
+            if modifiers_value is None
+            else _parse_modifiers(
                 language_name=language_name,
                 language_cls=language_cls,
                 value=modifiers_value,
             )
+        )
 
-        variable_form: VariableForm | None = None
-        if variable_name is not None:
-            if existing_variable:
-                variable_form = ExistingVariable(name=variable_name)
-            elif both_variable_forms:
-                variable_form = BothVariableForms(
-                    name=variable_name,
-                    modifiers=modifiers,
-                )
-            else:
-                variable_form = NewVariable(
-                    name=variable_name,
-                    modifiers=modifiers,
-                )
+        if existing_variable:
+            return ExistingVariable(name=variable_name)
+        if both_variable_forms:
+            return BothVariableForms(name=variable_name, modifiers=modifiers)
+        return NewVariable(name=variable_name, modifiers=modifiers)
 
+    def run(self) -> list[nodes.Node]:
+        """Read the data file and produce a literal block."""
+        env = self.state.document.settings.env
+        data_path = (Path(env.srcdir) / self.arguments[0]).resolve()
+
+        env.note_dependency(str(object=data_path))
+
+        language_name: str = self.options["language"]
+        language_cls = _language_types()[language_name]
+        language_spec = self._build_language(
+            language_name=language_name,
+            language_cls=language_cls,
+        )
+
+        pre_indent_level: int = self.options.get("pre-indent-level", 0)
+        include_delimiters: bool = "include-delimiters" in self.options
+        include_preamble: bool = "include-preamble" in self.options
+        variable_form = self._resolve_variable_form(
+            language_name=language_name,
+            language_cls=language_cls,
+        )
         wrap_in_file: bool = "wrap-in-file" in self.options
         ref_case, ref_key = self._resolve_ref_options()
         collection_layout = self._resolve_collection_layout()
 
         input_format = self._resolve_input_format(data_path=data_path)
-        result = literalize(
-            source=data_path.read_text(encoding="utf-8"),
-            input_format=input_format,
-            language=language_spec,
-            pre_indent_level=pre_indent_level,
-            include_delimiters=include_delimiters,
-            variable_form=variable_form,
-            wrap_in_file=wrap_in_file,
-            ref_case=ref_case,
-            ref_key=ref_key,
-            collection_layout=collection_layout,
-        )
+        with _literalize_errors_as_extension_errors():
+            result = literalize(
+                source=data_path.read_text(encoding="utf-8"),
+                input_format=input_format,
+                language=language_spec,
+                pre_indent_level=pre_indent_level,
+                include_delimiters=include_delimiters,
+                variable_form=variable_form,
+                wrap_in_file=wrap_in_file,
+                ref_case=ref_case,
+                ref_key=ref_key,
+                collection_layout=collection_layout,
+            )
         parts: list[str] = []
         if include_preamble and result.preamble:
             parts.append("\n".join(result.preamble))
@@ -637,19 +686,20 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
         input_format = self._resolve_input_format(data_path=data_path)
         try:
-            result = literalize_call(
-                source=data_path.read_text(encoding="utf-8"),
-                input_format=input_format,
-                language=language_spec,
-                target_function=target_function,
-                parameter_names=parameter_names,
-                call_transform=call_transform,
-                per_element=per_element,
-                ref_case=ref_case,
-                consumable_refs=consumable_refs,
-                ref_key=ref_key,
-                collection_layout=collection_layout,
-            )
+            with _literalize_errors_as_extension_errors():
+                result = literalize_call(
+                    source=data_path.read_text(encoding="utf-8"),
+                    input_format=input_format,
+                    language=language_spec,
+                    target_function=target_function,
+                    parameter_names=parameter_names,
+                    call_transform=call_transform,
+                    per_element=per_element,
+                    ref_case=ref_case,
+                    consumable_refs=consumable_refs,
+                    ref_key=ref_key,
+                    collection_layout=collection_layout,
+                )
         except ParameterCountMismatchError as exc:
             msg = (
                 f"':parameter-names:' has {len(parameter_names)} entries "

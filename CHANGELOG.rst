@@ -21,6 +21,18 @@ Next
 - The ``:call-style:`` option exposes the new ``curried`` value for
   F#, Haskell, OCaml, and SML.  Elm ``literalizer-call`` output now
   emits curried-application calls in place of the prior tuple form.
+- The new upstream typed exceptions raised by directive option
+  combinations a language cannot represent
+  (``WrapInFileWithoutVariableNotSupportedError``,
+  ``WrapCombinedInFileNotSupportedError``,
+  ``VariableNameNotSupportedError``, ``UnsupportedCallShapeError``,
+  ``UnsupportedIdentifierCaseError``,
+  ``DottedCallTargetNotSupportedError``,
+  ``DottedCallStubNotSupportedError``,
+  ``FreeFunctionCallNotSupportedError``, and
+  ``CallArgNotSupportedError``) are now caught and re-raised as
+  ``ExtensionError`` so the offending directive is reported as a
+  build error rather than a traceback.
 
 2026.05.01.2
 ------------
