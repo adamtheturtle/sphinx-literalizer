@@ -35,7 +35,7 @@ dynamic = [
 dependencies = [
     "beartype==0.22.9",
     "docutils",
-    "literalizer==2026.5.13",
+    "literalizer==2026.5.13.1",
     "sphinx>=7.0",
 ]
 optional-dependencies.dev = [
@@ -216,13 +216,6 @@ ignore_path = [
 fail-under = 100
 omit-covered-files = true
 verbose = 2
-
-[tool.mypy_strict_kwargs]
-# ``is_dataclass`` only narrows when called with the positional argument
-# (the stub overload that returns ``TypeIs`` is positional-only); ty's
-# type-guard recognition behaves the same way.  Exempt it from the
-# kwargs-only rule so the narrowing path round-trips through mypy.
-ignore_names = [ "dataclasses.is_dataclass" ]
 
 [tool.pydocstringformatter]
 write = true

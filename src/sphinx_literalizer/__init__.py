@@ -4,7 +4,6 @@ Provides the ``literalizer`` and ``literalizer-call`` directives, which
 read data files and render them as native language code blocks.
 """
 
-import dataclasses
 import enum
 from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
@@ -239,13 +238,6 @@ _EXTENSION_TO_INPUT_FORMAT: dict[str, InputFormat] = {
 }
 
 
-def _dataclass_field_names(language_cls: LanguageCls) -> frozenset[str]:
-    """Return the dataclass field names accepted by ``language_cls``."""
-    if not dataclasses.is_dataclass(language_cls):
-        return frozenset()
-    return frozenset(field.name for field in dataclasses.fields(language_cls))
-
-
 # Literalizer exceptions that signal a directive option combination the
 # selected language cannot represent.  Surfacing these as a clean
 # ``ExtensionError`` (rather than a traceback) lets the build report the
@@ -310,20 +302,38 @@ class _BaseLiteralizerDirective(SphinxDirective):
         constructor: partial[Language],
     ) -> partial[Language]:
         """Apply default element/key/value type options."""
-        type_option_map: dict[str, str] = {
-            "default-set-element-type": "default_set_element_type",
-            "default-sequence-element-type": "default_sequence_element_type",
-            "default-dict-key-type": "default_dict_key_type",
-            "default-dict-value-type": "default_dict_value_type",
+        type_option_map: dict[
+            str,
+            tuple[str, Callable[[LanguageCls], bool]],
+        ] = {
+            "default-set-element-type": (
+                "default_set_element_type",
+                lambda cls: cls.supports_default_set_element_type,
+            ),
+            "default-sequence-element-type": (
+                "default_sequence_element_type",
+                lambda cls: cls.supports_default_sequence_element_type,
+            ),
+            "default-dict-key-type": (
+                "default_dict_key_type",
+                lambda cls: cls.supports_default_dict_key_type,
+            ),
+            "default-dict-value-type": (
+                "default_dict_value_type",
+                lambda cls: cls.supports_default_dict_value_type,
+            ),
             "default-ordered-map-value-type": (
-                "default_ordered_map_value_type"
+                "default_ordered_map_value_type",
+                lambda cls: cls.supports_default_ordered_map_value_type,
             ),
         }
         language_cls = _language_types()[language_name]
-        accepted_params = _dataclass_field_names(language_cls=language_cls)
-        for option_name, param_name in type_option_map.items():
+        for option_name, (
+            param_name,
+            supports_check,
+        ) in type_option_map.items():
             if (value := self.options.get(option_name)) is not None:
-                if param_name not in accepted_params:
+                if not supports_check(language_cls):
                     msg = (
                         f"Language '{language_name}' does not support "
                         f"'{option_name}'."

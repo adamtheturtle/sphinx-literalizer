@@ -4,7 +4,7 @@ Changelog
 Next
 ----
 
-- Bumped ``literalizer`` to ``2026.5.13``.
+- Bumped ``literalizer`` to ``2026.5.13.1``.
 - Removed the ``:line-ending:`` directive option.  Upstream
   ``literalizer`` removed the corresponding ``LineEndings`` enum;
   statement terminators now follow each language's idiomatic default.
