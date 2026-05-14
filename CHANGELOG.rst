@@ -4,7 +4,17 @@ Changelog
 Next
 ----
 
-- Bumped ``literalizer`` to ``2026.5.13.1``.
+- Bumped ``literalizer`` to ``2026.5.14``.
+- The ``literalizer-call`` directive now accepts ``:variable-name:``,
+  ``:existing-variable:``, and ``:modifiers:`` options, wrapping the
+  rendered call in an idiomatic per-language variable binding (e.g.
+  ``let my_data = make_widget(42);``).  ``:both-variable-forms:`` is
+  not supported for ``literalizer-call`` because emitting both a
+  declaration and an assignment would invoke the target function
+  twice; upstream ``literalizer`` raises
+  ``UnsupportedCallShapeError`` for languages whose call form is a
+  statement rather than an expression, or whose declaration template
+  is only valid for literal values.
 - Removed the ``:line-ending:`` directive option.  Upstream
   ``literalizer`` removed the corresponding ``LineEndings`` enum;
   statement terminators now follow each language's idiomatic default.
