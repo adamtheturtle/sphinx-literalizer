@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.05.14
+----------
+
+
 - Bumped ``literalizer`` to ``2026.5.14.1``.
 - ``UnrepresentableInputError`` from ``literalizer`` (raised when a
   YAML input contains a non-string dict key that the target language
