@@ -4,7 +4,11 @@ Changelog
 Next
 ----
 
-- Bumped ``literalizer`` to ``2026.5.14``.
+- Bumped ``literalizer`` to ``2026.5.14.1``.
+- ``UnrepresentableInputError`` from ``literalizer`` (raised when a
+  YAML input contains a non-string dict key that the target language
+  cannot represent) is now surfaced as a Sphinx ``ExtensionError``
+  rather than an uncaught traceback.
 - The ``literalizer-call`` directive now accepts ``:variable-name:``,
   ``:existing-variable:``, and ``:modifiers:`` options, wrapping the
   rendered call in an idiomatic per-language variable binding (e.g.

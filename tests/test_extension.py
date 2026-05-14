@@ -5435,6 +5435,40 @@ def test_literalizer_call_variable_form_per_element_error(
     app.cleanup()
 
 
+def test_unrepresentable_input_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A YAML non-string dict key for a language that cannot represent it
+    surfaces literalizer's ``UnrepresentableInputError`` as an
+    ``ExtensionError``.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text(data="1: a\n")
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.yaml
+           :language: go
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(expected_exception=ExtensionError):
+        app.build()
+    app.cleanup()
+
+
 def test_tcl_language(
     *,
     make_app: Callable[..., SphinxTestApp],
