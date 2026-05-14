@@ -431,6 +431,64 @@ class _BaseLiteralizerDirective(SphinxDirective):
         ref_key: str = self.options.get("ref-key", "$ref")
         return ref_case, ref_key
 
+    def _resolve_variable_form(
+        self,
+        language_name: str,
+        language_cls: LanguageCls,
+        *,
+        allow_both: bool,
+    ) -> VariableForm | None:
+        """Resolve the variable-form options into a ``VariableForm``."""
+        variable_name: str | None = self.options.get("variable-name")
+        existing_variable: bool = "existing-variable" in self.options
+        both_variable_forms: bool = (
+            allow_both and "both-variable-forms" in self.options
+        )
+        modifiers_value: str | None = self.options.get("modifiers")
+
+        if modifiers_value is not None and variable_name is None:
+            msg = "':modifiers:' requires ':variable-name:'."
+            raise ExtensionError(message=msg)
+        if modifiers_value is not None and existing_variable:
+            msg = (
+                "':modifiers:' cannot be combined with ':existing-variable:'."
+            )
+            raise ExtensionError(message=msg)
+        if modifiers_value is not None and both_variable_forms:
+            msg = (
+                "':modifiers:' cannot be combined with "
+                "':both-variable-forms:'."
+            )
+            raise ExtensionError(message=msg)
+        if both_variable_forms and variable_name is None:
+            msg = "':both-variable-forms:' requires ':variable-name:'."
+            raise ExtensionError(message=msg)
+        if both_variable_forms and existing_variable:
+            msg = (
+                "':both-variable-forms:' cannot be combined with "
+                "':existing-variable:'."
+            )
+            raise ExtensionError(message=msg)
+
+        if variable_name is None:
+            return None
+
+        modifiers: frozenset[enum.Enum] = (
+            frozenset()
+            if modifiers_value is None
+            else _parse_modifiers(
+                language_name=language_name,
+                language_cls=language_cls,
+                value=modifiers_value,
+            )
+        )
+
+        if existing_variable:
+            return ExistingVariable(name=variable_name)
+        if both_variable_forms:
+            return BothVariableForms(name=variable_name, modifiers=modifiers)
+        return NewVariable(name=variable_name, modifiers=modifiers)
+
     def _resolve_collection_layout(self) -> CollectionLayout:
         """Resolve the nested collection layout option."""
         collection_layout_value: str = self.options.get(
@@ -499,60 +557,6 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         "modifiers": directives.unchanged,
     }
 
-    def _resolve_variable_form(
-        self,
-        language_name: str,
-        language_cls: LanguageCls,
-    ) -> VariableForm | None:
-        """Resolve the variable-form options into a ``VariableForm``."""
-        variable_name: str | None = self.options.get("variable-name")
-        existing_variable: bool = "existing-variable" in self.options
-        both_variable_forms: bool = "both-variable-forms" in self.options
-        modifiers_value: str | None = self.options.get("modifiers")
-
-        if modifiers_value is not None and variable_name is None:
-            msg = "':modifiers:' requires ':variable-name:'."
-            raise ExtensionError(message=msg)
-        if modifiers_value is not None and existing_variable:
-            msg = (
-                "':modifiers:' cannot be combined with ':existing-variable:'."
-            )
-            raise ExtensionError(message=msg)
-        if modifiers_value is not None and both_variable_forms:
-            msg = (
-                "':modifiers:' cannot be combined with "
-                "':both-variable-forms:'."
-            )
-            raise ExtensionError(message=msg)
-        if both_variable_forms and variable_name is None:
-            msg = "':both-variable-forms:' requires ':variable-name:'."
-            raise ExtensionError(message=msg)
-        if both_variable_forms and existing_variable:
-            msg = (
-                "':both-variable-forms:' cannot be combined with "
-                "':existing-variable:'."
-            )
-            raise ExtensionError(message=msg)
-
-        if variable_name is None:
-            return None
-
-        modifiers: frozenset[enum.Enum] = (
-            frozenset()
-            if modifiers_value is None
-            else _parse_modifiers(
-                language_name=language_name,
-                language_cls=language_cls,
-                value=modifiers_value,
-            )
-        )
-
-        if existing_variable:
-            return ExistingVariable(name=variable_name)
-        if both_variable_forms:
-            return BothVariableForms(name=variable_name, modifiers=modifiers)
-        return NewVariable(name=variable_name, modifiers=modifiers)
-
     def run(self) -> list[nodes.Node]:
         """Read the data file and produce a literal block."""
         env = self.state.document.settings.env
@@ -573,6 +577,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         variable_form = self._resolve_variable_form(
             language_name=language_name,
             language_cls=language_cls,
+            allow_both=True,
         )
         wrap_in_file: bool = "wrap-in-file" in self.options
         ref_case, ref_key = self._resolve_ref_options()
@@ -634,6 +639,9 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :module-name: MyModule
            :consumable-refs: my_var,other_var
            :collection-layout: multiline
+           :variable-name: my_data
+           :existing-variable:
+           :modifiers: public,static
     """
 
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
@@ -644,6 +652,9 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         "call-transform": directives.unchanged_required,
         "consumable-refs": directives.unchanged,
         "omit-code": directives.flag,
+        "variable-name": directives.unchanged,
+        "existing-variable": directives.flag,
+        "modifiers": directives.unchanged,
     }
 
     def run(self) -> list[nodes.Node]:
@@ -684,6 +695,11 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
         ref_case, ref_key = self._resolve_ref_options()
         collection_layout = self._resolve_collection_layout()
+        variable_form = self._resolve_variable_form(
+            language_name=language_name,
+            language_cls=language_cls,
+            allow_both=False,
+        )
 
         consumable_refs_value: str | None = self.options.get("consumable-refs")
         consumable_refs: frozenset[str] = (
@@ -711,6 +727,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
                     consumable_refs=consumable_refs,
                     ref_key=ref_key,
                     collection_layout=collection_layout,
+                    variable_form=variable_form,
                 )
         except ParameterCountMismatchError as exc:
             msg = (

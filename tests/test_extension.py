@@ -5307,6 +5307,134 @@ def test_literalizer_call_consumable_refs(
     app.cleanup()
 
 
+def test_literalizer_call_variable_name_rust(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """``:variable-name:`` wraps the ``literalizer-call`` output in a
+    per-language variable binding.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"count": 42}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: rust
+           :target-function: make_widget
+           :parameter-names: count
+           :variable-name: my_data
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    expected = 'let my_data = make_widget(HashMap::from([("count", 42)]));'
+    assert text == expected
+    app.cleanup()
+
+
+def test_literalizer_call_existing_variable_rust(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """``:existing-variable:`` produces an assignment without a
+    declaration keyword.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"count": 42}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: rust
+           :target-function: make_widget
+           :parameter-names: count
+           :variable-name: my_data
+           :existing-variable:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    expected = 'my_data = make_widget(HashMap::from([("count", 42)]));'
+    assert text == expected
+    app.cleanup()
+
+
+def test_literalizer_call_variable_form_per_element_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """``:variable-name:`` with ``:per-element:`` surfaces literalizer's
+    ``UnsupportedCallShapeError`` as an ``ExtensionError``.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"count": 42}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: rust
+           :target-function: make_widget
+           :parameter-names: count
+           :per-element:
+           :variable-name: my_data
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(expected_exception=ExtensionError):
+        app.build()
+    app.cleanup()
+
+
 def test_tcl_language(
     *,
     make_app: Callable[..., SphinxTestApp],
