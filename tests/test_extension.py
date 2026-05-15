@@ -4124,7 +4124,7 @@ def test_include_preamble_go(
     app.cleanup()
 
 
-def test_include_preamble_no_effect_python(
+def test_include_preamble_no_effect_ruby(
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
@@ -4144,7 +4144,7 @@ def test_include_preamble_no_effect_python(
         ====
 
         .. literalizer:: data.json
-           :language: python
+           :language: ruby
            :include-preamble:
     """
         )
@@ -4165,7 +4165,7 @@ def test_include_preamble_no_effect_python(
         Test
         ====
 
-        .. code-block:: python
+        .. code-block:: ruby
 
            1,
     """
@@ -5874,7 +5874,7 @@ def test_language_version(
 
         .. literalizer:: data.json
            :language: python
-           :language-version: py_3_12
+           :language-version: py39
     """
         )
     )
@@ -5967,3 +5967,129 @@ def test_wrap_in_file_without_variable_raises_extension_error(
         ),
     ):
         app.build()
+
+
+def test_heterogeneous_strategy_record_go(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Go's :heterogeneous-strategy: record renders a record-shaped
+    mapping as a generated struct with the default name prefix.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"flag": True, "count": 1}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: go
+           :heterogeneous-strategy: record
+           :include-delimiters:
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        "package main\n"
+        "type Record0 struct {\n"
+        "\tFlag bool\n"
+        "\tCount int\n"
+        "}\n"
+        "\n"
+        "Record0{\n"
+        "\tFlag: true,\n"
+        "\tCount: 1,\n"
+        "}"
+    )
+    app.cleanup()
+
+
+def test_fortran_language_version_v2003(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Fortran accepts :language-version: v2003 again, defining int64
+    via selected_int_kind instead of importing it from
+    iso_fortran_env.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: fortran
+           :language-version: v2003
+           :include-delimiters:
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        "module fval_m\n"
+        "  implicit none\n"
+        "  integer, parameter :: int64 = selected_int_kind(18)\n"
+        "  type :: fval_t\n"
+        "    integer :: t = 0\n"
+        "  end type fval_t\n"
+        "contains\n"
+        "  function fnull() result(v); type(fval_t) :: v; end function\n"
+        "  function fbool(b) result(v); logical, intent(in) :: b; "
+        "type(fval_t) :: v; end function\n"
+        "  function fint(n) result(v); integer(kind=int64), intent(in) "
+        ":: n; type(fval_t) :: v; end function\n"
+        "  function freal(x) result(v); real, intent(in) :: x; "
+        "type(fval_t) :: v; end function\n"
+        "  function fstr(s) result(v); character(len=*), intent(in) :: "
+        "s; type(fval_t) :: v; end function\n"
+        "  function flist(a) result(v); type(fval_t), intent(in) :: "
+        "a(:); type(fval_t) :: v; end function\n"
+        "  function fmap(a) result(v); type(fval_t), intent(in) :: "
+        "a(:); type(fval_t) :: v; end function\n"
+        "  function fset(a) result(v); type(fval_t), intent(in) :: "
+        "a(:); type(fval_t) :: v; end function\n"
+        "  function fentry(k, u) result(v); character(len=*), "
+        "intent(in) :: k; type(fval_t), intent(in) :: u; type(fval_t) "
+        ":: v; end function\n"
+        "end module fval_m\n"
+        "\n"
+        "flist([fval_t ::\n"
+        "    fint(1_int64),\n"
+        "    fint(2_int64)\n"
+        "])"
+    )
+    app.cleanup()
