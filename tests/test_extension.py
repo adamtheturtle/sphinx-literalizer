@@ -4578,6 +4578,134 @@ def test_literalizer_call_call_transform(
     assert content_html == expected_html
 
 
+def test_literalizer_call_call_transform_index(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The :call-transform: template exposes the zero-based call
+    position as ``$index``.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[True, 42, "hello"], [False, 99, "world"]]),
+    )
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: python
+           :target-function: my_func
+           :parameter-names: flag,count,name
+           :per-element:
+           :call-transform: result_$index = $call
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. code-block:: python
+
+           result_0 = my_func(flag=True, count=42, name="hello")
+           result_1 = my_func(flag=False, count=99, name="world")
+    """
+        )
+    )
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
+
+
+def test_literalizer_call_zip_file(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """:zip-file: pairs a parallel data file with the generated calls,
+    surfacing each element as ``$zipped`` rendered as a native literal.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[True, 42, "hello"], [False, 99, "world"]]),
+    )
+    (source_directory / "expected.json").write_text(
+        data=json.dumps(obj=["first", "second"]),
+    )
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: python
+           :target-function: my_func
+           :parameter-names: flag,count,name
+           :per-element:
+           :zip-file: expected.json
+           :call-transform: assert $call == $zipped
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. code-block:: python
+
+           assert my_func(flag=True, count=42, name="hello") == "first"
+           assert my_func(flag=False, count=99, name="world") == "second"
+    """
+        )
+    )
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
+
+
 def test_literalizer_call_racket(
     *,
     make_app: Callable[..., SphinxTestApp],
@@ -6092,4 +6220,45 @@ def test_fortran_language_version_v2003(
         "    fint(2_int64)\n"
         "])"
     )
+    app.cleanup()
+
+
+def test_heterogeneous_strategy_tuple_rust(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Rust's :heterogeneous-strategy: tuple renders a fixed-length
+    heterogeneous scalar array as a native tuple instead of raising.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, True, "x"]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+           :heterogeneous-strategy: tuple
+           :include-delimiters:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == '(\n    1,\n    true,\n    "x",\n)'
     app.cleanup()

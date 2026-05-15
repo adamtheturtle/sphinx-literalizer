@@ -579,6 +579,27 @@ For positional-call languages like Go, the same data renders as:
    which is useful when a later ``literalizer-call`` block needs preamble
    lines at the top of a combined snippet.
 
+``:call-transform:`` (optional)
+   A template applied to each generated call.  These placeholders are
+   substituted: ``$call`` (and the ``$0`` alias) for the rendered call
+   expression, ``$index`` for the zero-based call position, and
+   ``$zipped`` for the matching ``:zip-file:`` element rendered as a
+   native literal (empty when no ``:zip-file:`` is given).  For example,
+   ``:call-transform: result_$index = $call``.
+
+``:zip-file:`` (optional)
+   A data file whose top-level elements pair positionally with the
+   generated calls.  Each paired element is rendered as a native literal
+   and made available to ``:call-transform:`` as ``$zipped``, which is
+   handy for generating assertions from a parallel file of expected
+   results (e.g. ``:call-transform: assert $call == $zipped``).  The
+   file is parsed with the same parser as the main source.
+
+``:zip-input-format:`` (optional)
+   The input format (``json``, ``json5``, ``yaml``, or ``toml``) of the
+   ``:zip-file:``.  Defaults to the format inferred from the
+   ``:zip-file:`` extension.
+
 The ``literalizer-call`` directive also supports these shared options
 from the ``literalizer`` directive: ``:language:``, ``:input-format:``,
 ``:pre-indent-level:``, ``:indent:``, ``:indent-char:``,

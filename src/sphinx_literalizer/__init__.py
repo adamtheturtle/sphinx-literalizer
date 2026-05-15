@@ -17,6 +17,7 @@ from docutils import nodes
 from docutils.parsers.rst import directives
 from literalizer import (
     BothVariableForms,
+    CallContext,
     CollectionLayout,
     ExistingVariable,
     IdentifierCase,
@@ -30,16 +31,19 @@ from literalizer import (
 )
 from literalizer.exceptions import (
     CallArgNotSupportedError,
-    DottedCallStubNotSupportedError,
+    CallsNotSupportedByLanguageError,
+    CallsNotSupportedByToolError,
     DottedCallTargetNotSupportedError,
-    FreeFunctionCallNotSupportedError,
     ParameterCountMismatchError,
+    PerElementNotListError,
     UnrepresentableInputError,
     UnsupportedCallShapeError,
     UnsupportedIdentifierCaseError,
     VariableNameNotSupportedError,
     WrapCombinedInFileNotSupportedError,
     WrapInFileWithoutVariableNotSupportedError,
+    ZipSourceWithoutInputFormatError,
+    ZipValuesLengthMismatchError,
 )
 from literalizer.languages import ALL_LANGUAGES
 from sphinx.application import Sphinx
@@ -245,15 +249,18 @@ _EXTENSION_TO_INPUT_FORMAT: dict[str, InputFormat] = {
 # offending directive and continue under ``-W``.
 _USER_FACING_LITERALIZER_ERRORS: tuple[type[Exception], ...] = (
     CallArgNotSupportedError,
-    DottedCallStubNotSupportedError,
+    CallsNotSupportedByLanguageError,
+    CallsNotSupportedByToolError,
     DottedCallTargetNotSupportedError,
-    FreeFunctionCallNotSupportedError,
+    PerElementNotListError,
     UnrepresentableInputError,
     UnsupportedCallShapeError,
     UnsupportedIdentifierCaseError,
     VariableNameNotSupportedError,
     WrapCombinedInFileNotSupportedError,
     WrapInFileWithoutVariableNotSupportedError,
+    ZipSourceWithoutInputFormatError,
+    ZipValuesLengthMismatchError,
 )
 
 
@@ -389,11 +396,16 @@ class _BaseLiteralizerDirective(SphinxDirective):
 
         return constructor()
 
-    def _resolve_input_format(self, data_path: Path) -> InputFormat:
-        """Determine the input format from the option or file
+    def _resolve_format(
+        self,
+        data_path: Path,
+        *,
+        option_name: str,
+    ) -> InputFormat:
+        """Determine an input format from *option_name* or the file
         extension.
         """
-        explicit = self.options.get("input-format")
+        explicit = self.options.get(option_name)
         if explicit is not None:
             return InputFormat[explicit.upper()]
         suffix = data_path.suffix.lower()
@@ -402,9 +414,18 @@ class _BaseLiteralizerDirective(SphinxDirective):
         except KeyError:
             msg = (
                 f"Cannot determine input format for '{data_path.name}'. "
-                f"Use the :input-format: option."
+                f"Use the :{option_name}: option."
             )
             raise ExtensionError(message=msg) from None
+
+    def _resolve_input_format(self, data_path: Path) -> InputFormat:
+        """Determine the input format from the option or file
+        extension.
+        """
+        return self._resolve_format(
+            data_path=data_path,
+            option_name="input-format",
+        )
 
     def _make_node(
         self,
@@ -630,7 +651,9 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :parameter-names: flag,count,name
            :per-element:
            :call-style: keyword
-           :call-transform: print($0)
+           :call-transform: print($call)  # $call ($0), $index, $zipped
+           :zip-file: expected.json
+           :zip-input-format: json
            :input-format: json
            :indent: 4
            :indent-char: spaces
@@ -644,6 +667,12 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :variable-name: my_data
            :existing-variable:
            :modifiers: public,static
+
+    ``:call-transform:`` substitutes these placeholders in the template:
+    ``$call`` (and the ``$0`` alias) for the rendered call expression,
+    ``$index`` for the zero-based call position, and ``$zipped`` for the
+    matching ``:zip-file:`` element rendered as a native literal (empty
+    when no ``:zip-file:`` is given).
     """
 
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
@@ -652,12 +681,60 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         "parameter-names": directives.unchanged_required,
         "per-element": directives.flag,
         "call-transform": directives.unchanged_required,
+        "zip-file": directives.unchanged_required,
+        "zip-input-format": lambda x: directives.choice(
+            argument=x,
+            values=("json", "json5", "yaml", "toml"),
+        ),
         "consumable-refs": directives.unchanged,
         "omit-code": directives.flag,
         "variable-name": directives.unchanged,
         "existing-variable": directives.flag,
         "modifiers": directives.unchanged,
     }
+
+    def _build_call_transform(
+        self,
+    ) -> Callable[[CallContext], str] | None:
+        """Build the ``:call-transform:`` callback from the template.
+
+        ``$index`` and ``$zipped`` are resolved before ``$call`` / ``$0``
+        so a placeholder-like substring inside the rendered call
+        expression is never re-expanded.
+        """
+        template: str | None = self.options.get("call-transform")
+        if template is None:
+            return None
+        resolved_template = template
+
+        def _call_transform(context: CallContext) -> str:
+            """Substitute call-context placeholders in the template."""
+            zipped = "" if context.zipped is None else context.zipped
+            result = resolved_template.replace(
+                "$index",
+                str(object=context.index),
+            )
+            result = result.replace("$zipped", zipped)
+            result = result.replace("$call", context.call)
+            return result.replace("$0", context.call)
+
+        return _call_transform
+
+    def _resolve_zip_source(
+        self,
+    ) -> tuple[str | None, InputFormat | None]:
+        """Read the optional ``:zip-file:`` and resolve its format."""
+        zip_file_value: str | None = self.options.get("zip-file")
+        if zip_file_value is None:
+            return None, None
+        env = self.state.document.settings.env
+        zip_path = (Path(env.srcdir) / zip_file_value).resolve()
+        env.note_dependency(str(object=zip_path))
+        zip_input_format = self._resolve_format(
+            data_path=zip_path,
+            option_name="zip-input-format",
+        )
+        return zip_path.read_text(encoding="utf-8"), zip_input_format
 
     def run(self) -> list[nodes.Node]:
         """Read the data file and produce function call expressions."""
@@ -682,18 +759,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         ]
         per_element: bool = "per-element" in self.options
 
-        call_transform_template: str | None = self.options.get(
-            "call-transform",
-        )
-        call_transform: Callable[[str], str] | None = None
-        if call_transform_template is not None:
-            template = call_transform_template
-
-            def _call_transform(call_str: str) -> str:
-                """Replace ``$0`` with the call expression."""
-                return template.replace("$0", call_str)
-
-            call_transform = _call_transform
+        call_transform = self._build_call_transform()
 
         ref_case, ref_key = self._resolve_ref_options()
         collection_layout = self._resolve_collection_layout()
@@ -714,6 +780,8 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             )
         )
 
+        zip_source, zip_input_format = self._resolve_zip_source()
+
         input_format = self._resolve_input_format(data_path=data_path)
         try:
             with _literalize_errors_as_extension_errors():
@@ -724,6 +792,8 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
                     target_function=target_function,
                     parameter_names=parameter_names,
                     call_transform=call_transform,
+                    zip_source=zip_source,
+                    zip_input_format=zip_input_format,
                     per_element=per_element,
                     ref_case=ref_case,
                     consumable_refs=consumable_refs,
