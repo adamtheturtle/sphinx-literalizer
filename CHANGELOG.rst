@@ -4,6 +4,29 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.5.15.2``.
+- The ``literalizer-call`` directive gains ``:zip-file:`` and
+  ``:zip-input-format:`` options.  The data file's top-level elements
+  pair positionally with the generated calls and are exposed to
+  ``:call-transform:`` as ``$zipped``, rendered as a native literal --
+  useful for generating assertions from a parallel file of expected
+  results (e.g. ``:call-transform: assert $call == $zipped``).  This
+  follows upstream ``literalizer`` replacing ``zip_values`` with the
+  ``zip_source`` / ``zip_input_format`` pair.
+- The ``:call-transform:`` template now also substitutes ``$call`` (an
+  alias of the existing ``$0``) for the rendered call expression and
+  ``$index`` for the zero-based call position, following upstream
+  ``literalizer`` passing a ``CallContext`` to ``call_transform``
+  instead of a bare string.
+- ``CallsNotSupportedByLanguageError``, ``CallsNotSupportedByToolError``,
+  ``PerElementNotListError``, ``ZipSourceWithoutInputFormatError``, and
+  ``ZipValuesLengthMismatchError`` from ``literalizer`` are now surfaced
+  as Sphinx ``ExtensionError`` rather than an uncaught traceback.
+- The ``:heterogeneous-strategy:`` option now accepts ``record`` for
+  ``java`` and ``kotlin`` and ``tuple`` for ``rust``, and
+  ``:language-version:`` accepts ``jdk_16`` for ``java``, matching
+  upstream ``literalizer`` additions.
+
 2026.05.15
 ----------
 
