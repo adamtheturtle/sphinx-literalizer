@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.05.15
+----------
+
+
 
 - Bumped ``literalizer`` to ``2026.5.15``.
 - The ``:heterogeneous-strategy:`` option now accepts ``record`` for
