@@ -92,9 +92,10 @@ Directive options
 
 ``:language-version:`` (optional)
    Target language version.  Values are language-specific enum member
-   names in lowercase, e.g. ``py_3_12`` for Python, ``jdk_11`` for Java,
-   and ``ada_2022`` for Ada.  Each language currently exposes one
-   default version; unsupported values raise an error.
+   names in lowercase, e.g. ``py39`` for Python, ``jdk_11`` for Java,
+   and ``ada_2022`` for Ada.  Some languages expose more than one
+   version (e.g. ``v2003`` and ``v2008`` for Fortran); unsupported
+   values raise an error.
 
 ``:ref-case:`` (optional)
    Case conversion for reference markers in the input data.  Supported
@@ -446,6 +447,11 @@ Directive options
       Emit a minimal tagged ``enum`` in the preamble and wrap each
       heterogeneous value at the call site (e.g. ``Value::I32(1)``).
       Available for Rust.
+   ``record``
+      Emit a generated struct declaration in the preamble for each
+      record-shaped mapping plus a matching struct literal (e.g.
+      ``Record0{Name: "a", Items: []int{1}}``).  Available for Go and
+      Rust.
 
 ``:call-style:`` (optional)
    How ``literalizer-call`` renders function calls.  Each language

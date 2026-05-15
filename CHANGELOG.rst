@@ -4,6 +4,23 @@ Changelog
 Next
 ----
 
+
+- Bumped ``literalizer`` to ``2026.5.15``.
+- The ``:heterogeneous-strategy:`` option now accepts ``record`` for
+  ``go`` (previously only ``rust``).  Each record-shaped mapping
+  becomes a generated struct declaration plus a matching struct
+  literal, so a mapping whose values mix scalars and containers is
+  representable instead of raising.
+- The ``:language-version:`` option accepts ``v2003`` again for
+  ``fortran`` (alongside the default ``v2008``), matching upstream
+  ``literalizer`` re-introducing ``Fortran.VersionFormats.V2003``.
+- The ``:language-version:`` values for ``python`` are now ``py38``
+  and ``py39`` (previously ``py_3_12``), following upstream
+  ``literalizer``'s ``Python.VersionFormats`` change.
+- ``python`` output now carries a ``from __future__ import
+  annotations`` preamble (visible with ``:include-preamble:``),
+  following an upstream ``literalizer`` change.
+
 2026.05.14
 ----------
 

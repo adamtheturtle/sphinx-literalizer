@@ -534,7 +534,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :numeric-style: overloaded
            :string-format: double
            :trailing-comma: yes
-           :language-version: py_3_12
+           :language-version: py39
            :empty-dict-key: positional
            :heterogeneous-strategy: tagged_enum
            :default-set-element-type: String
