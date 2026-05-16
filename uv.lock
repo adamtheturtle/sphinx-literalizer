@@ -665,7 +665,7 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.5.15.2"
+version = "2026.5.16"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
@@ -676,9 +676,9 @@ dependencies = [
     { name = "tomlkit" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/59/8d/e865872f7b887a9b2829a697466fbd0abb493a93dd0d85e0647509e25105/literalizer-2026.5.15.2.tar.gz", hash = "sha256:bb46ad5f58eecc69e1ace1a492292bbffa62025f132313b52709e6fb5af06821", size = 2551380, upload-time = "2026-05-15T21:00:06.037Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bc/1f/ce29e69c706ef1446eadbf6db4a89c6971c3bf7ca7ffa837324634bfe33c/literalizer-2026.5.16.tar.gz", hash = "sha256:0ab2d8999635fffca36506189750195ccc60bf1b6a212770918e73035b0d80a8", size = 2619055, upload-time = "2026-05-16T12:11:12.996Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/19/3a/2d0658898d631da96be9fb843c41602663ad966fec835d533e266f7e1e3b/literalizer-2026.5.15.2-py3-none-any.whl", hash = "sha256:f601d93befe6714aec0779621f0b1f3d0e3eb93bb5146136658c97f2b6f044af", size = 601085, upload-time = "2026-05-15T21:00:03.941Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/15/f7646adc5f8bb6e76eed3ca9db7ea4634cfc3f14d9e463c78bd47f2a07f3/literalizer-2026.5.16-py3-none-any.whl", hash = "sha256:05dc83af29aa93ab85afcd72210aea66188d384ae1e9c37168e609ff51a6484b", size = 617737, upload-time = "2026-05-16T12:11:10.364Z" },
 ]
 
 [[package]]
@@ -1884,7 +1884,7 @@ requires-dist = [
     { name = "docutils" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
     { name = "interrogate", marker = "extra == 'dev'", specifier = "==1.7.0" },
-    { name = "literalizer", specifier = "==2026.5.15.2" },
+    { name = "literalizer", specifier = "==2026.5.16" },
     { name = "mypy", extras = ["faster-cache"], marker = "extra == 'dev'", specifier = "==2.1.0" },
     { name = "mypy-strict-kwargs", marker = "extra == 'dev'", specifier = "==2026.1.12" },
     { name = "prek", marker = "extra == 'dev'", specifier = "==0.4.0" },

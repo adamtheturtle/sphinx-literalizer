@@ -33,6 +33,8 @@ from literalizer.exceptions import (
     CallArgNotSupportedError,
     CallsNotSupportedByLanguageError,
     CallsNotSupportedByToolError,
+    CommentSourceLengthMismatchError,
+    CommentSourceMultilineError,
     DottedCallTargetNotSupportedError,
     ParameterCountMismatchError,
     PerElementNotListError,
@@ -251,6 +253,8 @@ _USER_FACING_LITERALIZER_ERRORS: tuple[type[Exception], ...] = (
     CallArgNotSupportedError,
     CallsNotSupportedByLanguageError,
     CallsNotSupportedByToolError,
+    CommentSourceLengthMismatchError,
+    CommentSourceMultilineError,
     DottedCallTargetNotSupportedError,
     PerElementNotListError,
     UnrepresentableInputError,
@@ -654,6 +658,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :call-transform: print($call)  # $call ($0), $index, $zipped
            :zip-file: expected.json
            :zip-input-format: json
+           :comment-file: comments.txt
            :input-format: json
            :indent: 4
            :indent-char: spaces
@@ -673,6 +678,12 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
     ``$index`` for the zero-based call position, and ``$zipped`` for the
     matching ``:zip-file:`` element rendered as a native literal (empty
     when no ``:zip-file:`` is given).
+
+    ``:comment-file:`` is a text file with one line per generated call;
+    each non-blank line is emitted as a trailing source comment after
+    that call (using the target language's comment syntax), and a blank
+    line emits no comment.  The line count must match the number of
+    generated calls.
     """
 
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
@@ -686,6 +697,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             argument=x,
             values=("json", "json5", "yaml", "toml"),
         ),
+        "comment-file": directives.unchanged_required,
         "consumable-refs": directives.unchanged,
         "omit-code": directives.flag,
         "variable-name": directives.unchanged,
@@ -736,6 +748,22 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         )
         return zip_path.read_text(encoding="utf-8"), zip_input_format
 
+    def _resolve_comment_source(self) -> list[str] | None:
+        """Read the optional ``:comment-file:`` as one comment per call.
+
+        Each line becomes one ``comment_source`` entry, paired
+        positionally with a generated call; a blank line emits no
+        comment for that call.  A trailing newline does not add an
+        extra (empty) entry.
+        """
+        comment_file_value: str | None = self.options.get("comment-file")
+        if comment_file_value is None:
+            return None
+        env = self.state.document.settings.env
+        comment_path = (Path(env.srcdir) / comment_file_value).resolve()
+        env.note_dependency(str(object=comment_path))
+        return comment_path.read_text(encoding="utf-8").splitlines()
+
     def run(self) -> list[nodes.Node]:
         """Read the data file and produce function call expressions."""
         env = self.state.document.settings.env
@@ -781,6 +809,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         )
 
         zip_source, zip_input_format = self._resolve_zip_source()
+        comment_source = self._resolve_comment_source()
 
         input_format = self._resolve_input_format(data_path=data_path)
         try:
@@ -794,6 +823,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
                     call_transform=call_transform,
                     zip_source=zip_source,
                     zip_input_format=zip_input_format,
+                    comment_source=comment_source,
                     per_element=per_element,
                     ref_case=ref_case,
                     consumable_refs=consumable_refs,
