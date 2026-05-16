@@ -3,6 +3,7 @@ Changelog
 Dhall
 Fortran
 Initializer
+Jinja
 Jsonnet
 Lua
 MATLAB
@@ -32,5 +33,6 @@ datetimes
 dicts
 literalizer
 structs
+unrepresentable
 validator
 whitespace

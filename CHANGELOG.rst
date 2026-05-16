@@ -7,6 +7,25 @@ Next
 - Two ``:record-shape-names:`` entries for the same set of keys (in any
   order) now raise a clean ``ExtensionError`` instead of silently
   keeping only the last name.
+- ``:heterogeneous-strategy:`` now accepts ``auto``.  It renders the
+  input with its natural representation first -- so homogeneous and
+  genuinely map-shaped data keep their native form -- and only if that
+  fails because the data is heterogeneous does it retry with each
+  strategy the target language supports, in the order given by the new
+  ``literalizer_heterogeneous_strategy_precedence`` configuration value
+  (default: ``record``, ``tuple``, ``tagged_enum``, ``object_variant``,
+  ``variant``, ``union_type``, ``interface``).  This removes the need to
+  pick a single per-project or per-input strategy.
+- Both directives gain a ``:skip-if-unrepresentable:`` flag.  When the
+  input cannot be represented in the target language (including after
+  ``auto`` exhausts its precedence), the directive emits no node instead
+  of failing the build, so a per-language loop can skip the languages a
+  given input does not fit without leaking data-shape concerns into
+  prose.
+- A ``HeterogeneousCollectionError`` raised by a concrete (non-``auto``)
+  ``:heterogeneous-strategy:`` that cannot represent the input is now
+  surfaced as a clean ``ExtensionError`` rather than an uncaught
+  traceback.
 
 2026.05.16.1
 ------------

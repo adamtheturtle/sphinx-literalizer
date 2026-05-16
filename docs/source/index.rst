@@ -458,6 +458,15 @@ Directive options
    How to render scalar collections whose elements have more than one
    language-level type.  Supported values:
 
+   ``auto``
+      Render the input with its natural representation first, and only
+      if that fails because the data is heterogeneous, retry with each
+      strategy the target language supports in the order given by the
+      ``literalizer_heterogeneous_strategy_precedence`` configuration
+      value.
+      Homogeneous and genuinely map-shaped data keep their native form,
+      so a single ``auto`` works across a mix of inputs without picking
+      a strategy per project or per file.
    ``error``
       Raise an error when a collection mixes scalar types (default for
       all languages).
@@ -479,6 +488,14 @@ Directive options
       Scala, and TypeScript.
 
    See :doc:`heterogeneous-strategies` for the full set of strategies (including ``tuple``, ``object_variant``, ``union_type``, ``interface``, and ``variant``), worked examples, and the per-language support matrix.
+
+``:skip-if-unrepresentable:`` (optional, flag)
+   Emit no node at all -- instead of failing the build -- when the
+   input cannot be represented in the target language, including after
+   ``:heterogeneous-strategy: auto`` exhausts its precedence.  This lets
+   a loop that renders the same data in several languages skip the
+   languages a given input does not fit, without moving data-shape
+   knowledge into the surrounding prose or template.
 
 ``:call-style:`` (optional)
    How ``literalizer-call`` renders function calls.  Each language
@@ -642,8 +659,29 @@ from the ``literalizer`` directive: ``:language:``, ``:input-format:``,
 ``:include-preamble:``, ``:language-version:``, ``:ref-case:``,
 ``:ref-key:``, ``:module-name:``, ``:record-struct-name-prefix:``,
 ``:record-shape-names:``, ``:wrap-in-file:``,
-``:collection-layout:``, and all format options (e.g.
+``:collection-layout:``, ``:heterogeneous-strategy:``,
+``:skip-if-unrepresentable:``, and all format options (e.g.
 ``:string-format:``, ``:trailing-comma:``, etc.).
+
+
+Configuration
+~~~~~~~~~~~~~
+
+``literalizer_heterogeneous_strategy_precedence``
+   The order in which ``:heterogeneous-strategy: auto`` tries
+   representational strategies after the natural representation fails.
+   It defaults to ``["record", "tuple", "tagged_enum",
+   "object_variant", "variant", "union_type", "interface"]`` and is
+   restricted, per directive, to the strategies the target language
+   exposes (``error`` is never a fallback).  Set it in :file:`conf.py`
+   to change which representation ``auto`` prefers, for example to
+   prefer a tagged union over a record::
+
+      literalizer_heterogeneous_strategy_precedence = [
+          "tagged_enum",
+          "record",
+          "tuple",
+      ]
 
 
 Reference

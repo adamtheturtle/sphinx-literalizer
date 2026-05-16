@@ -28,6 +28,11 @@ with ``data.json`` containing ``[1, "hello"]`` raises an ``ExtensionError`` desc
 Choosing a strategy
 -------------------
 
+``auto``
+   Let |project| choose.
+   The input is rendered with its natural representation first, so homogeneous and genuinely map-shaped data keep their native form, and a strategy is only applied if that natural rendering fails because the data is heterogeneous.
+   See `Letting the directive choose: auto`_ below.
+
 ``error``
    Keep strict typing.
    Appropriate when mixed-scalar collections in the source data are a mistake you want surfaced rather than rendered.
@@ -47,6 +52,54 @@ Choosing a strategy
 
 Strategies are not mutually exclusive across data shapes: the same language may pick ``record`` for a mapping and one of the sum-type strategies for a list.
 Each language exposes only the subset listed in `Per-language support`_ below.
+
+Letting the directive choose: ``auto``
+--------------------------------------
+
+A realistic project rarely has one strategy that fits every input.
+A record-shaped dict needs ``record``; a genuinely map-shaped dict must stay a map; a list of mixed scalars needs a sum type or ``tuple``.
+``:heterogeneous-strategy: auto`` removes that per-input decision.
+
+``auto`` renders the input with its **natural representation first**.
+If that succeeds -- as it does for homogeneous data and for genuinely map-shaped mappings -- the native output is used unchanged, so ``auto`` never promotes a plain map to a generated record.
+Only if the natural rendering fails because the data is heterogeneous does ``auto`` retry, trying each strategy the target language supports in a configured precedence and using the first that represents the data.
+
+The precedence is the ``literalizer_heterogeneous_strategy_precedence`` configuration value (see :doc:`index`), restricted per directive to the strategies the target language exposes.
+It defaults to ``record``, ``tuple``, ``tagged_enum``, ``object_variant``, ``variant``, ``union_type``, ``interface``; ``error`` is never a fallback because it is the failure ``auto`` is recovering from.
+
+For example, with ``data.json`` containing ``[{"id": 1, "desc": "x", "blocks": [1, 2]}]``:
+
+.. code-block:: rst
+
+   .. literalizer:: data.json
+      :language: rust
+      :heterogeneous-strategy: auto
+
+the natural Rust map rendering fails (a ``HashMap`` cannot hold mixed value types), so ``auto`` falls back to ``record`` and renders:
+
+.. code-block:: rust
+
+   Record0 { id: 1, desc: "x", blocks: vec![1, 2] },
+
+The same directive with a homogeneous or map-shaped ``data.json`` emits the native ``HashMap`` instead, with no fallback applied.
+
+Skipping unrepresentable inputs
+-------------------------------
+
+Some inputs cannot be represented in some languages even with ``auto`` -- for instance a shape no strategy the language exposes can model.
+By default this fails the build, which is correct when every language must render every input.
+
+When a single canonical input is rendered across several languages (typically a Jinja loop over a language list), failing the whole build forces the data-shape knowledge -- "skip Rust for this one" -- into the template or prose.
+The ``:skip-if-unrepresentable:`` flag (on both directives) keeps that knowledge in the directive: when the input cannot be represented in the target language, including after ``auto`` exhausts its precedence, the directive emits no node instead of raising.
+
+.. code-block:: rst
+
+   .. literalizer:: data.json
+      :language: rust
+      :heterogeneous-strategy: auto
+      :skip-if-unrepresentable:
+
+Without ``:skip-if-unrepresentable:`` the same unrepresentable input raises an ``ExtensionError`` and fails the build, as before.
 
 Worked examples
 ---------------

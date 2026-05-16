@@ -24,6 +24,7 @@ from literalizer import (
     InputFormat,
     Language,
     LanguageCls,
+    LiteralizeResult,
     NewVariable,
     VariableForm,
     literalize,
@@ -36,6 +37,7 @@ from literalizer.exceptions import (
     CommentSourceLengthMismatchError,
     CommentSourceMultilineError,
     DottedCallTargetNotSupportedError,
+    HeterogeneousCollectionError,
     InvalidRecordNameError,
     ParameterCountMismatchError,
     PerElementNotListError,
@@ -228,6 +230,38 @@ def _make_format_validator(
     return validator
 
 
+# Sentinel value for ``:heterogeneous-strategy:`` that asks the directive
+# to pick a strategy itself instead of naming a literalizer enum member.
+_AUTO_STRATEGY = "auto"
+
+# Order in which ``:heterogeneous-strategy: auto`` tries representational
+# strategies *after* the natural representation fails.  Restricted per
+# directive to the strategies the target language actually exposes;
+# overridable via the ``literalizer_heterogeneous_strategy_precedence``
+# config value.  ``error`` is never a fallback -- it is the failure that
+# ``auto`` is recovering from.
+_DEFAULT_HETEROGENEOUS_STRATEGY_PRECEDENCE: tuple[str, ...] = (
+    "record",
+    "tuple",
+    "tagged_enum",
+    "object_variant",
+    "variant",
+    "union_type",
+    "interface",
+)
+
+
+def _heterogeneous_strategy_validator(x: str) -> str:
+    """Validate ``:heterogeneous-strategy:``, also accepting ``auto``."""
+    return directives.choice(
+        argument=x,
+        values=(
+            _AUTO_STRATEGY,
+            *_all_format_values()["heterogeneous-strategy"],
+        ),
+    )
+
+
 _COMMON_OPTIONS: dict[str, Callable[[str], Any]] = {
     "language": lambda x: directives.choice(
         argument=x,
@@ -248,6 +282,9 @@ _COMMON_OPTIONS: dict[str, Callable[[str], Any]] = {
         option_name: _make_format_validator(option_name=option_name)
         for option_name in _FORMAT_OPTION_GETTERS
     },
+    # ``auto`` is not a literalizer enum member, so this option needs a
+    # validator that accepts it alongside the per-language values.
+    "heterogeneous-strategy": _heterogeneous_strategy_validator,
     "default-set-element-type": directives.unchanged,
     "default-sequence-element-type": directives.unchanged,
     "default-dict-key-type": directives.unchanged,
@@ -256,6 +293,7 @@ _COMMON_OPTIONS: dict[str, Callable[[str], Any]] = {
     "module-name": directives.unchanged,
     "record-struct-name-prefix": directives.unchanged_required,
     "record-shape-names": directives.unchanged_required,
+    "skip-if-unrepresentable": directives.flag,
     "wrap-in-file": directives.flag,
     "ref-case": lambda x: directives.choice(
         argument=x,
@@ -293,7 +331,10 @@ _EXTENSION_TO_INPUT_FORMAT: dict[str, InputFormat] = {
 # Literalizer exceptions that signal a directive option combination the
 # selected language cannot represent.  Surfacing these as a clean
 # ``ExtensionError`` (rather than a traceback) lets the build report the
-# offending directive and continue under ``-W``.
+# offending directive and continue under ``-W``.  This includes
+# ``HeterogeneousCollectionError`` so a record-shaped or mixed-scalar
+# input rendered with a concrete (non-``auto``) strategy that cannot
+# represent it fails loudly rather than with a traceback.
 _USER_FACING_LITERALIZER_ERRORS: tuple[type[Exception], ...] = (
     CallArgNotSupportedError,
     CallsNotSupportedByLanguageError,
@@ -301,6 +342,7 @@ _USER_FACING_LITERALIZER_ERRORS: tuple[type[Exception], ...] = (
     CommentSourceLengthMismatchError,
     CommentSourceMultilineError,
     DottedCallTargetNotSupportedError,
+    HeterogeneousCollectionError,
     InvalidRecordNameError,
     PerElementNotListError,
     UnrepresentableInputError,
@@ -336,11 +378,23 @@ class _BaseLiteralizerDirective(SphinxDirective):
         self,
         language_name: str,
         constructor: partial[Language],
+        *,
+        heterogeneous_strategy_value: str | None,
     ) -> partial[Language]:
-        """Apply all format/enum options."""
+        """Apply all format/enum options.
+
+        ``heterogeneous-strategy`` is taken from
+        *heterogeneous_strategy_value* rather than the directive options
+        so the caller can vary it per attempt for ``auto``; the resolved
+        value is never the ``auto`` sentinel.
+        """
         all_formats = _all_formats()
         for option_name in _FORMAT_OPTION_GETTERS:
-            if (value := self.options.get(option_name)) is not None:
+            if option_name == "heterogeneous-strategy":
+                value = heterogeneous_strategy_value
+            else:
+                value = self.options.get(option_name)
+            if value is not None:
                 param_name = option_name.replace("-", "_")
                 constructor = partial(
                     constructor,
@@ -408,8 +462,16 @@ class _BaseLiteralizerDirective(SphinxDirective):
         self,
         language_name: str,
         language_cls: LanguageCls,
+        *,
+        heterogeneous_strategy_value: str | None,
     ) -> Language:
-        """Build a Language instance from directive options."""
+        """Build a Language instance from directive options.
+
+        *heterogeneous_strategy_value* is the concrete strategy name (or
+        ``None`` for the language default) to apply for this build; it is
+        kept separate from the directive options so ``auto`` can rebuild
+        the language with a different strategy per attempt.
+        """
         constructor = partial(language_cls)
 
         indent_count = self.options.get("indent")
@@ -425,6 +487,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
         constructor = self._apply_format_options(
             language_name=language_name,
             constructor=constructor,
+            heterogeneous_strategy_value=heterogeneous_strategy_value,
         )
         constructor = self._apply_default_type_options(
             language_name=language_name,
@@ -599,6 +662,84 @@ class _BaseLiteralizerDirective(SphinxDirective):
         )
         return CollectionLayout[collection_layout_value.upper()]
 
+    def _auto_precedence(self, *, language_cls: LanguageCls) -> list[str]:
+        """Strategies ``auto`` falls back through, most preferred first.
+
+        The configured precedence
+        (``literalizer_heterogeneous_strategy_precedence``) restricted to
+        the strategies the target language exposes.  ``error`` is never
+        included -- it is the failure ``auto`` recovers from.
+        """
+        supported = {
+            member.name.lower()
+            for member in language_cls.HeterogeneousStrategies
+        }
+        precedence: list[str] = (
+            self.env.config.literalizer_heterogeneous_strategy_precedence
+        )
+        return [
+            name
+            for name in precedence
+            if name in supported and name != "error"
+        ]
+
+    def _render_with_strategy(
+        self,
+        *,
+        language_name: str,
+        language_cls: LanguageCls,
+        render: Callable[[Language], LiteralizeResult],
+    ) -> tuple[LiteralizeResult, Language] | None:
+        """Build the language and render, honoring ``auto`` and
+        ``:skip-if-unrepresentable:``.
+
+        For ``:heterogeneous-strategy: auto`` the natural representation
+        is tried first -- so homogeneous and genuinely map-shaped data
+        keep their native output -- then each strategy from
+        :meth:`_auto_precedence` in turn until one represents the data.
+
+        Returns ``(result, language)`` where *result* is what *render*
+        produced, or ``None`` when the input cannot be represented in the
+        target language and ``:skip-if-unrepresentable:`` is set (the
+        caller then emits no node).
+        """
+        hs_value: str | None = self.options.get("heterogeneous-strategy")
+        skip = "skip-if-unrepresentable" in self.options
+
+        if hs_value == _AUTO_STRATEGY:
+            attempts: list[str | None] = [
+                None,
+                *self._auto_precedence(language_cls=language_cls),
+            ]
+        else:
+            attempts = [hs_value]
+
+        for index, strategy_value in enumerate(iterable=attempts):
+            is_last = index == len(attempts) - 1
+            language_spec = self._build_language(
+                language_name=language_name,
+                language_cls=language_cls,
+                heterogeneous_strategy_value=strategy_value,
+            )
+            try:
+                return render(language_spec), language_spec
+            except HeterogeneousCollectionError as exc:
+                if hs_value == _AUTO_STRATEGY and not is_last:
+                    continue
+                if skip:
+                    return None
+                raise ExtensionError(message=str(object=exc)) from exc
+            except UnrepresentableInputError as exc:
+                if skip:
+                    return None
+                raise ExtensionError(message=str(object=exc)) from exc
+            except _USER_FACING_LITERALIZER_ERRORS as exc:
+                raise ExtensionError(message=str(object=exc)) from exc
+        # ``attempts`` is always non-empty, so the loop always returns or
+        # raises; this is unreachable and only satisfies the type checker.
+        msg = "no heterogeneous strategy produced a result"
+        raise ExtensionError(message=msg)
+
 
 @beartype
 class LiteralizerDirective(_BaseLiteralizerDirective):
@@ -636,7 +777,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :trailing-comma: yes
            :language-version: py39
            :empty-dict-key: positional
-           :heterogeneous-strategy: tagged_enum
+           :heterogeneous-strategy: auto
            :default-set-element-type: String
            :default-sequence-element-type: String
            :default-dict-key-type: String
@@ -646,10 +787,27 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :module-name: MyModule
            :record-struct-name-prefix: Record
            :record-shape-names: x,y=Point; a,b,c=Vec3
+           :skip-if-unrepresentable:
            :wrap-in-file:
            :ref-case: camel
            :ref-key: $reference
            :collection-layout: multiline
+
+    ``:heterogeneous-strategy: auto`` renders the input with its natural
+    representation and, only if that raises because the data is
+    heterogeneous, retries with each strategy the target language
+    supports in the order configured by the
+    ``literalizer_heterogeneous_strategy_precedence`` config value
+    (default: ``record``, ``tuple``, ``tagged_enum``, ``object_variant``,
+    ``variant``, ``union_type``, ``interface``).  This keeps homogeneous
+    and genuinely map-shaped data in its native form while still
+    representing record-shaped or mixed-scalar inputs.
+
+    ``:skip-if-unrepresentable:`` makes the directive emit no node at all
+    (instead of failing the build) when the input cannot be represented
+    in the target language -- including after ``auto`` exhausts its
+    precedence -- so a per-language loop can skip the languages a given
+    input does not fit without leaking data-shape concerns into prose.
     """
 
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
@@ -670,10 +828,6 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
 
         language_name: str = self.options["language"]
         language_cls = _language_types()[language_name]
-        language_spec = self._build_language(
-            language_name=language_name,
-            language_cls=language_cls,
-        )
 
         pre_indent_level: int = self.options.get("pre-indent-level", 0)
         include_delimiters: bool = "include-delimiters" in self.options
@@ -688,9 +842,12 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         collection_layout = self._resolve_collection_layout()
 
         input_format = self._resolve_input_format(data_path=data_path)
-        with _literalize_errors_as_extension_errors():
-            result = literalize(
-                source=data_path.read_text(encoding="utf-8"),
+        source = data_path.read_text(encoding="utf-8")
+
+        def _do(language_spec: Language) -> LiteralizeResult:
+            """Render *source* with the built language."""
+            return literalize(
+                source=source,
                 input_format=input_format,
                 language=language_spec,
                 pre_indent_level=pre_indent_level,
@@ -701,6 +858,15 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
                 ref_key=ref_key,
                 collection_layout=collection_layout,
             )
+
+        rendered = self._render_with_strategy(
+            language_name=language_name,
+            language_cls=language_cls,
+            render=_do,
+        )
+        if rendered is None:
+            return []
+        result, _ = rendered
         parts: list[str] = []
         if include_preamble and result.preamble:
             parts.append("\n".join(result.preamble))
@@ -748,6 +914,8 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :record-shape-names: x,y=Point; a,b,c=Vec3
            :consumable-refs: my_var,other_var
            :collection-layout: multiline
+           :heterogeneous-strategy: auto
+           :skip-if-unrepresentable:
            :variable-name: my_data
            :existing-variable:
            :modifiers: public,static
@@ -852,10 +1020,6 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
         language_name: str = self.options["language"]
         language_cls = _language_types()[language_name]
-        language_spec = self._build_language(
-            language_name=language_name,
-            language_cls=language_cls,
-        )
 
         pre_indent_level: int = self.options.get("pre-indent-level", 0)
         include_preamble: bool = "include-preamble" in self.options
@@ -891,31 +1055,44 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         comment_source = self._resolve_comment_source()
 
         input_format = self._resolve_input_format(data_path=data_path)
+        source = data_path.read_text(encoding="utf-8")
+
+        def _do(language_spec: Language) -> LiteralizeResult:
+            """Render the calls for *source* with the built language."""
+            return literalize_call(
+                source=source,
+                input_format=input_format,
+                language=language_spec,
+                target_function=target_function,
+                parameter_names=parameter_names,
+                call_transform=call_transform,
+                zip_source=zip_source,
+                zip_input_format=zip_input_format,
+                comment_source=comment_source,
+                per_element=per_element,
+                ref_case=ref_case,
+                consumable_refs=consumable_refs,
+                ref_key=ref_key,
+                collection_layout=collection_layout,
+                variable_form=variable_form,
+            )
+
         try:
-            with _literalize_errors_as_extension_errors():
-                result = literalize_call(
-                    source=data_path.read_text(encoding="utf-8"),
-                    input_format=input_format,
-                    language=language_spec,
-                    target_function=target_function,
-                    parameter_names=parameter_names,
-                    call_transform=call_transform,
-                    zip_source=zip_source,
-                    zip_input_format=zip_input_format,
-                    comment_source=comment_source,
-                    per_element=per_element,
-                    ref_case=ref_case,
-                    consumable_refs=consumable_refs,
-                    ref_key=ref_key,
-                    collection_layout=collection_layout,
-                    variable_form=variable_form,
-                )
+            rendered = self._render_with_strategy(
+                language_name=language_name,
+                language_cls=language_cls,
+                render=_do,
+            )
         except ParameterCountMismatchError as exc:
             msg = (
                 f"':parameter-names:' has {len(parameter_names)} entries "
                 f"but the data provides a different number of values: {exc}"
             )
             raise ExtensionError(message=msg) from exc
+
+        if rendered is None:
+            return []
+        result, language_spec = rendered
 
         code = result.code
         if pre_indent_level > 0:
@@ -945,6 +1122,12 @@ def setup(app: Sphinx) -> ExtensionMetadata:
     app.add_directive(
         name="literalizer-call",
         cls=LiteralizerCallDirective,
+    )
+    app.add_config_value(
+        name="literalizer_heterogeneous_strategy_precedence",
+        default=list(_DEFAULT_HETEROGENEOUS_STRATEGY_PRECEDENCE),
+        rebuild="env",
+        types=frozenset({list, tuple}),
     )
     return {
         "version": version(distribution_name="sphinx-literalizer"),
