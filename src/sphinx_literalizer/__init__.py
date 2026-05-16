@@ -238,8 +238,8 @@ _AUTO_STRATEGY = "auto"
 # strategies *after* the natural representation fails.  Restricted per
 # directive to the strategies the target language actually exposes;
 # overridable via the ``literalizer_heterogeneous_strategy_precedence``
-# config value.  ``error`` is never a fallback -- it is the failure that
-# ``auto`` is recovering from.
+# configuration value.  ``error`` is never a fallback -- it is the
+# failure that ``auto`` is recovering from.
 _DEFAULT_HETEROGENEOUS_STRATEGY_PRECEDENCE: tuple[str, ...] = (
     "record",
     "tuple",
@@ -703,42 +703,46 @@ class _BaseLiteralizerDirective(SphinxDirective):
         target language and ``:skip-if-unrepresentable:`` is set (the
         caller then emits no node).
         """
-        hs_value: str | None = self.options.get("heterogeneous-strategy")
         skip = "skip-if-unrepresentable" in self.options
 
-        if hs_value == _AUTO_STRATEGY:
+        if self.options.get("heterogeneous-strategy") == _AUTO_STRATEGY:
             attempts: list[str | None] = [
                 None,
                 *self._auto_precedence(language_cls=language_cls),
             ]
         else:
-            attempts = [hs_value]
+            attempts = [self.options.get("heterogeneous-strategy")]
 
-        for index, strategy_value in enumerate(iterable=attempts):
-            is_last = index == len(attempts) - 1
-            language_spec = self._build_language(
+        def _build(strategy_value: str | None) -> Language:
+            """Build the language for one attempt's strategy."""
+            return self._build_language(
                 language_name=language_name,
                 language_cls=language_cls,
                 heterogeneous_strategy_value=strategy_value,
             )
-            try:
-                return render(language_spec), language_spec
-            except HeterogeneousCollectionError as exc:
-                if hs_value == _AUTO_STRATEGY and not is_last:
+
+        with _literalize_errors_as_extension_errors():
+            for strategy_value in attempts:
+                try:
+                    language_spec = _build(strategy_value=strategy_value)
+                    return render(language_spec), language_spec
+                except UnrepresentableInputError:
+                    # No heterogeneous strategy can fix a shape-level
+                    # rejection, so do not fall back; skip or surface it.
+                    if skip:
+                        return None
+                    raise
+                except HeterogeneousCollectionError:
+                    # An ``auto`` fallback (or the sole attempt): move on
+                    # to the next strategy, if any.
                     continue
-                if skip:
-                    return None
-                raise ExtensionError(message=str(object=exc)) from exc
-            except UnrepresentableInputError as exc:
-                if skip:
-                    return None
-                raise ExtensionError(message=str(object=exc)) from exc
-            except _USER_FACING_LITERALIZER_ERRORS as exc:
-                raise ExtensionError(message=str(object=exc)) from exc
-        # ``attempts`` is always non-empty, so the loop always returns or
-        # raises; this is unreachable and only satisfies the type checker.
-        msg = "no heterogeneous strategy produced a result"
-        raise ExtensionError(message=msg)
+            # Every attempt raised ``HeterogeneousCollectionError``.
+            if skip:
+                return None
+            # Re-run the last attempt so its error propagates to the
+            # surrounding converter as a clean ``ExtensionError``.
+            language_spec = _build(strategy_value=attempts[-1])
+            return render(language_spec), language_spec
 
 
 @beartype
@@ -797,7 +801,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
     representation and, only if that raises because the data is
     heterogeneous, retries with each strategy the target language
     supports in the order configured by the
-    ``literalizer_heterogeneous_strategy_precedence`` config value
+    ``literalizer_heterogeneous_strategy_precedence`` configuration value
     (default: ``record``, ``tuple``, ``tagged_enum``, ``object_variant``,
     ``variant``, ``union_type``, ``interface``).  This keeps homogeneous
     and genuinely map-shaped data in its native form while still

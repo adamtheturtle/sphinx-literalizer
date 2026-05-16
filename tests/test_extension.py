@@ -7190,3 +7190,112 @@ def test_heterogeneous_strategy_auto_literalizer_call_rust(
     (literal_block,) = doctree.findall(condition=nodes.literal_block)
     assert literal_block.astext() == "add(1, 2);\nadd(3, 4);"
     app.cleanup()
+
+
+def test_skip_if_unrepresentable_unrepresentable_input_csharp(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """:skip-if-unrepresentable: also covers shape-level rejections
+    (UnrepresentableInputError), not just heterogeneous collections.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text(data="1: a\n2: b\n")
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.yaml
+           :language: csharp
+           :skip-if-unrepresentable:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    assert list(doctree.findall(condition=nodes.literal_block)) == []
+    app.cleanup()
+
+
+def test_unrepresentable_input_without_skip_raises_csharp(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A shape-level rejection without :skip-if-unrepresentable: fails
+    the build with a clean ExtensionError.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text(data="1: a\n2: b\n")
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.yaml
+           :language: csharp
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(expected_exception=ExtensionError):
+        app.build()
+
+
+def test_skip_if_unrepresentable_literalizer_call_csharp(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """:skip-if-unrepresentable: makes literalizer-call emit no node
+    when the call data cannot be represented in the language.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text(data="- {1: a, 2: b}\n")
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.yaml
+           :language: csharp
+           :target-function: f
+           :parameter-names: m
+           :per-element:
+           :skip-if-unrepresentable:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    assert list(doctree.findall(condition=nodes.literal_block)) == []
+    app.cleanup()
