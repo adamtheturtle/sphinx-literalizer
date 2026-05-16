@@ -6578,6 +6578,49 @@ def test_record_shape_names_empty_name_error(
         app.build()
 
 
+def test_record_shape_names_duplicate_key_set_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Two :record-shape-names: entries for the same key set (in any
+    key order) raise a clear ExtensionError instead of silently
+    keeping only the last name.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"x": 1, "y": 2}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: java
+           :heterogeneous-strategy: record
+           :record-shape-names: x,y=Point; y,x=Other
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=(
+            r"':record-shape-names:' has multiple entries for the key "
+            r"set \{x, y\}\."
+        ),
+    ):
+        app.build()
+
+
 def test_record_shape_names_unsupported_language_error(
     *,
     make_app: Callable[..., SphinxTestApp],

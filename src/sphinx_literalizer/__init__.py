@@ -202,6 +202,13 @@ def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
                 f"least one key and a non-empty name."
             )
             raise ExtensionError(message=msg)
+        if keys in result:
+            sorted_keys = ", ".join(sorted(keys))
+            msg = (
+                f"':record-shape-names:' has multiple entries for the "
+                f"key set {{{sorted_keys}}}."
+            )
+            raise ExtensionError(message=msg)
         result[keys] = name
     return result
 
