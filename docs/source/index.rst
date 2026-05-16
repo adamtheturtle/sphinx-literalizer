@@ -478,6 +478,8 @@ Directive options
       ``std::make_tuple(...)``).  Available for C++, Kotlin, Rust,
       Scala, and TypeScript.
 
+   See :doc:`heterogeneous-strategies` for the full set of strategies (including ``tuple``, ``object_variant``, ``union_type``, ``interface``, and ``variant``), worked examples, and the per-language support matrix.
+
 ``:call-style:`` (optional)
    How ``literalizer-call`` renders function calls.  Each language
    offers its own set of call styles; using a value a language does not
@@ -650,6 +652,7 @@ Reference
 .. toctree::
    :maxdepth: 3
 
+   heterogeneous-strategies
    api-reference
    release-process
    changelog

@@ -44,6 +44,7 @@ Next
 - The ``:heterogeneous-strategy:`` option now accepts ``tuple`` for
   ``cpp``, ``kotlin``, ``scala``, and ``typescript``, matching upstream
   ``literalizer`` additions.
+  See :doc:`heterogeneous-strategies` for the full strategy set, worked examples, and the per-language support matrix; future strategy changes are summarized here and detailed there.
 
 2026.05.16
 ----------
