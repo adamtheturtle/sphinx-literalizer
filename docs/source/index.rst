@@ -600,6 +600,15 @@ For positional-call languages like Go, the same data renders as:
    ``:zip-file:``.  Defaults to the format inferred from the
    ``:zip-file:`` extension.
 
+``:comment-file:`` (optional)
+   A text file with one line per generated call.  Each non-blank line
+   is emitted as a trailing source comment after the matching call,
+   using the target language's comment syntax, and a blank line emits
+   no comment for that call.  The number of lines must equal the
+   number of generated calls.  Unlike ``:call-transform:``, the
+   comment is placed after the statement terminator, so a comment can
+   be attached without commenting out the terminator.
+
 The ``literalizer-call`` directive also supports these shared options
 from the ``literalizer`` directive: ``:language:``, ``:input-format:``,
 ``:pre-indent-level:``, ``:indent:``, ``:indent-char:``,

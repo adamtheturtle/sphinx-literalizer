@@ -4,6 +4,24 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.5.16``.
+- The ``literalizer-call`` directive gains a ``:comment-file:`` option:
+  a text file with one line per generated call whose non-blank lines
+  are emitted as trailing source comments after the matching call
+  (using the target language's comment syntax), with a blank line
+  emitting no comment.  This follows upstream ``literalizer`` adding
+  the ``comment_source`` argument to ``literalize_call``, which places
+  the comment after the statement terminator -- something a
+  ``:call-transform:`` cannot do without commenting out the
+  terminator.
+- ``CommentSourceLengthMismatchError`` (the ``:comment-file:`` line
+  count not matching the number of generated calls) and
+  ``CommentSourceMultilineError`` from ``literalizer`` are now surfaced
+  as a Sphinx ``ExtensionError`` rather than an uncaught traceback.
+- The ``:heterogeneous-strategy:`` option now accepts ``tuple`` for
+  ``cpp``, ``kotlin``, ``scala``, and ``typescript``, matching upstream
+  ``literalizer`` additions.
+
 2026.05.16
 ----------
 

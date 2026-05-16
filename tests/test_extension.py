@@ -4706,6 +4706,115 @@ def test_literalizer_call_zip_file(
     assert content_html == expected_html
 
 
+def test_literalizer_call_comment_file(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """:comment-file: emits one trailing comment per generated call,
+    using the target language's comment syntax, with a blank line
+    emitting no comment for that call.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[True, 42, "hello"], [False, 99, "world"]]),
+    )
+    (source_directory / "comments.txt").write_text(data="first case\n\n")
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: python
+           :target-function: my_func
+           :parameter-names: flag,count,name
+           :per-element:
+           :comment-file: comments.txt
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. code-block:: python
+
+           my_func(flag=True, count=42, name="hello")  # first case
+           my_func(flag=False, count=99, name="world")
+    """
+        )
+    )
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
+
+
+def test_literalizer_call_comment_file_length_mismatch(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A :comment-file: whose line count does not match the number of
+    generated calls is surfaced as a clean ExtensionError.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[True, 42, "hello"], [False, 99, "world"]]),
+    )
+    (source_directory / "comments.txt").write_text(data="only one\n")
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: python
+           :target-function: my_func
+           :parameter-names: flag,count,name
+           :per-element:
+           :comment-file: comments.txt
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=(
+            r"comment_source has 1 entry\(ies\) but 2 call\(s\) were "
+            r"generated"
+        ),
+    ):
+        app.build()
+
+
 def test_literalizer_call_racket(
     *,
     make_app: Callable[..., SphinxTestApp],
