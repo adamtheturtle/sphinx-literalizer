@@ -11,6 +11,7 @@ Nim
 Norg
 OCaml
 Odin
+PascalCase
 PureScript
 Pygments
 Raku
@@ -24,8 +25,12 @@ Zig
 backend
 backends
 compilable
+customised
+dataclass
+dataclasses
 datetimes
 dicts
 literalizer
+structs
 validator
 whitespace

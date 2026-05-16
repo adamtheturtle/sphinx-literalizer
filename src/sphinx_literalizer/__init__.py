@@ -36,6 +36,7 @@ from literalizer.exceptions import (
     CommentSourceLengthMismatchError,
     CommentSourceMultilineError,
     DottedCallTargetNotSupportedError,
+    InvalidRecordNameError,
     ParameterCountMismatchError,
     PerElementNotListError,
     UnrepresentableInputError,
@@ -170,6 +171,41 @@ def _parse_modifiers(
     return frozenset(result)
 
 
+def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
+    """Parse the ``:record-shape-names:`` inline mapping.
+
+    The value is a semicolon-separated list of ``key1,key2=Name``
+    entries, each mapping a record's set of keys to the custom struct /
+    ``record`` / ``case class`` name used instead of the auto-generated
+    one.  Whitespace around keys, names, and separators is ignored, and
+    empty entries (e.g. from a trailing semicolon) are skipped.
+    """
+    result: dict[frozenset[str], str] = {}
+    for raw_entry in value.split(sep=";"):
+        entry = raw_entry.strip()
+        if not entry:
+            continue
+        if "=" not in entry:
+            msg = (
+                f"':record-shape-names:' entry {entry!r} is missing the "
+                f"'=' between the comma-separated keys and the name."
+            )
+            raise ExtensionError(message=msg)
+        keys_part, name = entry.rsplit(sep="=", maxsplit=1)
+        keys = frozenset(
+            key.strip() for key in keys_part.split(sep=",") if key.strip()
+        )
+        name = name.strip()
+        if not keys or not name:
+            msg = (
+                f"':record-shape-names:' entry {entry!r} must have at "
+                f"least one key and a non-empty name."
+            )
+            raise ExtensionError(message=msg)
+        result[keys] = name
+    return result
+
+
 def _make_format_validator(
     option_name: str,
 ) -> Callable[[str], str]:
@@ -211,6 +247,8 @@ _COMMON_OPTIONS: dict[str, Callable[[str], Any]] = {
     "default-dict-value-type": directives.unchanged,
     "default-ordered-map-value-type": directives.unchanged,
     "module-name": directives.unchanged,
+    "record-struct-name-prefix": directives.unchanged_required,
+    "record-shape-names": directives.unchanged_required,
     "wrap-in-file": directives.flag,
     "ref-case": lambda x: directives.choice(
         argument=x,
@@ -256,6 +294,7 @@ _USER_FACING_LITERALIZER_ERRORS: tuple[type[Exception], ...] = (
     CommentSourceLengthMismatchError,
     CommentSourceMultilineError,
     DottedCallTargetNotSupportedError,
+    InvalidRecordNameError,
     PerElementNotListError,
     UnrepresentableInputError,
     UnsupportedCallShapeError,
@@ -398,7 +437,36 @@ class _BaseLiteralizerDirective(SphinxDirective):
             )
             constructor = partial(constructor, module_name=module_name)
 
-        return constructor()
+        prefix = self.options.get("record-struct-name-prefix")
+        if prefix is not None:
+            if not language_cls.supports_record_struct_name_prefix:
+                msg = (
+                    f"Language '{language_name}' does not support "
+                    f"':record-struct-name-prefix:'."
+                )
+                raise ExtensionError(message=msg)
+            constructor = partial(
+                constructor,
+                record_struct_name_prefix=prefix,
+            )
+
+        shape_names_value = self.options.get("record-shape-names")
+        if shape_names_value is not None:
+            if not language_cls.supports_record_shape_names:
+                msg = (
+                    f"Language '{language_name}' does not support "
+                    f"':record-shape-names:'."
+                )
+                raise ExtensionError(message=msg)
+            constructor = partial(
+                constructor,
+                record_shape_names=_parse_record_shape_names(
+                    value=shape_names_value,
+                ),
+            )
+
+        with _literalize_errors_as_extension_errors():
+            return constructor()
 
     def _resolve_format(
         self,
@@ -569,6 +637,8 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :default-ordered-map-value-type: any
            :modifiers: public,static,final
            :module-name: MyModule
+           :record-struct-name-prefix: Record
+           :record-shape-names: x,y=Point; a,b,c=Vec3
            :wrap-in-file:
            :ref-case: camel
            :ref-key: $reference
@@ -667,6 +737,8 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :ref-case: camel
            :ref-key: $reference
            :module-name: MyModule
+           :record-struct-name-prefix: Record
+           :record-shape-names: x,y=Point; a,b,c=Vec3
            :consumable-refs: my_var,other_var
            :collection-layout: multiline
            :variable-name: my_data
