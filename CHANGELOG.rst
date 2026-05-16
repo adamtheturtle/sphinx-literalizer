@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.05.16
+----------
+
+
 - Bumped ``literalizer`` to ``2026.5.15.2``.
 - The ``literalizer-call`` directive gains ``:zip-file:`` and
   ``:zip-input-format:`` options.  The data file's top-level elements
