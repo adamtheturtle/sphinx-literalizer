@@ -3,27 +3,18 @@
 Heterogeneous strategies
 ========================
 
-A *heterogeneous* collection is a list or mapping whose scalar values do
-not all share a single language-level type -- for example a JSON array
-``[1, "hello"]``, which mixes an integer and a string.  Dynamically
-typed source data routinely contains such collections, but many target
-languages have no single literal that can hold them.
+A *heterogeneous* collection is a list or mapping whose scalar values do not all share a single language-level type -- for example a JSON array ``[1, "hello"]``, which mixes an integer and a string.
+Dynamically typed source data routinely contains such collections, but many target languages have no single literal that can hold them.
 
-The ``:heterogeneous-strategy:`` option (on both the ``literalizer`` and
-``literalizer-call`` directives -- see :doc:`index`) selects how
-|project| renders these collections.  This page explains what each
-strategy emits, when each is appropriate, and which languages expose
-which strategies.
+The ``:heterogeneous-strategy:`` option (on both the ``literalizer`` and ``literalizer-call`` directives -- see :doc:`index`) selects how |project| renders these collections.
+This page explains what each strategy emits, when each is appropriate, and which languages expose which strategies.
 
 The default: ``error``
 ----------------------
 
-Every language defaults to ``error``: a collection that mixes scalar
-types raises rather than emitting a literal that would not compile.
-This is deliberate -- silently coercing ``1`` and ``"hello"`` to a
-common type would change the data.  The remaining strategies are
-opt-in, language-specific ways to represent the mixed collection
-faithfully instead of failing.
+Every language defaults to ``error``: a collection that mixes scalar types raises rather than emitting a literal that would not compile.
+This is deliberate -- silently coercing ``1`` and ``"hello"`` to a common type would change the data.
+The remaining strategies are opt-in, language-specific ways to represent the mixed collection faithfully instead of failing.
 
 The directive:
 
@@ -32,46 +23,36 @@ The directive:
    .. literalizer:: data.json
       :language: rust
 
-with ``data.json`` containing ``[1, "hello"]`` raises an
-``ExtensionError`` describing the heterogeneous scalar types.
+with ``data.json`` containing ``[1, "hello"]`` raises an ``ExtensionError`` describing the heterogeneous scalar types.
 
 Choosing a strategy
 -------------------
 
 ``error``
-   Keep strict typing.  Appropriate when mixed-scalar collections in the
-   source data are a mistake you want surfaced rather than rendered.
+   Keep strict typing.
+   Appropriate when mixed-scalar collections in the source data are a mistake you want surfaced rather than rendered.
 
 ``tagged_enum`` / ``object_variant`` / ``union_type`` / ``interface`` / ``variant``
-   Wrap each value in a generated sum type so a *list* (or list-shaped
-   mapping) of mixed scalars round-trips.  Appropriate when the
-   collection is genuinely a sequence of "one of several scalar types".
-   These differ only in the host language's idiom for a tagged union;
-   the modeling is the same.
+   Wrap each value in a generated sum type so a *list* (or list-shaped mapping) of mixed scalars round-trips.
+   Appropriate when the collection is genuinely a sequence of "one of several scalar types".
+   These differ only in the host language's idiom for a tagged union; the modeling is the same.
 
 ``record``
-   Render a *mapping* whose values mix scalars and containers as a
-   generated ``struct`` declaration plus a matching struct literal.
-   Appropriate when the mapping is record-shaped (non-empty, string
-   keys) -- each key becomes a typed field, so values may legitimately
-   differ per field.
+   Render a *mapping* whose values mix scalars and containers as a generated ``struct`` declaration plus a matching struct literal.
+   Appropriate when the mapping is record-shaped (non-empty, string keys) -- each key becomes a typed field, so values may legitimately differ per field.
 
 ``tuple``
-   Render a fixed-length list of mixed scalars as the language's native
-   tuple.  Appropriate when position, not iteration, carries meaning and
-   no extra preamble declaration is wanted.
+   Render a fixed-length list of mixed scalars as the language's native tuple.
+   Appropriate when position, not iteration, carries meaning and no extra preamble declaration is wanted.
 
-Strategies are not mutually exclusive across data shapes: the same
-language may pick ``record`` for a mapping and one of the sum-type
-strategies for a list.  Each language exposes only the subset listed in
-`Per-language support`_ below.
+Strategies are not mutually exclusive across data shapes: the same language may pick ``record`` for a mapping and one of the sum-type strategies for a list.
+Each language exposes only the subset listed in `Per-language support`_ below.
 
 Worked examples
 ---------------
 
-Each example uses ``:include-preamble:`` so the generated declaration is
-shown alongside the literal.  Without that flag only the literal (the
-second block) is emitted.
+Each example uses ``:include-preamble:`` so the generated declaration is shown alongside the literal.
+Without that flag only the literal (the second block) is emitted.
 
 ``tagged_enum`` (Rust)
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -270,8 +251,7 @@ Languages not listed support only ``error``.
      - A generated tagged ``enum`` plus wrapped values.
    * - ``record``
      - Go, Java, Kotlin, Rust, Scala
-     - A generated ``struct`` / record declaration plus a matching
-       literal, for record-shaped mappings.
+     - A generated ``struct`` / record declaration plus a matching literal, for record-shaped mappings.
    * - ``tuple``
      - C++, Rust
      - The language's native fixed-length tuple.
@@ -288,13 +268,8 @@ Languages not listed support only ``error``.
      - Mojo
      - A ``Variant`` alias plus wrapped values.
 
-Selecting a strategy a language does not support raises an
-``ExtensionError`` rather than silently falling back, so a typo such as
-``:heterogeneous-strategy: tagged_enum`` on a Go directive fails
-loudly.
+Selecting a strategy a language does not support raises an ``ExtensionError`` rather than silently falling back, so a typo such as ``:heterogeneous-strategy: tagged_enum`` on a Go directive fails loudly.
 
-This matrix tracks the upstream `literalizer`_ release pinned by
-|project|; new languages and strategies are announced in the
-:doc:`changelog`.
+This matrix tracks the upstream `literalizer`_ release pinned by |project|; new languages and strategies are announced in the :doc:`changelog`.
 
 .. _literalizer: https://github.com/adamtheturtle/literalizer
