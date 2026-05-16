@@ -6259,6 +6259,367 @@ def test_heterogeneous_strategy_record_go(
     app.cleanup()
 
 
+def test_record_struct_name_prefix_python(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Python's :heterogeneous-strategy: record honours
+    :record-struct-name-prefix: for the generated dataclass name.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"x": 1, "y": 2}, {"x": 3, "y": 4}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :heterogeneous-strategy: record
+           :record-struct-name-prefix: Row
+           :include-delimiters:
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        "from __future__ import annotations\n"
+        "import dataclasses\n"
+        "@dataclasses.dataclass(frozen=True)\n"
+        "class Row0:\n"
+        "    x: int\n"
+        "    y: int\n"
+        "\n"
+        "(\n"
+        "    Row0(x=1, y=2),\n"
+        "    Row0(x=3, y=4),\n"
+        ")"
+    )
+    app.cleanup()
+
+
+def test_record_struct_name_prefix_unsupported_language_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """:record-struct-name-prefix: with a language that has no record
+    strategy raises a clear ExtensionError.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: typescript
+           :record-struct-name-prefix: Row
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=(
+            r"Language 'typescript' does not support "
+            r"':record-struct-name-prefix:'\."
+        ),
+    ):
+        app.build()
+
+
+def test_record_shape_names_java(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Java's :record-shape-names: maps a key set to a custom record
+    name instead of the auto-generated one.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"x": 1, "y": 2}, {"x": 3, "y": 4}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: java
+           :heterogeneous-strategy: record
+           :record-shape-names: x,y=Point
+           :include-delimiters:
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        "import java.util.Map;\n"
+        "record Point(int x, int y) {}\n"
+        "\n"
+        "new Object[]{\n"
+        "    new Point(1, 2),\n"
+        "    new Point(3, 4)\n"
+        "}"
+    )
+    app.cleanup()
+
+
+def test_record_shape_names_invalid_name_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A :record-shape-names: name that is not a PascalCase identifier
+    is surfaced as a clean ExtensionError, not a traceback.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"x": 1, "y": 2}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: java
+           :heterogeneous-strategy: record
+           :record-shape-names: x,y=point
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=r"not a PascalCase Java identifier",
+    ):
+        app.build()
+
+
+def test_record_shape_names_malformed_entry_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A :record-shape-names: entry without '=' raises a clear
+    ExtensionError.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"x": 1, "y": 2}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: java
+           :heterogeneous-strategy: record
+           :record-shape-names: x,y
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=(
+            r"':record-shape-names:' entry 'x,y' is missing the '=' "
+            r"between the comma-separated keys and the name\."
+        ),
+    ):
+        app.build()
+
+
+def test_record_shape_names_trailing_separator_ignored(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A trailing ';' (or empty entry) in :record-shape-names: is
+    skipped rather than treated as a malformed entry.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"x": 1, "y": 2}, {"x": 3, "y": 4}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: java
+           :heterogeneous-strategy: record
+           :record-shape-names: x,y=Point;
+           :include-delimiters:
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        "import java.util.Map;\n"
+        "record Point(int x, int y) {}\n"
+        "\n"
+        "new Object[]{\n"
+        "    new Point(1, 2),\n"
+        "    new Point(3, 4)\n"
+        "}"
+    )
+    app.cleanup()
+
+
+def test_record_shape_names_empty_name_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A :record-shape-names: entry with keys but an empty name raises
+    a clear ExtensionError.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"x": 1, "y": 2}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: java
+           :heterogeneous-strategy: record
+           :record-shape-names: x,y=
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=(
+            r"':record-shape-names:' entry 'x,y=' must have at least "
+            r"one key and a non-empty name\."
+        ),
+    ):
+        app.build()
+
+
+def test_record_shape_names_unsupported_language_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """:record-shape-names: with a language that does not support it
+    (e.g. Python) raises a clear ExtensionError.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"x": 1, "y": 2}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :heterogeneous-strategy: record
+           :record-shape-names: x,y=Point
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=(
+            r"Language 'python' does not support "
+            r"':record-shape-names:'\."
+        ),
+    ):
+        app.build()
+
+
 def test_fortran_language_version_v2003(
     *,
     make_app: Callable[..., SphinxTestApp],
