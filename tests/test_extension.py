@@ -6775,3 +6775,527 @@ def test_heterogeneous_strategy_tuple_rust(
     (literal_block,) = doctree.findall(condition=nodes.literal_block)
     assert literal_block.astext() == '(\n    1,\n    true,\n    "x",\n)'
     app.cleanup()
+
+
+def test_heterogeneous_strategy_auto_keeps_homogeneous_output_rust(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The auto mode leaves homogeneous data in its natural
+    representation instead of converting it to a generated record.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"a": 1}, {"a": 2}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+           :heterogeneous-strategy: auto
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        'HashMap::from([("a", 1)]),\nHashMap::from([("a", 2)]),'
+    )
+    app.cleanup()
+
+
+def test_heterogeneous_strategy_auto_keeps_map_shape_rust(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The auto mode keeps a genuinely map-shaped mapping as a native
+    map rather than promoting it to a record (the core #199 concern).
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"k1": 1, "k2": 2}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+           :heterogeneous-strategy: auto
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == '("k1", 1),\n("k2", 2),'
+    app.cleanup()
+
+
+def test_heterogeneous_strategy_auto_falls_back_to_record_rust(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The auto mode falls back to record for a record-shaped dict that
+    the natural representation cannot hold in a strict-map language.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"id": 1, "desc": "x", "blocks": [1, 2]}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+           :heterogeneous-strategy: auto
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        'Record0 { id: 1, desc: "x", blocks: vec![1, 2] },'
+    )
+    app.cleanup()
+
+
+def test_heterogeneous_strategy_auto_default_precedence_prefers_tuple_rust(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """With the default precedence, auto skips record (which cannot
+    represent a mixed-scalar list) and uses tuple.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, "hello"]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+           :heterogeneous-strategy: auto
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == '1,\n"hello",'
+    app.cleanup()
+
+
+def test_heterogeneous_strategy_auto_precedence_config_rust(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The precedence config value reorders the strategies auto tries,
+    so the same input renders differently.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, "hello"]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+           :heterogeneous-strategy: auto
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={
+            "extensions": ["sphinx_literalizer"],
+            "literalizer_heterogeneous_strategy_precedence": [
+                "tagged_enum",
+                "tuple",
+            ],
+        },
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        "enum Value {\n"
+        "    I32(i32),\n"
+        "    Str(&'static str),\n"
+        "}\n"
+        "\n"
+        'Value::I32(1),\nValue::Str("hello"),'
+    )
+    app.cleanup()
+
+
+def test_concrete_heterogeneous_strategy_unrepresentable_extension_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A concrete (non-auto) strategy that cannot represent the input
+    surfaces as a clean ExtensionError, not a traceback.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"id": 1, "desc": "x", "blocks": [1, 2]}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+           :heterogeneous-strategy: tagged_enum
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(expected_exception=ExtensionError):
+        app.build()
+
+
+def test_skip_if_unrepresentable_emits_no_node_rust(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """:skip-if-unrepresentable: emits no node (instead of failing the
+    build) when the input cannot be represented in the language.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, "hello"]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+           :skip-if-unrepresentable:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    assert list(doctree.findall(condition=nodes.literal_block)) == []
+    app.cleanup()
+
+
+def test_unrepresentable_without_skip_raises_rust(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Without :skip-if-unrepresentable: an unrepresentable input still
+    fails the build with a clean ExtensionError.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, "hello"]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(expected_exception=ExtensionError):
+        app.build()
+
+
+def test_skip_if_unrepresentable_after_auto_exhausts_precedence_rust(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """When auto exhausts the configured precedence without representing
+    the input, :skip-if-unrepresentable: emits no node.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"a": 1, "b": [1, "x"]}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+           :heterogeneous-strategy: auto
+           :skip-if-unrepresentable:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={
+            "extensions": ["sphinx_literalizer"],
+            "literalizer_heterogeneous_strategy_precedence": [
+                "record",
+                "tagged_enum",
+            ],
+        },
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    assert list(doctree.findall(condition=nodes.literal_block)) == []
+    app.cleanup()
+
+
+def test_heterogeneous_strategy_auto_literalizer_call_rust(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The auto mode integrates with literalizer-call: homogeneous call
+    data keeps its natural rendering.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[1, 2], [3, 4]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: rust
+           :target-function: add
+           :parameter-names: a,b
+           :per-element:
+           :heterogeneous-strategy: auto
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == "add(1, 2);\nadd(3, 4);"
+    app.cleanup()
+
+
+def test_skip_if_unrepresentable_unrepresentable_input_csharp(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """:skip-if-unrepresentable: also covers shape-level rejections
+    (UnrepresentableInputError), not just heterogeneous collections.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text(data="1: a\n2: b\n")
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.yaml
+           :language: csharp
+           :skip-if-unrepresentable:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    assert list(doctree.findall(condition=nodes.literal_block)) == []
+    app.cleanup()
+
+
+def test_unrepresentable_input_without_skip_raises_csharp(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A shape-level rejection without :skip-if-unrepresentable: fails
+    the build with a clean ExtensionError.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text(data="1: a\n2: b\n")
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.yaml
+           :language: csharp
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(expected_exception=ExtensionError):
+        app.build()
+
+
+def test_skip_if_unrepresentable_literalizer_call_csharp(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """:skip-if-unrepresentable: makes literalizer-call emit no node
+    when the call data cannot be represented in the language.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text(data="- {1: a, 2: b}\n")
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.yaml
+           :language: csharp
+           :target-function: f
+           :parameter-names: m
+           :per-element:
+           :skip-if-unrepresentable:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    assert list(doctree.findall(condition=nodes.literal_block)) == []
+    app.cleanup()
