@@ -5,6 +5,25 @@ Next
 ----
 
 
+- Bumped ``literalizer`` to ``2026.5.17``.
+- ``:variable-name:`` (with ``:existing-variable:``) on
+  ``literalizer-call`` now produces a call-result binding for ``ada``,
+  ``bash``, ``c``, ``d``, ``elixir``, ``erlang``, ``forth``,
+  ``fortran``, ``nim``, ``objectivec``, ``systemverilog``, ``tcl``, and
+  ``zig``.
+  These languages previously failed the build because they could not
+  bind a call result; they now emit an idiomatic binding (for example
+  ``set my_data [make_widget ...]`` for ``tcl`` and ``auto my_data =
+  make_widget(...);`` for ``d``), following upstream ``literalizer``
+  extending ``variable_form`` to those languages.
+  No directive change was needed.
+- ``:heterogeneous-strategy: record`` (including the ``auto`` default's
+  ``record`` fallback) and ``:record-struct-name-prefix:`` now work for
+  ``c``, ``csharp``, ``cpp``, ``crystal``, ``d``, ``nim``, ``odin``,
+  ``swift``, ``v``, and ``zig``.
+  This follows upstream ``literalizer`` adding the ``RECORD`` strategy
+  to those languages; the directives expose it generically from the
+  per-language capability flags, so no directive change was needed.
 - ``:heterogeneous-strategy:`` now defaults to ``auto`` instead of
   falling through to literalizer's per-language default (e.g. ``error``
   for Rust).  ``auto`` renders the input with its natural representation
