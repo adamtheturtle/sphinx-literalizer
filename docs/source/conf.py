@@ -19,7 +19,9 @@ extensions = [
     "sphinx_copybutton",
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
+    "sphinx_literalizer",
     "sphinx_substitution_extensions",
+    "sphinx_toolbox.rest_example",
     "sphinxcontrib.spelling",
 ]
 
