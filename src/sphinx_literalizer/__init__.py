@@ -1263,6 +1263,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             p.strip() for p in options.parameter_names.split(sep=",")
         ]
         per_element = options.per_element
+        wrap_in_file = options.wrap_in_file
 
         call_transform = self._build_call_transform(options=options)
 
@@ -1309,6 +1310,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
                 zip_input_format=zip_input_format,
                 comment_source=comment_source,
                 per_element=per_element,
+                wrap_in_file=wrap_in_file,
                 ref_case=ref_case,
                 consumable_refs=consumable_refs,
                 ref_key=ref_key,

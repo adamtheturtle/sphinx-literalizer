@@ -7528,6 +7528,60 @@ def test_literalizer_call_existing_variable_d(
     app.cleanup()
 
 
+def test_literalizer_call_wrap_in_file(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """``:wrap-in-file:`` on ``literalizer-call`` renders a complete,
+    self-contained file: an injected no-op stub for the target function
+    precedes the generated calls.
+
+    This exercises ``literalizer`` ``2026.5.17.1``'s self-contained
+    ``literalize_call`` file mode (previously ``:wrap-in-file:`` was
+    parsed but silently ignored by ``literalizer-call``).
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: python
+           :target-function: make_widget
+           :parameter-names: count
+           :per-element:
+           :wrap-in-file:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    expected = (
+        "def make_widget(*_args: object, **_kwargs: object) -> object: ...\n"
+        "make_widget(count=1)\n"
+        "make_widget(count=2)"
+    )
+    assert text == expected
+    app.cleanup()
+
+
 def test_record_struct_name_prefix_swift(
     *,
     make_app: Callable[..., SphinxTestApp],

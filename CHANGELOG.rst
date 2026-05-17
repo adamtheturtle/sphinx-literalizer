@@ -11,6 +11,22 @@ Next
   A single shared helper now converts these string options to their
   internal values and raises a clean ``ExtensionError`` instead of
   relying on each option's input validator to constrain the value.
+- Bumped ``literalizer`` to ``2026.5.17.1``.
+- ``:wrap-in-file:`` is now honored by the ``literalizer-call``
+  directive.
+  It was previously parsed (and documented as a shared option) but
+  silently ignored, so ``literalizer-call`` always emitted bare calls.
+  It now passes ``wrap_in_file`` through to ``literalize_call``, which
+  upstream ``2026.5.17.1`` extended to render a complete, self-contained
+  file: an injected no-op stub for the target function (and any declared
+  refs) precedes the generated calls, with a single reconciled preamble.
+- C# array sequence-format output no longer carries a spurious ``using
+  System;`` / ``using System.Collections.Generic;`` line, and the empty
+  array form is now the typed literal ``new T[] {}`` rather than
+  ``Array.Empty<T>()``, following upstream ``literalizer``
+  ``2026.5.17.1``.
+  No directive change was needed; rendered C# array examples update
+  automatically.
 
 2026.05.17
 ----------
