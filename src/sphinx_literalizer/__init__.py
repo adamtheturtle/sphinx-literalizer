@@ -151,8 +151,25 @@ def _lookup_format(
         raise ExtensionError(message=msg) from None
 
 
+@beartype
+def _enum_member[E: enum.Enum](cls: type[E], value: str) -> E:
+    """Look up an enum member by its case-insensitive name.
+
+    Raises a clean ``ExtensionError`` (rather than the ``KeyError`` from
+    a bare ``cls[value.upper()]``) when *value* is not a member name, so
+    callers need not rely on an upstream ``directives.choice`` validator
+    to constrain the string.
+    """
+    try:
+        return cls[value.upper()]
+    except KeyError:
+        choices = sorted(member.name.lower() for member in cls)
+        detail = f" Choose from: {', '.join(choices)}." if choices else ""
+        msg = f"'{value}' is not a valid value.{detail}"
+        raise ExtensionError(message=msg) from None
+
+
 def _parse_modifiers(
-    language_name: str,
     language_cls: LanguageCls,
     value: str,
 ) -> frozenset[enum.Enum]:
@@ -162,14 +179,7 @@ def _parse_modifiers(
         name = raw.strip()
         if not name:
             continue
-        try:
-            result.add(language_cls.Modifiers[name.upper()])
-        except KeyError:
-            msg = (
-                f"Language '{language_name}' does not support "
-                f"modifier '{name}'."
-            )
-            raise ExtensionError(message=msg) from None
+        result.add(_enum_member(cls=language_cls.Modifiers, value=name))
     return frozenset(result)
 
 
@@ -549,7 +559,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
         """
         explicit = self.options.get(option_name)
         if explicit is not None:
-            return InputFormat[explicit.upper()]
+            return _enum_member(cls=InputFormat, value=explicit)
         suffix = data_path.suffix.lower()
         try:
             return _EXTENSION_TO_INPUT_FORMAT[suffix]
@@ -591,14 +601,13 @@ class _BaseLiteralizerDirective(SphinxDirective):
         ref_case: IdentifierCase | None = (
             None
             if ref_case_value is None
-            else IdentifierCase[ref_case_value.upper()]
+            else _enum_member(cls=IdentifierCase, value=ref_case_value)
         )
         ref_key: str = self.options.get("ref-key", "$ref")
         return ref_case, ref_key
 
     def _resolve_variable_form(
         self,
-        language_name: str,
         language_cls: LanguageCls,
         *,
         allow_both: bool,
@@ -642,7 +651,6 @@ class _BaseLiteralizerDirective(SphinxDirective):
             frozenset()
             if modifiers_value is None
             else _parse_modifiers(
-                language_name=language_name,
                 language_cls=language_cls,
                 value=modifiers_value,
             )
@@ -660,7 +668,10 @@ class _BaseLiteralizerDirective(SphinxDirective):
             "collection-layout",
             "compact",
         )
-        return CollectionLayout[collection_layout_value.upper()]
+        return _enum_member(
+            cls=CollectionLayout,
+            value=collection_layout_value,
+        )
 
     def _auto_precedence(self, *, language_cls: LanguageCls) -> list[str]:
         """Strategies ``auto`` falls back through, most preferred first.
@@ -849,7 +860,6 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         include_delimiters: bool = "include-delimiters" in self.options
         include_preamble: bool = "include-preamble" in self.options
         variable_form = self._resolve_variable_form(
-            language_name=language_name,
             language_cls=language_cls,
             allow_both=True,
         )
@@ -1051,7 +1061,6 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         ref_case, ref_key = self._resolve_ref_options()
         collection_layout = self._resolve_collection_layout()
         variable_form = self._resolve_variable_form(
-            language_name=language_name,
             language_cls=language_cls,
             allow_both=False,
         )

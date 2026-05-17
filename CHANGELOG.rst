@@ -4,6 +4,14 @@ Changelog
 Next
 ----
 
+- The error raised for an unrecognized ``:modifiers:`` value is now
+  ``'<value>' is not a valid value. Choose from: ...`` (listing the
+  modifiers the target language supports), replacing the previous
+  ``Language '<name>' does not support modifier '<value>'.`` message.
+  A single shared helper now converts these string options to their
+  internal values and raises a clean ``ExtensionError`` instead of
+  relying on each option's input validator to constrain the value.
+
 2026.05.17
 ----------
 
