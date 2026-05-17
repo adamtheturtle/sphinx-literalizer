@@ -5,12 +5,13 @@ read data files and render them as native language code blocks.
 """
 
 import enum
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Generator, Iterable, Mapping
 from contextlib import contextmanager
+from dataclasses import dataclass
 from functools import cache, partial
 from importlib.metadata import version
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, ClassVar, TypedDict
 
 from beartype import beartype
 from docutils import nodes
@@ -317,6 +318,37 @@ _COMMON_OPTIONS: dict[str, Callable[[str], Any]] = {
 }
 
 
+# Default element/key/value type options: directive option name ->
+# (language constructor kwarg, predicate for whether the language class
+# supports it).  Lifted to module scope so the typed-options parse
+# boundary and ``_apply_default_type_options`` share one source of truth.
+_DEFAULT_TYPE_OPTIONS: dict[
+    str,
+    tuple[str, Callable[[LanguageCls], bool]],
+] = {
+    "default-set-element-type": (
+        "default_set_element_type",
+        lambda cls: cls.supports_default_set_element_type,
+    ),
+    "default-sequence-element-type": (
+        "default_sequence_element_type",
+        lambda cls: cls.supports_default_sequence_element_type,
+    ),
+    "default-dict-key-type": (
+        "default_dict_key_type",
+        lambda cls: cls.supports_default_dict_key_type,
+    ),
+    "default-dict-value-type": (
+        "default_dict_value_type",
+        lambda cls: cls.supports_default_dict_value_type,
+    ),
+    "default-ordered-map-value-type": (
+        "default_ordered_map_value_type",
+        lambda cls: cls.supports_default_ordered_map_value_type,
+    ),
+}
+
+
 @cache
 def _languages_supporting_module_name() -> frozenset[str]:
     """Return directive language keys whose class accepts
@@ -378,6 +410,142 @@ def _literalize_errors_as_extension_errors() -> Generator[None]:
 
 
 @beartype
+@dataclass(frozen=True, kw_only=True)
+class _CommonOptions:
+    """Typed view of the directive options shared by both directives.
+
+    Built once from ``self.options`` (``dict[str, Any]``) at the start of
+    ``run()``.  Because the constructor is ``@beartype``-wrapped, every
+    field is validated at this single boundary, so the rest of the module
+    operates on fully-typed fields instead of ``Any``.
+
+    ``format_options`` and ``default_type_options`` hold the options that
+    are applied by iterating :data:`_FORMAT_OPTION_GETTERS` /
+    :data:`_DEFAULT_TYPE_OPTIONS`; they map the present option names to
+    their (string) values.  ``heterogeneous-strategy`` is excluded from
+    ``format_options`` because it is supplied per build attempt (it may be
+    the ``auto`` sentinel) -- the raw option value lives in
+    ``heterogeneous_strategy`` instead.
+    """
+
+    language: str
+    input_format: str | None
+    pre_indent_level: int
+    indent: int | None
+    indent_char: str | None
+    include_preamble: bool
+    format_options: Mapping[str, str]
+    heterogeneous_strategy: str | None
+    default_type_options: Mapping[str, str]
+    module_name: str | None
+    record_struct_name_prefix: str | None
+    record_shape_names: str | None
+    skip_if_unrepresentable: bool
+    wrap_in_file: bool
+    ref_case: str | None
+    ref_key: str
+    collection_layout: str
+    variable_name: str | None
+    existing_variable: bool
+    modifiers: str | None
+
+
+@beartype
+@dataclass(frozen=True, kw_only=True)
+class _LiteralizerOptions(_CommonOptions):
+    """Typed options for the ``literalizer`` directive."""
+
+    include_delimiters: bool
+    both_variable_forms: bool
+
+
+@beartype
+@dataclass(frozen=True, kw_only=True)
+class _LiteralizerCallOptions(_CommonOptions):
+    """Typed options for the ``literalizer-call`` directive."""
+
+    target_function: str
+    parameter_names: str
+    per_element: bool
+    call_transform: str | None
+    zip_file: str | None
+    zip_input_format: str | None
+    comment_file: str | None
+    consumable_refs: str | None
+    omit_code: bool
+
+
+class _CommonOptionArgs(TypedDict):
+    """Keyword arguments for the :class:`_CommonOptions` base.
+
+    Mirrors the :class:`_CommonOptions` fields so the per-directive
+    factories can splat the shared extraction in a type-safe way; the two
+    must be kept in sync.
+    """
+
+    language: str
+    input_format: str | None
+    pre_indent_level: int
+    indent: int | None
+    indent_char: str | None
+    include_preamble: bool
+    format_options: Mapping[str, str]
+    heterogeneous_strategy: str | None
+    default_type_options: Mapping[str, str]
+    module_name: str | None
+    record_struct_name_prefix: str | None
+    record_shape_names: str | None
+    skip_if_unrepresentable: bool
+    wrap_in_file: bool
+    ref_case: str | None
+    ref_key: str
+    collection_layout: str
+    variable_name: str | None
+    existing_variable: bool
+    modifiers: str | None
+
+
+@beartype
+def _common_option_args(options: dict[str, Any]) -> _CommonOptionArgs:
+    """Extract the shared options from a directive's raw ``options``.
+
+    This is the sole place ``self.options``'s ``Any`` values are read;
+    the ``@beartype``-wrapped :class:`_CommonOptions` constructor then
+    validates them.
+    """
+    return _CommonOptionArgs(
+        language=options["language"],
+        input_format=options.get("input-format"),
+        pre_indent_level=options.get("pre-indent-level", 0),
+        indent=options.get("indent"),
+        indent_char=options.get("indent-char"),
+        include_preamble="include-preamble" in options,
+        format_options={
+            name: options[name]
+            for name in _FORMAT_OPTION_GETTERS
+            if name != "heterogeneous-strategy" and name in options
+        },
+        heterogeneous_strategy=options.get("heterogeneous-strategy"),
+        default_type_options={
+            name: options[name]
+            for name in _DEFAULT_TYPE_OPTIONS
+            if name in options
+        },
+        module_name=options.get("module-name"),
+        record_struct_name_prefix=options.get("record-struct-name-prefix"),
+        record_shape_names=options.get("record-shape-names"),
+        skip_if_unrepresentable="skip-if-unrepresentable" in options,
+        wrap_in_file="wrap-in-file" in options,
+        ref_case=options.get("ref-case"),
+        ref_key=options.get("ref-key", "$ref"),
+        collection_layout=options.get("collection-layout", "compact"),
+        variable_name=options.get("variable-name"),
+        existing_variable="existing-variable" in options,
+        modifiers=options.get("modifiers"),
+    )
+
+
+@beartype
 class _BaseLiteralizerDirective(SphinxDirective):
     """Shared logic for literalizer directives."""
 
@@ -389,6 +557,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
         language_name: str,
         constructor: partial[Language],
         *,
+        options: _CommonOptions,
         heterogeneous_strategy_value: str | None,
     ) -> partial[Language]:
         """Apply all format/enum options.
@@ -403,7 +572,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
             if option_name == "heterogeneous-strategy":
                 value = heterogeneous_strategy_value
             else:
-                value = self.options.get(option_name)
+                value = options.format_options.get(option_name)
             if value is not None:
                 param_name = option_name.replace("-", "_")
                 constructor = partial(
@@ -423,39 +592,17 @@ class _BaseLiteralizerDirective(SphinxDirective):
         self,
         language_name: str,
         constructor: partial[Language],
+        *,
+        options: _CommonOptions,
     ) -> partial[Language]:
         """Apply default element/key/value type options."""
-        type_option_map: dict[
-            str,
-            tuple[str, Callable[[LanguageCls], bool]],
-        ] = {
-            "default-set-element-type": (
-                "default_set_element_type",
-                lambda cls: cls.supports_default_set_element_type,
-            ),
-            "default-sequence-element-type": (
-                "default_sequence_element_type",
-                lambda cls: cls.supports_default_sequence_element_type,
-            ),
-            "default-dict-key-type": (
-                "default_dict_key_type",
-                lambda cls: cls.supports_default_dict_key_type,
-            ),
-            "default-dict-value-type": (
-                "default_dict_value_type",
-                lambda cls: cls.supports_default_dict_value_type,
-            ),
-            "default-ordered-map-value-type": (
-                "default_ordered_map_value_type",
-                lambda cls: cls.supports_default_ordered_map_value_type,
-            ),
-        }
         language_cls = _language_types()[language_name]
         for option_name, (
             param_name,
             supports_check,
-        ) in type_option_map.items():
-            if (value := self.options.get(option_name)) is not None:
+        ) in _DEFAULT_TYPE_OPTIONS.items():
+            value = options.default_type_options.get(option_name)
+            if value is not None:
                 if not supports_check(language_cls):
                     msg = (
                         f"Language '{language_name}' does not support "
@@ -473,6 +620,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
         language_name: str,
         language_cls: LanguageCls,
         *,
+        options: _CommonOptions,
         heterogeneous_strategy_value: str | None,
     ) -> Language:
         """Build a Language instance from directive options.
@@ -484,8 +632,8 @@ class _BaseLiteralizerDirective(SphinxDirective):
         """
         constructor = partial(language_cls)
 
-        indent_count = self.options.get("indent")
-        indent_char_name = self.options.get("indent-char")
+        indent_count = options.indent
+        indent_char_name = options.indent_char
         if indent_count is not None or indent_char_name is not None:
             resolved_count: int = 4 if indent_count is None else indent_count
             resolved_char = "\t" if indent_char_name == "tabs" else " "
@@ -497,14 +645,16 @@ class _BaseLiteralizerDirective(SphinxDirective):
         constructor = self._apply_format_options(
             language_name=language_name,
             constructor=constructor,
+            options=options,
             heterogeneous_strategy_value=heterogeneous_strategy_value,
         )
         constructor = self._apply_default_type_options(
             language_name=language_name,
             constructor=constructor,
+            options=options,
         )
 
-        module_name = self.options.get("module-name")
+        module_name = options.module_name
         if module_name is not None:
             if language_name not in _languages_supporting_module_name():
                 msg = (
@@ -517,7 +667,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
             )
             constructor = partial(constructor, module_name=module_name)
 
-        prefix = self.options.get("record-struct-name-prefix")
+        prefix = options.record_struct_name_prefix
         if prefix is not None:
             if not language_cls.supports_record_struct_name_prefix:
                 msg = (
@@ -530,7 +680,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
                 record_struct_name_prefix=prefix,
             )
 
-        shape_names_value = self.options.get("record-shape-names")
+        shape_names_value = options.record_shape_names
         if shape_names_value is not None:
             if not language_cls.supports_record_shape_names:
                 msg = (
@@ -552,12 +702,15 @@ class _BaseLiteralizerDirective(SphinxDirective):
         self,
         data_path: Path,
         *,
+        explicit: str | None,
         option_name: str,
     ) -> InputFormat:
-        """Determine an input format from *option_name* or the file
+        """Determine an input format from *explicit* or the file
         extension.
+
+        *option_name* names the directive option that *explicit* came
+        from, used only for the "cannot determine" error message.
         """
-        explicit = self.options.get(option_name)
         if explicit is not None:
             return _enum_member(cls=InputFormat, value=explicit)
         suffix = data_path.suffix.lower()
@@ -570,12 +723,18 @@ class _BaseLiteralizerDirective(SphinxDirective):
             )
             raise ExtensionError(message=msg) from None
 
-    def _resolve_input_format(self, data_path: Path) -> InputFormat:
+    def _resolve_input_format(
+        self,
+        data_path: Path,
+        *,
+        options: _CommonOptions,
+    ) -> InputFormat:
         """Determine the input format from the option or file
         extension.
         """
         return self._resolve_format(
             data_path=data_path,
+            explicit=options.input_format,
             option_name="input-format",
         )
 
@@ -595,30 +754,37 @@ class _BaseLiteralizerDirective(SphinxDirective):
         self.add_name(node=node)
         return [node]
 
-    def _resolve_ref_options(self) -> tuple[IdentifierCase | None, str]:
+    def _resolve_ref_options(
+        self,
+        *,
+        options: _CommonOptions,
+    ) -> tuple[IdentifierCase | None, str]:
         """Resolve reference marker options."""
-        ref_case_value: str | None = self.options.get("ref-case")
+        ref_case_value = options.ref_case
         ref_case: IdentifierCase | None = (
             None
             if ref_case_value is None
             else _enum_member(cls=IdentifierCase, value=ref_case_value)
         )
-        ref_key: str = self.options.get("ref-key", "$ref")
-        return ref_case, ref_key
+        return ref_case, options.ref_key
 
     def _resolve_variable_form(
         self,
         language_cls: LanguageCls,
         *,
-        allow_both: bool,
+        options: _CommonOptions,
+        both_variable_forms: bool,
     ) -> VariableForm | None:
-        """Resolve the variable-form options into a ``VariableForm``."""
-        variable_name: str | None = self.options.get("variable-name")
-        existing_variable: bool = "existing-variable" in self.options
-        both_variable_forms: bool = (
-            allow_both and "both-variable-forms" in self.options
-        )
-        modifiers_value: str | None = self.options.get("modifiers")
+        """Resolve the variable-form options into a ``VariableForm``.
+
+        *both_variable_forms* is passed in (rather than read from
+        *options*) because ``:both-variable-forms:`` only exists on the
+        ``literalizer`` directive; the caller supplies ``False`` where the
+        directive does not support it.
+        """
+        variable_name = options.variable_name
+        existing_variable = options.existing_variable
+        modifiers_value = options.modifiers
 
         if modifiers_value is not None and variable_name is None:
             msg = "':modifiers:' requires ':variable-name:'."
@@ -662,15 +828,15 @@ class _BaseLiteralizerDirective(SphinxDirective):
             return BothVariableForms(name=variable_name, modifiers=modifiers)
         return NewVariable(name=variable_name, modifiers=modifiers)
 
-    def _resolve_collection_layout(self) -> CollectionLayout:
+    def _resolve_collection_layout(
+        self,
+        *,
+        options: _CommonOptions,
+    ) -> CollectionLayout:
         """Resolve the nested collection layout option."""
-        collection_layout_value: str = self.options.get(
-            "collection-layout",
-            "compact",
-        )
         return _enum_member(
             cls=CollectionLayout,
-            value=collection_layout_value,
+            value=options.collection_layout,
         )
 
     def _auto_precedence(self, *, language_cls: LanguageCls) -> list[str]:
@@ -700,6 +866,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
         language_name: str,
         language_cls: LanguageCls,
         render: Callable[[Language], LiteralizeResult],
+        options: _CommonOptions,
     ) -> tuple[LiteralizeResult, Language] | None:
         """Build the language and render, honoring ``auto`` and
         ``:skip-if-unrepresentable:``.
@@ -714,7 +881,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
         target language and ``:skip-if-unrepresentable:`` is set (the
         caller then emits no node).
         """
-        skip = "skip-if-unrepresentable" in self.options
+        skip = options.skip_if_unrepresentable
 
         # An unset ``:heterogeneous-strategy:`` defaults to ``auto``
         # rather than falling through to literalizer's per-language
@@ -724,9 +891,10 @@ class _BaseLiteralizerDirective(SphinxDirective):
         # map-shaped data) and still raises for genuinely
         # unrepresentable input.  An author who wants a specific
         # representation sets the option explicitly.
-        strategy = self.options.get(
-            "heterogeneous-strategy",
-            _AUTO_STRATEGY,
+        strategy = (
+            _AUTO_STRATEGY
+            if options.heterogeneous_strategy is None
+            else options.heterogeneous_strategy
         )
         if strategy == _AUTO_STRATEGY:
             attempts: list[str | None] = [
@@ -741,6 +909,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
             return self._build_language(
                 language_name=language_name,
                 language_cls=language_cls,
+                options=options,
                 heterogeneous_strategy_value=strategy_value,
             )
 
@@ -846,28 +1015,41 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         "modifiers": directives.unchanged,
     }
 
+    def _parse_options(self) -> _LiteralizerOptions:
+        """Parse ``self.options`` into the typed options dataclass."""
+        return _LiteralizerOptions(
+            **_common_option_args(options=self.options),
+            include_delimiters="include-delimiters" in self.options,
+            both_variable_forms="both-variable-forms" in self.options,
+        )
+
     def run(self) -> list[nodes.Node]:
         """Read the data file and produce a literal block."""
+        options = self._parse_options()
         env = self.state.document.settings.env
         data_path = (Path(env.srcdir) / self.arguments[0]).resolve()
 
         env.note_dependency(str(object=data_path))
 
-        language_name: str = self.options["language"]
+        language_name = options.language
         language_cls = _language_types()[language_name]
 
-        pre_indent_level: int = self.options.get("pre-indent-level", 0)
-        include_delimiters: bool = "include-delimiters" in self.options
-        include_preamble: bool = "include-preamble" in self.options
+        pre_indent_level = options.pre_indent_level
+        include_delimiters = options.include_delimiters
+        include_preamble = options.include_preamble
         variable_form = self._resolve_variable_form(
             language_cls=language_cls,
-            allow_both=True,
+            options=options,
+            both_variable_forms=options.both_variable_forms,
         )
-        wrap_in_file: bool = "wrap-in-file" in self.options
-        ref_case, ref_key = self._resolve_ref_options()
-        collection_layout = self._resolve_collection_layout()
+        wrap_in_file = options.wrap_in_file
+        ref_case, ref_key = self._resolve_ref_options(options=options)
+        collection_layout = self._resolve_collection_layout(options=options)
 
-        input_format = self._resolve_input_format(data_path=data_path)
+        input_format = self._resolve_input_format(
+            data_path=data_path,
+            options=options,
+        )
         source = data_path.read_text(encoding="utf-8")
 
         def _do(language_spec: Language) -> LiteralizeResult:
@@ -889,6 +1071,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
             language_name=language_name,
             language_cls=language_cls,
             render=_do,
+            options=options,
         )
         if rendered is None:
             return []
@@ -980,6 +1163,8 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
     def _build_call_transform(
         self,
+        *,
+        options: _LiteralizerCallOptions,
     ) -> Callable[[CallContext], str] | None:
         """Build the ``:call-transform:`` callback from the template.
 
@@ -987,7 +1172,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         so a placeholder-like substring inside the rendered call
         expression is never re-expanded.
         """
-        template: str | None = self.options.get("call-transform")
+        template = options.call_transform
         if template is None:
             return None
         resolved_template = template
@@ -1007,9 +1192,11 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
     def _resolve_zip_source(
         self,
+        *,
+        options: _LiteralizerCallOptions,
     ) -> tuple[str | None, InputFormat | None]:
         """Read the optional ``:zip-file:`` and resolve its format."""
-        zip_file_value: str | None = self.options.get("zip-file")
+        zip_file_value = options.zip_file
         if zip_file_value is None:
             return None, None
         env = self.state.document.settings.env
@@ -1017,11 +1204,16 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         env.note_dependency(str(object=zip_path))
         zip_input_format = self._resolve_format(
             data_path=zip_path,
+            explicit=options.zip_input_format,
             option_name="zip-input-format",
         )
         return zip_path.read_text(encoding="utf-8"), zip_input_format
 
-    def _resolve_comment_source(self) -> list[str] | None:
+    def _resolve_comment_source(
+        self,
+        *,
+        options: _LiteralizerCallOptions,
+    ) -> list[str] | None:
         """Read the optional ``:comment-file:`` as one comment per call.
 
         Each line becomes one ``comment_source`` entry, paired
@@ -1029,7 +1221,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         comment for that call.  A trailing newline does not add an
         extra (empty) entry.
         """
-        comment_file_value: str | None = self.options.get("comment-file")
+        comment_file_value = options.comment_file
         if comment_file_value is None:
             return None
         env = self.state.document.settings.env
@@ -1037,35 +1229,52 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         env.note_dependency(str(object=comment_path))
         return comment_path.read_text(encoding="utf-8").splitlines()
 
+    def _parse_options(self) -> _LiteralizerCallOptions:
+        """Parse ``self.options`` into the typed options dataclass."""
+        return _LiteralizerCallOptions(
+            **_common_option_args(options=self.options),
+            target_function=self.options["target-function"],
+            parameter_names=self.options["parameter-names"],
+            per_element="per-element" in self.options,
+            call_transform=self.options.get("call-transform"),
+            zip_file=self.options.get("zip-file"),
+            zip_input_format=self.options.get("zip-input-format"),
+            comment_file=self.options.get("comment-file"),
+            consumable_refs=self.options.get("consumable-refs"),
+            omit_code="omit-code" in self.options,
+        )
+
     def run(self) -> list[nodes.Node]:
         """Read the data file and produce function call expressions."""
+        options = self._parse_options()
         env = self.state.document.settings.env
         data_path = (Path(env.srcdir) / self.arguments[0]).resolve()
 
         env.note_dependency(str(object=data_path))
 
-        language_name: str = self.options["language"]
+        language_name = options.language
         language_cls = _language_types()[language_name]
 
-        pre_indent_level: int = self.options.get("pre-indent-level", 0)
-        include_preamble: bool = "include-preamble" in self.options
-        omit_code: bool = "omit-code" in self.options
-        target_function: str = self.options["target-function"]
+        pre_indent_level = options.pre_indent_level
+        include_preamble = options.include_preamble
+        omit_code = options.omit_code
+        target_function = options.target_function
         parameter_names = [
-            p.strip() for p in self.options["parameter-names"].split(",")
+            p.strip() for p in options.parameter_names.split(sep=",")
         ]
-        per_element: bool = "per-element" in self.options
+        per_element = options.per_element
 
-        call_transform = self._build_call_transform()
+        call_transform = self._build_call_transform(options=options)
 
-        ref_case, ref_key = self._resolve_ref_options()
-        collection_layout = self._resolve_collection_layout()
+        ref_case, ref_key = self._resolve_ref_options(options=options)
+        collection_layout = self._resolve_collection_layout(options=options)
         variable_form = self._resolve_variable_form(
             language_cls=language_cls,
-            allow_both=False,
+            options=options,
+            both_variable_forms=False,
         )
 
-        consumable_refs_value: str | None = self.options.get("consumable-refs")
+        consumable_refs_value = options.consumable_refs
         consumable_refs: frozenset[str] = (
             frozenset()
             if consumable_refs_value is None
@@ -1076,10 +1285,15 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             )
         )
 
-        zip_source, zip_input_format = self._resolve_zip_source()
-        comment_source = self._resolve_comment_source()
+        zip_source, zip_input_format = self._resolve_zip_source(
+            options=options,
+        )
+        comment_source = self._resolve_comment_source(options=options)
 
-        input_format = self._resolve_input_format(data_path=data_path)
+        input_format = self._resolve_input_format(
+            data_path=data_path,
+            options=options,
+        )
         source = data_path.read_text(encoding="utf-8")
 
         def _do(language_spec: Language) -> LiteralizeResult:
@@ -1107,6 +1321,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
                 language_name=language_name,
                 language_cls=language_cls,
                 render=_do,
+                options=options,
             )
         except ParameterCountMismatchError as exc:
             msg = (
