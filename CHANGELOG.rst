@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.05.17
+----------
+
+
 
 - Bumped ``literalizer`` to ``2026.5.17``.
 - ``:variable-name:`` (with ``:existing-variable:``) on
