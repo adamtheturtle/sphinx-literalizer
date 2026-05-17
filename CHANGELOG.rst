@@ -4,6 +4,12 @@ Changelog
 Next
 ----
 
+
+- The documentation examples now use ``sphinx-toolbox``'s
+  ``rest-example`` directive, which executes each ``literalizer`` and
+  ``literalizer-call`` directive at build time, so the rendered output
+  can no longer drift from the pinned ``literalizer`` behavior.
+
 2026.05.16.2
 ------------
 

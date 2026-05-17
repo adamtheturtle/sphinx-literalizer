@@ -67,21 +67,20 @@ Only if the natural rendering fails because the data is heterogeneous does ``aut
 The precedence is the ``literalizer_heterogeneous_strategy_precedence`` configuration value (see :doc:`index`), restricted per directive to the strategies the target language exposes.
 It defaults to ``record``, ``tuple``, ``tagged_enum``, ``object_variant``, ``variant``, ``union_type``, ``interface``; ``error`` is never a fallback because it is the failure ``auto`` is recovering from.
 
-For example, with ``data.json`` containing ``[{"id": 1, "desc": "x", "blocks": [1, 2]}]``:
+For example, with :file:`_examples/auto_record.json`:
 
-.. code-block:: rst
+.. literalinclude:: _examples/auto_record.json
+   :language: json
 
-   .. literalizer:: data.json
+the natural Rust map rendering fails (a ``HashMap`` cannot hold mixed value types), so ``auto`` falls back to ``record``:
+
+.. rest-example::
+
+   .. literalizer:: _examples/auto_record.json
       :language: rust
       :heterogeneous-strategy: auto
 
-the natural Rust map rendering fails (a ``HashMap`` cannot hold mixed value types), so ``auto`` falls back to ``record`` and renders:
-
-.. code-block:: rust
-
-   Record0 { id: 1, desc: "x", blocks: vec![1, 2] },
-
-The same directive with a homogeneous or map-shaped ``data.json`` emits the native ``HashMap`` instead, with no fallback applied.
+The same directive with a homogeneous or map-shaped input emits the native ``HashMap`` instead, with no fallback applied.
 
 Skipping unrepresentable inputs
 -------------------------------
@@ -105,185 +104,95 @@ Worked examples
 ---------------
 
 Each example uses ``:include-preamble:`` so the generated declaration is shown alongside the literal.
-Without that flag only the literal (the second block) is emitted.
+Without that flag only the literal (the second block) is emitted, and without ``:include-delimiters:`` the literal carries no surrounding collection delimiters.
+
+Most examples render :file:`_examples/mixed_scalars.json`:
+
+.. literalinclude:: _examples/mixed_scalars.json
+   :language: json
+
+The ``record`` and ``tuple`` examples use their own input files, shown inline.
 
 ``tagged_enum`` (Rust)
 ~~~~~~~~~~~~~~~~~~~~~~
 
-With ``data.json`` containing ``[1, "hello"]``:
+.. rest-example::
 
-.. code-block:: rst
-
-   .. literalizer:: data.json
+   .. literalizer:: _examples/mixed_scalars.json
       :language: rust
       :heterogeneous-strategy: tagged_enum
       :include-preamble:
 
-renders:
-
-.. code-block:: rust
-
-   enum Value {
-       I32(i32),
-       Str(&'static str),
-   }
-
-   vec![
-       Value::I32(1),
-       Value::Str("hello"),
-   ]
-
 ``record`` (Go)
 ~~~~~~~~~~~~~~~
 
-With ``data.json`` containing ``{"name": "a", "count": 1, "items": [1, 2]}``:
+With :file:`_examples/record.json`:
 
-.. code-block:: rst
+.. literalinclude:: _examples/record.json
+   :language: json
 
-   .. literalizer:: data.json
+.. rest-example::
+
+   .. literalizer:: _examples/record.json
       :language: go
       :heterogeneous-strategy: record
       :include-preamble:
 
-renders:
-
-.. code-block:: go
-
-   package main
-   type Record0 struct {
-       Name string
-       Count int
-       Items []int
-   }
-
-   Record0{
-       Name: "a",
-       Count: 1,
-       Items: []int{
-           1,
-           2,
-       },
-   }
-
 ``tuple`` (Rust)
 ~~~~~~~~~~~~~~~~
 
-With ``data.json`` containing ``[1, "hello", true]``:
+With :file:`_examples/tuple.json`:
 
-.. code-block:: rst
-
-   .. literalizer:: data.json
-      :language: rust
-      :heterogeneous-strategy: tuple
+.. literalinclude:: _examples/tuple.json
+   :language: json
 
 renders (no preamble -- the tuple is a native literal):
 
-.. code-block:: rust
+.. rest-example::
 
-   (
-       1,
-       "hello",
-       true,
-   )
+   .. literalizer:: _examples/tuple.json
+      :language: rust
+      :heterogeneous-strategy: tuple
 
 ``object_variant`` (Nim)
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-With ``data.json`` containing ``[1, "hello"]``:
+.. rest-example::
 
-.. code-block:: rst
-
-   .. literalizer:: data.json
+   .. literalizer:: _examples/mixed_scalars.json
       :language: nim
       :heterogeneous-strategy: object_variant
       :include-preamble:
 
-renders:
-
-.. code-block:: nim
-
-   type
-     ValueKind = enum
-       vkInt, vkStr
-     Value = object
-       case kind: ValueKind
-       of vkInt: intVal: int
-       of vkStr: strVal: string
-
-   @[
-       Value(kind: vkInt, intVal: 1),
-       Value(kind: vkStr, strVal: "hello")
-   ]
-
 ``union_type`` (Dhall)
 ~~~~~~~~~~~~~~~~~~~~~~
 
-With ``data.json`` containing ``[1, "hello"]``:
+.. rest-example::
 
-.. code-block:: rst
-
-   .. literalizer:: data.json
+   .. literalizer:: _examples/mixed_scalars.json
       :language: dhall
       :heterogeneous-strategy: union_type
       :include-preamble:
 
-renders:
-
-.. code-block:: text
-
-   let Value = < Int : Integer | Str : Text > in
-
-   [
-     Value.Int +1,
-     Value.Str "hello",
-   ]
-
 ``interface`` (V)
 ~~~~~~~~~~~~~~~~~
 
-With ``data.json`` containing ``[1, "hello"]``:
+.. rest-example::
 
-.. code-block:: rst
-
-   .. literalizer:: data.json
+   .. literalizer:: _examples/mixed_scalars.json
       :language: v
       :heterogeneous-strategy: interface
       :include-preamble:
 
-renders:
-
-.. code-block:: text
-
-   interface IVal {}
-
-   [
-       IVal(1),
-       IVal('hello'),
-   ]
-
 ``variant`` (Mojo)
 ~~~~~~~~~~~~~~~~~~
 
-With ``data.json`` containing ``[1, "hello"]``:
+.. rest-example::
 
-.. code-block:: rst
-
-   .. literalizer:: data.json
+   .. literalizer:: _examples/mixed_scalars.json
       :language: mojo
       :heterogeneous-strategy: variant
       :include-preamble:
-
-renders:
-
-.. code-block:: text
-
-   from std.utils.variant import Variant
-   comptime Value = Variant[Int, String]
-
-   [
-       Value(1),
-       Value(String("hello")),
-   ]
 
 Per-language support
 --------------------

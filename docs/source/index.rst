@@ -529,32 +529,19 @@ Directive options
 Example
 ~~~~~~~
 
-Given a file ``data.json`` containing:
+Given a file :file:`_examples/literal.json` containing:
 
-.. code-block:: json
+.. literalinclude:: _examples/literal.json
+   :language: json
 
-   [true, false, 42, "hello"]
+the ``literalizer`` directive renders both its directive source and the
+generated code block:
 
-The directive:
+.. rest-example::
 
-.. code-block:: rst
-
-   .. literalizer:: data.json
+   .. literalizer:: _examples/literal.json
       :language: python
       :include-delimiters:
-
-renders as a code block containing:
-
-.. skip doccmd[pyright]: next
-
-.. code-block:: python
-
-   [
-       True,
-       False,
-       42,
-       "hello",
-   ]
 
 
 ``literalizer-call`` directive
@@ -565,39 +552,36 @@ expressions.  Each top-level list element becomes a separate call (when
 ``:per-element:`` is set), with its values mapped positionally to the
 given parameter names.
 
-.. code-block:: rst
+Given a file :file:`_examples/calls.json` containing:
 
-   .. literalizer-call:: calls.json
+.. literalinclude:: _examples/calls.json
+   :language: json
+
+the directive renders as:
+
+.. rest-example::
+
+   .. literalizer-call:: _examples/calls.json
       :language: python
       :target-function: my_func
       :parameter-names: flag,count,name
       :per-element:
 
-Given a file ``calls.json`` containing:
+For positional-call languages like Go, :file:`_examples/calls_go.json`
+containing:
 
-.. code-block:: json
+.. literalinclude:: _examples/calls_go.json
+   :language: json
 
-   [[true, 42, "hello"], [false, 99, "world"]]
+renders as:
 
-This renders as a code block containing::
+.. rest-example::
 
-   my_func(flag=True, count=42, name="hello")
-   my_func(flag=False, count=99, name="world")
-
-For positional-call languages like Go, the same data renders as:
-
-.. code-block:: rst
-
-   .. literalizer-call:: calls.json
+   .. literalizer-call:: _examples/calls_go.json
       :language: go
       :target-function: myFunc
       :parameter-names: flag,count
       :per-element:
-
-.. code-block:: go
-
-   myFunc(true, 42);
-   myFunc(false, 99);
 
 ``literalizer-call`` directive options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
