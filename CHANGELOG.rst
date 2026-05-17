@@ -5,6 +5,19 @@ Next
 ----
 
 
+- ``:heterogeneous-strategy:`` now defaults to ``auto`` instead of
+  falling through to literalizer's per-language default (e.g. ``error``
+  for Rust).  ``auto`` renders the input with its natural representation
+  first -- so homogeneous and genuinely map-shaped data render
+  identically to before -- and genuinely unrepresentable input still
+  raises, so this only ever turns a representable input that previously
+  broke the build into a representable one.  Projects that forced
+  ``auto`` globally via a directive subclass in ``conf.py`` can drop
+  that override.  ``auto`` makes a representation choice implicitly
+  (``record`` vs ``tuple`` vs ``tagged_enum`` changes the generated
+  API), so set ``:heterogeneous-strategy:`` explicitly -- including
+  ``:heterogeneous-strategy: error`` to keep a mixed-scalar collection a
+  hard build failure -- when a specific behavior is wanted.
 - The documentation examples now use ``sphinx-toolbox``'s
   ``rest-example`` directive, which executes each ``literalizer`` and
   ``literalizer-call`` directive at build time, so the rendered output

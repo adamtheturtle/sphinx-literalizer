@@ -705,13 +705,25 @@ class _BaseLiteralizerDirective(SphinxDirective):
         """
         skip = "skip-if-unrepresentable" in self.options
 
-        if self.options.get("heterogeneous-strategy") == _AUTO_STRATEGY:
+        # An unset ``:heterogeneous-strategy:`` defaults to ``auto``
+        # rather than falling through to literalizer's per-language
+        # default (e.g. ``error`` for Rust): ``auto`` strictly dominates
+        # ``error`` as a default since it tries the natural
+        # representation first (byte-identical output for homogeneous /
+        # map-shaped data) and still raises for genuinely
+        # unrepresentable input.  An author who wants a specific
+        # representation sets the option explicitly.
+        strategy = self.options.get(
+            "heterogeneous-strategy",
+            _AUTO_STRATEGY,
+        )
+        if strategy == _AUTO_STRATEGY:
             attempts: list[str | None] = [
                 None,
                 *self._auto_precedence(language_cls=language_cls),
             ]
         else:
-            attempts = [self.options.get("heterogeneous-strategy")]
+            attempts = [strategy]
 
         def _build(strategy_value: str | None) -> Language:
             """Build the language for one attempt's strategy."""

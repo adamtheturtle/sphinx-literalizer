@@ -7037,6 +7037,11 @@ def test_skip_if_unrepresentable_emits_no_node_rust(
 ) -> None:
     """:skip-if-unrepresentable: emits no node (instead of failing the
     build) when the input cannot be represented in the language.
+
+    ``:heterogeneous-strategy: error`` is set explicitly because the
+    default is now ``auto``, under which ``[1, "hello"]`` is
+    representable (as a tuple); ``error`` keeps it a hard failure so the
+    skip flag has something to skip.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -7052,6 +7057,7 @@ def test_skip_if_unrepresentable_emits_no_node_rust(
 
         .. literalizer:: data.json
            :language: rust
+           :heterogeneous-strategy: error
            :skip-if-unrepresentable:
     """
         )
@@ -7076,6 +7082,10 @@ def test_unrepresentable_without_skip_raises_rust(
 ) -> None:
     """Without :skip-if-unrepresentable: an unrepresentable input still
     fails the build with a clean ExtensionError.
+
+    ``:heterogeneous-strategy: error`` is set explicitly because the
+    default is now ``auto``, under which ``[1, "hello"]`` is
+    representable (as a tuple) and would not fail the build.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -7091,6 +7101,7 @@ def test_unrepresentable_without_skip_raises_rust(
 
         .. literalizer:: data.json
            :language: rust
+           :heterogeneous-strategy: error
     """
         )
     )
@@ -7189,6 +7200,91 @@ def test_heterogeneous_strategy_auto_literalizer_call_rust(
     doctree = app.env.get_doctree(docname="index")
     (literal_block,) = doctree.findall(condition=nodes.literal_block)
     assert literal_block.astext() == "add(1, 2);\nadd(3, 4);"
+    app.cleanup()
+
+
+def test_unset_heterogeneous_strategy_defaults_to_auto_rust(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """An unset :heterogeneous-strategy: defaults to ``auto`` rather
+    than falling through to literalizer's per-language default
+    (``error`` for Rust): a record-shaped heterogeneous dict falls back
+    to ``record`` instead of failing the build.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"id": 1, "desc": "x", "blocks": [1, 2]}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        'Record0 { id: 1, desc: "x", blocks: vec![1, 2] },'
+    )
+    app.cleanup()
+
+
+def test_unset_heterogeneous_strategy_keeps_homogeneous_output_rust(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Defaulting to ``auto`` leaves homogeneous data byte-identical to
+    the pre-default behavior: the natural ``HashMap`` rendering is used
+    with no fallback applied.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"a": 1}, {"a": 2}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        'HashMap::from([("a", 1)]),\nHashMap::from([("a", 2)]),'
+    )
     app.cleanup()
 
 

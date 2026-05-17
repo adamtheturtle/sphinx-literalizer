@@ -9,26 +9,30 @@ Dynamically typed source data routinely contains such collections, but many targ
 The ``:heterogeneous-strategy:`` option (on both the ``literalizer`` and ``literalizer-call`` directives -- see :doc:`index`) selects how |project| renders these collections.
 This page explains what each strategy emits, when each is appropriate, and which languages expose which strategies.
 
-The default: ``error``
-----------------------
+The default: ``auto``
+---------------------
 
-Every language defaults to ``error``: a collection that mixes scalar types raises rather than emitting a literal that would not compile.
-This is deliberate -- silently coercing ``1`` and ``"hello"`` to a common type would change the data.
-The remaining strategies are opt-in, language-specific ways to represent the mixed collection faithfully instead of failing.
+``:heterogeneous-strategy:`` defaults to ``auto``.
+``auto`` renders the input with its natural representation first -- so homogeneous and genuinely map-shaped data keep their native form, byte-identical to naming no strategy at all -- and only falls back to a representational strategy when the natural rendering fails because the data is heterogeneous.
+Genuinely unrepresentable input still raises after the fallbacks are exhausted, so the "fail loud" safety is preserved exactly where it matters.
 
-The directive:
+``auto`` makes a representation choice implicitly: ``record`` vs ``tuple`` vs ``tagged_enum`` changes the shape of the generated API.
+An author who wants a specific representation for pedagogical or clarity reasons should set ``:heterogeneous-strategy:`` explicitly rather than rely on the default.
+To keep a mixed-scalar collection a hard build failure instead, set ``:heterogeneous-strategy: error`` explicitly:
 
 .. code-block:: rst
 
    .. literalizer:: data.json
       :language: rust
+      :heterogeneous-strategy: error
 
 with ``data.json`` containing ``[1, "hello"]`` raises an ``ExtensionError`` describing the heterogeneous scalar types.
+Without that explicit ``error``, the same input falls back through the configured precedence under ``auto``.
 
 Choosing a strategy
 -------------------
 
-``auto``
+``auto`` (the default)
    Let |project| choose.
    The input is rendered with its natural representation first, so homogeneous and genuinely map-shaped data keep their native form, and a strategy is only applied if that natural rendering fails because the data is heterogeneous.
    See `Letting the directive choose: auto`_ below.
@@ -36,6 +40,7 @@ Choosing a strategy
 ``error``
    Keep strict typing.
    Appropriate when mixed-scalar collections in the source data are a mistake you want surfaced rather than rendered.
+   This was the default before |project| defaulted ``:heterogeneous-strategy:`` to ``auto``; it must now be set explicitly.
 
 ``tagged_enum`` / ``object_variant`` / ``union_type`` / ``interface`` / ``variant``
    Wrap each value in a generated sum type so a *list* (or list-shaped mapping) of mixed scalars round-trips.
@@ -197,9 +202,9 @@ renders (no preamble -- the tuple is a native literal):
 Per-language support
 --------------------
 
-``error`` is available for every language and is always the default.
+``error`` is available for every language; ``auto`` is the default.
 The table below lists the additional strategies each language exposes.
-Languages not listed support only ``error``.
+Languages not listed support only ``error`` (set explicitly) and ``auto`` (which, with no representational strategy to fall back to, behaves like ``error`` for heterogeneous input).
 
 .. list-table::
    :header-rows: 1

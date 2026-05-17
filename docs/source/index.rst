@@ -454,11 +454,13 @@ Directive options
    ``error``
       Raise an error on empty keys.  Available for R.
 
-``:heterogeneous-strategy:`` (optional)
+``:heterogeneous-strategy:`` (optional, defaults to ``auto``)
    How to render scalar collections whose elements have more than one
-   language-level type.  Supported values:
+   language-level type.  Defaults to ``auto``; set it explicitly only
+   to pin a specific representation (see the caveat under ``auto``).
+   Supported values:
 
-   ``auto``
+   ``auto`` (default)
       Render the input with its natural representation first, and only
       if that fails because the data is heterogeneous, retry with each
       strategy the target language supports in the order given by the
@@ -467,9 +469,15 @@ Directive options
       Homogeneous and genuinely map-shaped data keep their native form,
       so a single ``auto`` works across a mix of inputs without picking
       a strategy per project or per file.
+      Because ``auto`` chooses a representation implicitly -- ``record``
+      vs ``tuple`` vs ``tagged_enum`` changes the shape of the
+      generated API -- set ``:heterogeneous-strategy:`` explicitly when
+      a specific representation is wanted for clarity.
    ``error``
-      Raise an error when a collection mixes scalar types (default for
-      all languages).
+      Raise an error when a collection mixes scalar types.  This was the
+      default before |project| defaulted ``:heterogeneous-strategy:`` to
+      ``auto``; set it explicitly to keep a mixed-scalar collection a
+      hard build failure.
    ``tagged_enum``
       Emit a minimal tagged ``enum`` in the preamble and wrap each
       heterogeneous value at the call site (e.g. ``Value::I32(1)``).
