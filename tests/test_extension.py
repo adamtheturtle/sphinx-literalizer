@@ -7395,3 +7395,145 @@ def test_skip_if_unrepresentable_literalizer_call_csharp(
     doctree = app.env.get_doctree(docname="index")
     assert list(doctree.findall(condition=nodes.literal_block)) == []
     app.cleanup()
+
+
+def test_literalizer_call_variable_name_tcl(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """``:variable-name:`` binds a ``literalizer-call`` result for a
+    language that gained call-variable-binding in ``literalizer``
+    ``2026.5.17`` (Tcl).
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"count": 42}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: tcl
+           :target-function: make_widget
+           :parameter-names: count
+           :variable-name: my_data
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    expected = 'set my_data [make_widget [dict create "count" 42]]'
+    assert text == expected
+    app.cleanup()
+
+
+def test_literalizer_call_existing_variable_d(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """``:existing-variable:`` binds a ``literalizer-call`` result
+    without a declaration keyword for a language that gained
+    call-variable-binding in ``literalizer`` ``2026.5.17`` (D).
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"count": 42}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: d
+           :target-function: make_widget
+           :parameter-names: count
+           :variable-name: my_data
+           :existing-variable:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    expected = 'my_data = make_widget(JSONValue(["count": JSONValue(42)]));'
+    assert text == expected
+    app.cleanup()
+
+
+def test_record_struct_name_prefix_swift(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Swift's :heterogeneous-strategy: record honours
+    :record-struct-name-prefix:, exercising the ``RECORD`` strategy
+    ``literalizer`` ``2026.5.17`` added for Swift.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"x": 1, "y": 2}, {"x": 3, "y": 4}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: swift
+           :heterogeneous-strategy: record
+           :record-struct-name-prefix: Row
+           :include-delimiters:
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        "struct Row0 { let x: Int; let y: Int }\n"
+        "\n"
+        "[\n"
+        "    Row0(x: 1, y: 2),\n"
+        "    Row0(x: 3, y: 4),\n"
+        "]"
+    )
+    app.cleanup()
