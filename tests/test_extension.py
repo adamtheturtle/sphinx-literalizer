@@ -1372,7 +1372,47 @@ def test_unsupported_modifier_error(
     )
     with pytest.raises(
         expected_exception=ExtensionError,
-        match=r"^Language 'python' does not support modifier 'public'\.$",
+        match=r"^'public' is not a valid value\.$",
+    ):
+        app.build()
+
+
+def test_unsupported_modifier_error_lists_choices(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """An unsupported modifier for a language that has modifiers lists
+    the valid choices in the error.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: java
+           :variable-name: myList
+           :modifiers: bogus
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=(
+            r"^'bogus' is not a valid value\. Choose from: "
+            r"final, private, protected, public, static\.$"
+        ),
     ):
         app.build()
 
