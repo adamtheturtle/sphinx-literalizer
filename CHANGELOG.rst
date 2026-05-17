@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.05.17.1
+------------
+
+
 - The error raised for an unrecognized ``:modifiers:`` value is now
   ``'<value>' is not a valid value. Choose from: ...`` (listing the
   modifiers the target language supports), replacing the previous
