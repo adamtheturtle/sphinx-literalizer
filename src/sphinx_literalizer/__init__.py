@@ -112,7 +112,7 @@ _COLLECTION_LAYOUT_VALUES: tuple[str, ...] = tuple(
 
 
 @cache
-def _all_formats() -> dict[str, dict[tuple[str, str], object]]:
+def _all_formats() -> dict[str, dict[tuple[str, str], enum.Enum]]:
     """Build format lookup dicts for all format options."""
     return {
         option_name: {
@@ -138,8 +138,8 @@ def _lookup_format(
     language_name: str,
     directive_name: str,
     format_value: str,
-    formats: dict[tuple[str, str], object],
-) -> object:
+    formats: dict[tuple[str, str], enum.Enum],
+) -> enum.Enum:
     """Look up a format enum member by language and value."""
     try:
         return formats[(language_name, format_value)]
