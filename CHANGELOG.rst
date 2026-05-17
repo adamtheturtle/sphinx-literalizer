@@ -12,7 +12,7 @@ Next
   internal values and raises a clean ``ExtensionError`` instead of
   relying on each option's input validator to constrain the value.
 - Bumped ``literalizer`` to ``2026.5.17.1``.
-- ``:wrap-in-file:`` is now honoured by the ``literalizer-call``
+- ``:wrap-in-file:`` is now honored by the ``literalizer-call``
   directive.
   It was previously parsed (and documented as a shared option) but
   silently ignored, so ``literalizer-call`` always emitted bare calls.
