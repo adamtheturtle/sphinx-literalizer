@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.05.18
+----------
+
+
 - Bumped ``literalizer`` to ``2026.5.18``.
 - ``:parameter-names:`` is now optional on the ``literalizer-call``
   directive.
