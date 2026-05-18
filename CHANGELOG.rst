@@ -4,6 +4,24 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.5.18``.
+- ``:parameter-names:`` is now optional on the ``literalizer-call``
+  directive.
+  An empty (or omitted) value means the call takes *no* arguments,
+  rather than the previous behavior where an empty value parsed as a
+  single empty-named argument.
+  Combined with ``:per-element:`` over a single-element source and
+  ``:variable-name:``, this renders a no-argument constructor bound to
+  a variable (``p1 = Playlist()`` / ``let p1 = Playlist();`` /
+  ``auto p1 = Playlist();``), the construction line that
+  ``literalizer-call`` could not previously express -- the original
+  motivation of the ``:variable-name:`` feature.
+- ``:variable-name:`` combined with ``:per-element:`` no longer always
+  fails: following upstream ``literalizer`` ``2026.5.18`` it binds the
+  call to the variable when the source produces exactly one call (a
+  single-element list), and still surfaces a clean ``ExtensionError``
+  when the source produces zero or more than one call.
+
 2026.05.17.1
 ------------
 
