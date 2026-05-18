@@ -287,6 +287,9 @@ Directive options
       ``readonly``.
    ``Java``
       ``public``, ``private``, ``protected``, ``static``, ``final``.
+   ``Rust``
+      ``mut`` (a mutable ``let mut`` binding, so the bound value can be
+      mutated through the binding).
 
 ``:variable-type-hints:`` (optional)
    Whether to add type hints to variable declarations.

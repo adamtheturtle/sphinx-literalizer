@@ -4,6 +4,16 @@ Changelog
 Next
 ----
 
+- Bumped ``literalizer`` to ``2026.5.18.1``.
+- ``:modifiers: mut`` is now accepted for Rust.
+  Following upstream ``literalizer`` ``2026.5.18.1``, which adds a
+  ``MUT`` member to ``Rust.Modifiers``, combining ``:variable-name:``
+  with ``:modifiers: mut`` renders a mutable Rust binding
+  (``let mut p1 = Playlist::new();``) instead of the immutable default
+  (``let p1 = Playlist::new();``).
+  This unblocks migrating a construct-then-mutate ladder to Rust, where
+  the constructed value is bound and then mutated through the binding.
+
 2026.05.18
 ----------
 

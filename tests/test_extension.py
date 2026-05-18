@@ -5813,6 +5813,50 @@ def test_literalizer_call_zero_arg_constructor_variable_name(
     app.cleanup()
 
 
+def test_literalizer_call_rust_mut_variable_name(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """``:modifiers: mut`` with ``:variable-name:`` renders a mutable
+    Rust binding, so the constructed value can be mutated through the
+    binding (the construct-then-mutate ladder of issue #228).
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text(data="- []\n")
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.yaml
+           :language: rust
+           :target-function: Playlist
+           :parameter-names:
+           :per-element:
+           :variable-name: p1
+           :modifiers: mut
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert text == "let mut p1 = Playlist();"
+    app.cleanup()
+
+
 def test_literalizer_call_parameter_names_omitted(
     *,
     make_app: Callable[..., SphinxTestApp],
