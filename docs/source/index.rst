@@ -591,6 +591,24 @@ renders as:
       :parameter-names: flag,count
       :per-element:
 
+A no-argument constructor bound to a variable is expressed with an
+empty ``:parameter-names:``, ``:per-element:``, and a single-element
+source.  Given :file:`_examples/no_args.yaml` containing:
+
+.. literalinclude:: _examples/no_args.yaml
+   :language: yaml
+
+the directive renders the language-idiomatic no-argument construction:
+
+.. rest-example::
+
+   .. literalizer-call:: _examples/no_args.yaml
+      :language: rust
+      :target-function: Playlist
+      :parameter-names:
+      :per-element:
+      :variable-name: p1
+
 ``literalizer-call`` directive options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -598,11 +616,15 @@ renders as:
    The function expression to call (e.g. ``my_func`` or
    ``throttler.should_send_notification``).
 
-``:parameter-names:`` (required)
+``:parameter-names:`` (optional)
    Comma-separated parameter names, positionally mapped to each
    element in each row.  For positional-call languages (like Go) these
    are unused in the output but still determine how many values to
    expect per row.
+   An empty (or omitted) value means the call takes *no* arguments,
+   which -- combined with ``:per-element:`` over a single-element
+   source and ``:variable-name:`` -- renders a no-argument constructor
+   bound to a variable (see the example below).
 
 ``:per-element:`` (optional flag)
    When set, each top-level list element becomes a separate function

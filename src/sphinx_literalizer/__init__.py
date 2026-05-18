@@ -1140,12 +1140,19 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
     that call (using the target language's comment syntax), and a blank
     line emits no comment.  The line count must match the number of
     generated calls.
+
+    An empty (or omitted) ``:parameter-names:`` means the call takes *no*
+    arguments.  Combined with ``:per-element:`` over a single-element
+    source (e.g. ``- []``) and ``:variable-name:``, this renders a
+    no-argument constructor bound to a variable -- ``p1 = Playlist()`` /
+    ``let p1 = Playlist::new();`` / ``auto p1 = Playlist();`` -- in the
+    target language's idiom.
     """
 
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
         **_COMMON_OPTIONS,
         "target-function": directives.unchanged_required,
-        "parameter-names": directives.unchanged_required,
+        "parameter-names": directives.unchanged,
         "per-element": directives.flag,
         "call-transform": directives.unchanged_required,
         "zip-file": directives.unchanged_required,
@@ -1234,7 +1241,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         return _LiteralizerCallOptions(
             **_common_option_args(options=self.options),
             target_function=self.options["target-function"],
-            parameter_names=self.options["parameter-names"],
+            parameter_names=self.options.get("parameter-names", ""),
             per_element="per-element" in self.options,
             call_transform=self.options.get("call-transform"),
             zip_file=self.options.get("zip-file"),
@@ -1259,9 +1266,18 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         include_preamble = options.include_preamble
         omit_code = options.omit_code
         target_function = options.target_function
-        parameter_names = [
-            p.strip() for p in options.parameter_names.split(sep=",")
-        ]
+        # An empty (or omitted) ``:parameter-names:`` means *no*
+        # arguments rather than one empty-named argument: splitting ``""``
+        # on ``,`` would yield ``['']`` (a single argument), so the
+        # zero-argument call -- e.g. a no-argument constructor bound to
+        # ``:variable-name:`` -- would be unreachable.  An empty value
+        # therefore parses to ``[]``.
+        if options.parameter_names.strip():
+            parameter_names = [
+                p.strip() for p in options.parameter_names.split(sep=",")
+            ]
+        else:
+            parameter_names = []
         per_element = options.per_element
         wrap_in_file = options.wrap_in_file
 

@@ -5673,13 +5673,13 @@ def test_literalizer_call_existing_variable_rust(
     app.cleanup()
 
 
-def test_literalizer_call_variable_form_per_element_error(
+def test_literalizer_call_variable_form_per_element_single_element(
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """``:variable-name:`` with ``:per-element:`` surfaces literalizer's
-    ``UnsupportedCallShapeError`` as an ``ExtensionError``.
+    """``:variable-name:`` with ``:per-element:`` over a single-element
+    source binds the one resulting call to the variable.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -5707,8 +5707,150 @@ def test_literalizer_call_variable_form_per_element_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    expected = 'let my_data = make_widget(HashMap::from([("count", 42)]));'
+    assert text == expected
+    app.cleanup()
+
+
+def test_literalizer_call_variable_form_per_element_multi_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """``:variable-name:`` with ``:per-element:`` over a source that
+    produces more than one call surfaces literalizer's
+    ``UnsupportedCallShapeError`` as an ``ExtensionError``.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"count": 1}, {"count": 2}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: rust
+           :target-function: make_widget
+           :parameter-names: count
+           :per-element:
+           :variable-name: my_data
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
     with pytest.raises(expected_exception=ExtensionError):
         app.build()
+    app.cleanup()
+
+
+@pytest.mark.parametrize(
+    argnames=("language", "expected"),
+    argvalues=[
+        ("python", "p1 = Playlist()"),
+        ("rust", "let p1 = Playlist();"),
+        ("cpp", "auto p1 = Playlist();"),
+        ("go", "p1 := Playlist()"),
+        ("ruby", "p1 = Playlist()"),
+    ],
+)
+def test_literalizer_call_zero_arg_constructor_variable_name(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+    language: str,
+    expected: str,
+) -> None:
+    """An empty ``:parameter-names:`` with ``:per-element:`` over a
+    single-element source binds a no-argument constructor to the
+    variable.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text(data="- []\n")
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text=f"""\
+        Test
+        ====
+
+        .. literalizer-call:: data.yaml
+           :language: {language}
+           :target-function: Playlist
+           :parameter-names:
+           :per-element:
+           :variable-name: p1
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert text == expected
+    app.cleanup()
+
+
+def test_literalizer_call_parameter_names_omitted(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Omitting ``:parameter-names:`` entirely is equivalent to an empty
+    value: the call takes no arguments.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[[]]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: python
+           :target-function: Playlist
+           :per-element:
+           :variable-name: p1
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    text = literal_block.astext()
+    assert text == "p1 = Playlist()"
     app.cleanup()
 
 
