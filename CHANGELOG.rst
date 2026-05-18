@@ -4,6 +4,10 @@ Changelog
 Next
 ----
 
+2026.05.18.1
+------------
+
+
 - Bumped ``literalizer`` to ``2026.5.18.1``.
 - ``:modifiers: mut`` is now accepted for Rust.
   Following upstream ``literalizer`` ``2026.5.18.1``, which adds a
