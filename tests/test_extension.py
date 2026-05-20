@@ -7297,7 +7297,7 @@ def test_skip_if_unrepresentable_emits_no_node_rust(
     assert app.statuscode == 0
 
     doctree = app.env.get_doctree(docname="index")
-    assert list(doctree.findall(condition=nodes.literal_block)) == []
+    assert not list(doctree.findall(condition=nodes.literal_block))
     app.cleanup()
 
 
@@ -7382,7 +7382,7 @@ def test_skip_if_unrepresentable_after_auto_exhausts_precedence_rust(
     assert app.statuscode == 0
 
     doctree = app.env.get_doctree(docname="index")
-    assert list(doctree.findall(condition=nodes.literal_block)) == []
+    assert not list(doctree.findall(condition=nodes.literal_block))
     app.cleanup()
 
 
@@ -7547,7 +7547,7 @@ def test_skip_if_unrepresentable_unrepresentable_input_csharp(
     assert app.statuscode == 0
 
     doctree = app.env.get_doctree(docname="index")
-    assert list(doctree.findall(condition=nodes.literal_block)) == []
+    assert not list(doctree.findall(condition=nodes.literal_block))
     app.cleanup()
 
 
@@ -7619,7 +7619,7 @@ def test_skip_if_unrepresentable_literalizer_call_csharp(
     assert app.statuscode == 0
 
     doctree = app.env.get_doctree(docname="index")
-    assert list(doctree.findall(condition=nodes.literal_block)) == []
+    assert not list(doctree.findall(condition=nodes.literal_block))
     app.cleanup()
 
 
