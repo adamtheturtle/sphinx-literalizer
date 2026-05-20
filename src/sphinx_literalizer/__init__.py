@@ -318,33 +318,37 @@ _COMMON_OPTIONS: dict[str, Callable[[str], Any]] = {
 }
 
 
-# Default element/key/value type options: directive option name ->
-# (language constructor kwarg, predicate for whether the language class
-# supports it).  Lifted to module scope so the typed-options parse
-# boundary and ``_apply_default_type_options`` share one source of truth.
-_DEFAULT_TYPE_OPTIONS: dict[
-    str,
-    tuple[str, Callable[[LanguageCls], bool]],
-] = {
-    "default-set-element-type": (
-        "default_set_element_type",
-        lambda cls: cls.supports_default_set_element_type,
+@dataclass(frozen=True, kw_only=True)
+class _DefaultTypeOption:
+    """Directive option metadata for default element/key/value types."""
+
+    param_name: str
+    supports_check: Callable[[LanguageCls], bool]
+
+
+# Default element/key/value type options, lifted to module scope so the
+# typed-options parse boundary and ``_apply_default_type_options`` share
+# one source of truth.
+_DEFAULT_TYPE_OPTIONS: dict[str, _DefaultTypeOption] = {
+    "default-set-element-type": _DefaultTypeOption(
+        param_name="default_set_element_type",
+        supports_check=lambda cls: cls.supports_default_set_element_type,
     ),
-    "default-sequence-element-type": (
-        "default_sequence_element_type",
-        lambda cls: cls.supports_default_sequence_element_type,
+    "default-sequence-element-type": _DefaultTypeOption(
+        param_name="default_sequence_element_type",
+        supports_check=lambda cls: cls.supports_default_sequence_element_type,
     ),
-    "default-dict-key-type": (
-        "default_dict_key_type",
-        lambda cls: cls.supports_default_dict_key_type,
+    "default-dict-key-type": _DefaultTypeOption(
+        param_name="default_dict_key_type",
+        supports_check=lambda cls: cls.supports_default_dict_key_type,
     ),
-    "default-dict-value-type": (
-        "default_dict_value_type",
-        lambda cls: cls.supports_default_dict_value_type,
+    "default-dict-value-type": _DefaultTypeOption(
+        param_name="default_dict_value_type",
+        supports_check=lambda cls: cls.supports_default_dict_value_type,
     ),
-    "default-ordered-map-value-type": (
-        "default_ordered_map_value_type",
-        lambda cls: cls.supports_default_ordered_map_value_type,
+    "default-ordered-map-value-type": _DefaultTypeOption(
+        param_name="default_ordered_map_value_type",
+        supports_check=lambda cls: cls.supports_default_ordered_map_value_type,
     ),
 }
 
@@ -546,14 +550,14 @@ def _common_option_args(options: dict[str, Any]) -> _CommonOptionArgs:
 
 
 @beartype
-class _BaseLiteralizerDirective(SphinxDirective):
+class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-method
     """Shared logic for literalizer directives."""
 
     required_arguments = 1
     has_content = False
 
+    @staticmethod
     def _apply_format_options(
-        self,
         language_name: str,
         constructor: partial[Language],
         *,
@@ -588,8 +592,8 @@ class _BaseLiteralizerDirective(SphinxDirective):
                 )
         return constructor
 
+    @staticmethod
     def _apply_default_type_options(
-        self,
         language_name: str,
         constructor: partial[Language],
         *,
@@ -597,13 +601,10 @@ class _BaseLiteralizerDirective(SphinxDirective):
     ) -> partial[Language]:
         """Apply default element/key/value type options."""
         language_cls = _language_types()[language_name]
-        for option_name, (
-            param_name,
-            supports_check,
-        ) in _DEFAULT_TYPE_OPTIONS.items():
+        for option_name, type_option in _DEFAULT_TYPE_OPTIONS.items():
             value = options.default_type_options.get(option_name)
             if value is not None:
-                if not supports_check(language_cls):
+                if not type_option.supports_check(language_cls):
                     msg = (
                         f"Language '{language_name}' does not support "
                         f"'{option_name}'."
@@ -611,7 +612,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
                     raise ExtensionError(message=msg)
                 constructor = partial(
                     constructor,
-                    **{param_name: value},
+                    **{type_option.param_name: value},
                 )
         return constructor
 
@@ -698,8 +699,8 @@ class _BaseLiteralizerDirective(SphinxDirective):
         with _literalize_errors_as_extension_errors():
             return constructor()
 
+    @staticmethod
     def _resolve_format(
-        self,
         data_path: Path,
         *,
         explicit: str | None,
@@ -754,8 +755,8 @@ class _BaseLiteralizerDirective(SphinxDirective):
         self.add_name(node=node)
         return [node]
 
+    @staticmethod
     def _resolve_ref_options(
-        self,
         *,
         options: _CommonOptions,
     ) -> tuple[IdentifierCase | None, str]:
@@ -768,8 +769,8 @@ class _BaseLiteralizerDirective(SphinxDirective):
         )
         return ref_case, options.ref_key
 
+    @staticmethod
     def _resolve_variable_form(
-        self,
         language_cls: LanguageCls,
         *,
         options: _CommonOptions,
@@ -828,8 +829,8 @@ class _BaseLiteralizerDirective(SphinxDirective):
             return BothVariableForms(name=variable_name, modifiers=modifiers)
         return NewVariable(name=variable_name, modifiers=modifiers)
 
+    @staticmethod
     def _resolve_collection_layout(
-        self,
         *,
         options: _CommonOptions,
     ) -> CollectionLayout:
@@ -1168,8 +1169,8 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         "modifiers": directives.unchanged,
     }
 
+    @staticmethod
     def _build_call_transform(
-        self,
         *,
         options: _LiteralizerCallOptions,
     ) -> Callable[[CallContext], str] | None:
