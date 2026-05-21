@@ -29,6 +29,8 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: '**/pyproject.toml'
+          cache-suffix: ${{ matrix.python-version }}-${{ matrix.platform }}
+          save-cache: ${{ github.event_name != 'pull_request' }}
 
       - name: Run tests
         run: uv run --extra=dev pytest -s -vvv --cov-fail-under 100 --cov=src/ --cov=tests

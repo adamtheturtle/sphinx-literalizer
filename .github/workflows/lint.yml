@@ -31,6 +31,9 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: '**/pyproject.toml'
+          cache-suffix: ${{ matrix.python-version }}-${{ matrix.platform }}-${{ matrix.hook-stage
+            }}
+          save-cache: ${{ github.event_name != 'pull_request' }}
 
       - name: Lint
         shell: bash
