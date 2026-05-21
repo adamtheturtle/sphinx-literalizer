@@ -17,6 +17,7 @@ Odin
 PascalCase
 PureScript
 Pygments
+Pylint
 Pytest
 Raku
 Roc
@@ -42,6 +43,7 @@ datetimes
 dicts
 doctree
 enum
+fallbacks
 fortran
 frozenset
 getter
@@ -50,6 +52,7 @@ iso
 json
 julia
 kwarg
+literalized
 literalizer
 literalizer's
 mojo
