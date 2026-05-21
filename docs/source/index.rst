@@ -595,8 +595,9 @@ renders as:
       :per-element:
 
 A no-argument constructor bound to a variable is expressed with an
-empty ``:parameter-names:``, ``:per-element:``, and a single-element
-source.  Given :file:`_examples/no_args.yaml` containing:
+empty ``:parameter-names:`` (or omitted ``:parameter-names:``),
+``:per-element:``, and a single-element source.  Given
+:file:`_examples/no_args.yaml` containing:
 
 .. literalinclude:: _examples/no_args.yaml
    :language: yaml
@@ -607,17 +608,23 @@ the directive renders the language-idiomatic no-argument construction:
 
    .. literalizer-call:: _examples/no_args.yaml
       :language: rust
-      :target-function: Playlist
-      :parameter-names:
+      :constructor-class: Playlist
       :per-element:
       :variable-name: p1
 
 ``literalizer-call`` directive options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``:target-function:`` (required)
+``:target-function:`` (required unless ``:constructor-class:`` is set)
    The function expression to call (e.g. ``my_func`` or
    ``throttler.should_send_notification``).
+
+``:constructor-class:`` (required unless ``:target-function:`` is set)
+   A class/type name whose no-argument constructor should be called using
+   the selected language's idiom.  For example, ``Playlist`` renders as
+   ``Playlist()``, ``new Playlist()``, ``NewPlaylist()``,
+   ``Playlist.new()``, or ``Playlist::new()`` depending on the language.
+   This option cannot be combined with ``:target-function:``.
 
 ``:parameter-names:`` (optional)
    Comma-separated parameter names, positionally mapped to each

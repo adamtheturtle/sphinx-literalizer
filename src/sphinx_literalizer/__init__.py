@@ -468,7 +468,8 @@ class _LiteralizerOptions(_CommonOptions):
 class _LiteralizerCallOptions(_CommonOptions):
     """Typed options for the ``literalizer-call`` directive."""
 
-    target_function: str
+    target_function: str | None
+    constructor_class: str | None
     parameter_names: str
     per_element: bool
     call_transform: str | None
@@ -1130,11 +1131,22 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :existing-variable:
            :modifiers: public,static
 
+        .. literalizer-call:: path/to/no_args.yaml
+           :language: rust
+           :constructor-class: Widget
+           :per-element:
+           :variable-name: widget
+
     ``:call-transform:`` substitutes these placeholders in the template:
     ``$call`` (and the ``$0`` alias) for the rendered call expression,
     ``$index`` for the zero-based call position, and ``$zipped`` for the
     matching ``:zip-file:`` element rendered as a native literal (empty
     when no ``:zip-file:`` is given).
+
+    Use exactly one of ``:target-function:`` and
+    ``:constructor-class:``.  ``:constructor-class:`` formats a
+    language-specific zero-argument constructor target and then renders
+    through the same call machinery as ``:target-function:``.
 
     ``:comment-file:`` is a text file with one line per generated call;
     each non-blank line is emitted as a trailing source comment after
@@ -1153,6 +1165,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
     option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
         **_COMMON_OPTIONS,
         "target-function": directives.unchanged_required,
+        "constructor-class": directives.unchanged_required,
         "parameter-names": directives.unchanged,
         "per-element": directives.flag,
         "call-transform": directives.unchanged_required,
@@ -1239,9 +1252,24 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
     def _parse_options(self) -> _LiteralizerCallOptions:
         """Parse ``self.options`` into the typed options dataclass."""
+        target_function = self.options.get("target-function")
+        constructor_class = self.options.get("constructor-class")
+        if target_function is None and constructor_class is None:
+            msg = (
+                "Use exactly one of ':target-function:' and "
+                "':constructor-class:'."
+            )
+            raise ExtensionError(message=msg)
+        if target_function is not None and constructor_class is not None:
+            msg = (
+                "':target-function:' cannot be combined with "
+                "':constructor-class:'."
+            )
+            raise ExtensionError(message=msg)
         return _LiteralizerCallOptions(
             **_common_option_args(options=self.options),
-            target_function=self.options["target-function"],
+            target_function=target_function,
+            constructor_class=constructor_class,
             parameter_names=self.options.get("parameter-names", ""),
             per_element="per-element" in self.options,
             call_transform=self.options.get("call-transform"),
@@ -1251,6 +1279,23 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             consumable_refs=self.options.get("consumable-refs"),
             omit_code="omit-code" in self.options,
         )
+
+    @staticmethod
+    def _resolve_target_function(
+        *,
+        language_spec: Language,
+        options: _LiteralizerCallOptions,
+    ) -> str:
+        """Resolve the explicit or constructor-derived call target."""
+        target_function = options.target_function
+        if target_function is not None:
+            return target_function
+
+        constructor_class = options.constructor_class
+        if constructor_class is None:  # pragma: no cover
+            msg = "target source options are validated during parsing"
+            raise AssertionError(msg)
+        return language_spec.format_constructor_target(constructor_class)
 
     def run(self) -> list[nodes.Node]:
         """Read the data file and produce function call expressions."""
@@ -1266,7 +1311,6 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         pre_indent_level = options.pre_indent_level
         include_preamble = options.include_preamble
         omit_code = options.omit_code
-        target_function = options.target_function
         # An empty (or omitted) ``:parameter-names:`` means *no*
         # arguments rather than one empty-named argument: splitting ``""``
         # on ``,`` would yield ``['']`` (a single argument), so the
@@ -1316,6 +1360,10 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
         def _do(language_spec: Language) -> LiteralizeResult:
             """Render the calls for *source* with the built language."""
+            target_function = self._resolve_target_function(
+                language_spec=language_spec,
+                options=options,
+            )
             return literalize_call(
                 source=source,
                 input_format=input_format,
