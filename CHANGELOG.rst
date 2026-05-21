@@ -3,6 +3,11 @@ Changelog
 
 .. towncrier release notes start
 
+2026.05.21
+----------
+
+- Bumped ``literalizer`` to ``2026.5.20.1``.
+
 2026.05.20
 ----------
 
