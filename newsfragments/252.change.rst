@@ -1,1 +1,0 @@
-Add ``:constructor-class:`` to ``literalizer-call`` for language-specific constructor targets.

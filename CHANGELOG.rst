@@ -3,6 +3,11 @@ Changelog
 
 .. towncrier release notes start
 
+2026.05.21.2
+------------
+
+- Add ``:constructor-class:`` to ``literalizer-call`` for language-specific constructor targets.
+
 2026.05.21.1
 ------------
 
