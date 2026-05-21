@@ -1136,7 +1136,6 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :constructor-class: Widget
            :per-element:
            :variable-name: widget
-           :modifiers: mut
 
     ``:call-transform:`` substitutes these placeholders in the template:
     ``$call`` (and the ``$0`` alias) for the rendered call expression,
@@ -1293,11 +1292,10 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             return target_function
 
         constructor_class = options.constructor_class
-        if constructor_class is not None:
-            return language_spec.format_constructor_target(constructor_class)
-
-        msg = "target source options are validated during parsing"
-        raise AssertionError(msg)
+        if constructor_class is None:  # pragma: no cover
+            msg = "target source options are validated during parsing"
+            raise AssertionError(msg)
+        return language_spec.format_constructor_target(constructor_class)
 
     def run(self) -> list[nodes.Node]:
         """Read the data file and produce function call expressions."""
