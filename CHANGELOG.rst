@@ -3,6 +3,13 @@ Changelog
 
 .. towncrier release notes start
 
+2026.05.21.1
+------------
+
+- Bumped ``literalizer`` to ``2026.5.21``.
+
+- Aligned the Pylint configuration more closely with ``literalizer``.
+
 2026.05.21
 ----------
 
