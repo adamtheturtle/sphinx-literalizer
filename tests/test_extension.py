@@ -7950,3 +7950,129 @@ def test_record_struct_name_prefix_swift(
         "]"
     )
     app.cleanup()
+
+
+def test_json_type_rust_serde_json_value(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """``:json-type: serde_json_value`` routes Rust through
+    ``serde_json::json!`` so heterogeneous data round-trips without
+    needing a heterogeneous-strategy fallback.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"a": 1, "b": "two"}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+           :json-type: serde_json_value
+           :include-delimiters:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        'serde_json::json!({\n    "a": 1,\n    "b": "two",\n})'
+    )
+    app.cleanup()
+
+
+def test_bool_format_perl_json_pp_ref(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    r"""``:bool-format: json_pp_ref`` renders Perl booleans as ``\1`` /
+    ``\0`` scalar references, the conventional form for JSON::PP and
+    friends.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[True, False]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: perl
+           :bool-format: json_pp_ref
+           :include-delimiters:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == "[\n    \\1,\n    \\0,\n]"
+    app.cleanup()
+
+
+def test_json_type_rejected_for_unsupported_language(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A language that does not expose ``JsonTypes`` (e.g. Python)
+    surfaces a clean ``ExtensionError`` rather than crashing on the
+    constructor kwarg.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"a": 1}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :json-type: serde_json_value
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match="does not support json-type",
+    ):
+        app.build()
+    app.cleanup()

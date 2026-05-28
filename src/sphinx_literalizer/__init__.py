@@ -42,7 +42,9 @@ from literalizer.exceptions import (
     InvalidRecordNameError,
     ParameterCountMismatchError,
     PerElementNotListError,
+    UnrepresentableEmptyDictError,
     UnrepresentableInputError,
+    UnrepresentableIntegerError,
     UnsupportedCallShapeError,
     UnsupportedIdentifierCaseError,
     VariableNameNotSupportedError,
@@ -101,7 +103,48 @@ _FORMAT_OPTION_GETTERS: dict[
     "empty-dict-key": lambda cls: cls.EmptyDictKey,
     "heterogeneous-strategy": lambda cls: cls.HeterogeneousStrategies,
     "call-style": lambda cls: cls.CallStyles,
+    # Only a subset of languages expose ``JsonTypes`` / ``BoolFormats``;
+    # the helpers below keep the cross-language enumeration uniform
+    # without forcing literalizer to add empty enum classes to every
+    # language.
+    "json-type": lambda cls: _json_types(cls=cls),
+    "bool-format": lambda cls: _bool_formats(cls=cls),
 }
+
+
+def _optional_enum_cls(
+    *,
+    cls: LanguageCls,
+    name: str,
+) -> Iterable[enum.Enum]:
+    """Return the enum class named *name* on the language, or empty.
+
+    Returns an empty iterable when the attribute is not present.  Walks
+    each base's ``__dict__`` rather than using attribute access so the
+    project's ``bad-functions`` ban on ``getattr`` / ``hasattr`` stays
+    intact.
+    """
+    for klass in cls.__mro__:
+        if name in klass.__dict__:
+            enum_cls: type[enum.Enum] = klass.__dict__[name]
+            return enum_cls
+    return ()
+
+
+def _json_types(*, cls: LanguageCls) -> Iterable[enum.Enum]:
+    """Return ``cls.JsonTypes`` if defined, else an empty iterable.
+
+    Only a subset of languages route values through a JSON-value type.
+    """
+    return _optional_enum_cls(cls=cls, name="JsonTypes")
+
+
+def _bool_formats(*, cls: LanguageCls) -> Iterable[enum.Enum]:
+    """Return ``cls.BoolFormats`` if defined, else an empty iterable.
+
+    Only Perl currently exposes boolean format variants.
+    """
+    return _optional_enum_cls(cls=cls, name="BoolFormats")
 
 
 _IDENTIFIER_CASE_VALUES: tuple[str, ...] = tuple(
@@ -391,7 +434,9 @@ _USER_FACING_LITERALIZER_ERRORS: tuple[type[Exception], ...] = (
     HeterogeneousCollectionError,
     InvalidRecordNameError,
     PerElementNotListError,
+    UnrepresentableEmptyDictError,
     UnrepresentableInputError,
+    UnrepresentableIntegerError,
     UnsupportedCallShapeError,
     UnsupportedIdentifierCaseError,
     VariableNameNotSupportedError,
@@ -920,9 +965,14 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
                 try:
                     language_spec = _build(strategy_value=strategy_value)
                     return render(language_spec), language_spec
-                except UnrepresentableInputError:
+                except (
+                    UnrepresentableInputError,
+                    UnrepresentableEmptyDictError,
+                    UnrepresentableIntegerError,
+                ):
                     # No heterogeneous strategy can fix a shape-level
-                    # rejection, so do not fall back; skip or surface it.
+                    # rejection (or an out-of-range integer / empty-map
+                    # ambiguity), so do not fall back; skip or surface it.
                     if skip:
                         return None
                     raise
@@ -976,6 +1026,8 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :language-version: py39
            :empty-dict-key: positional
            :heterogeneous-strategy: auto
+           :json-type: serde_json_value
+           :bool-format: json_pp_ref
            :default-set-element-type: String
            :default-sequence-element-type: String
            :default-dict-key-type: String
