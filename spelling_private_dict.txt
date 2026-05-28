@@ -50,6 +50,7 @@ fallbacks
 fortran
 frozenset
 getter
+honoured
 honours
 iso
 iterable
