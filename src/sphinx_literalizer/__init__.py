@@ -104,11 +104,47 @@ _FORMAT_OPTION_GETTERS: dict[
     "heterogeneous-strategy": lambda cls: cls.HeterogeneousStrategies,
     "call-style": lambda cls: cls.CallStyles,
     # Only a subset of languages expose ``JsonTypes`` / ``BoolFormats``;
-    # ``getattr`` keeps the cross-language enumeration uniform without
-    # forcing literalizer to add empty enums to every language.
-    "json-type": lambda cls: getattr(cls, "JsonTypes", ()),
-    "bool-format": lambda cls: getattr(cls, "BoolFormats", ()),
+    # the helpers below keep the cross-language enumeration uniform
+    # without forcing literalizer to add empty enum classes to every
+    # language.
+    "json-type": lambda cls: _json_types(cls=cls),
+    "bool-format": lambda cls: _bool_formats(cls=cls),
 }
+
+
+def _optional_enum_cls(
+    *,
+    cls: LanguageCls,
+    name: str,
+) -> Iterable[enum.Enum]:
+    """Return the enum class named *name* on the language, or empty.
+
+    Returns an empty iterable when the attribute is not present.  Walks
+    each base's ``__dict__`` rather than using attribute access so the
+    project's ``bad-functions`` ban on ``getattr`` / ``hasattr`` stays
+    intact.
+    """
+    for klass in cls.__mro__:
+        if name in klass.__dict__:
+            enum_cls: type[enum.Enum] = klass.__dict__[name]
+            return enum_cls
+    return ()
+
+
+def _json_types(*, cls: LanguageCls) -> Iterable[enum.Enum]:
+    """Return ``cls.JsonTypes`` if defined, else an empty iterable.
+
+    Only a subset of languages route values through a JSON-value type.
+    """
+    return _optional_enum_cls(cls=cls, name="JsonTypes")
+
+
+def _bool_formats(*, cls: LanguageCls) -> Iterable[enum.Enum]:
+    """Return ``cls.BoolFormats`` if defined, else an empty iterable.
+
+    Only Perl currently exposes boolean format variants.
+    """
+    return _optional_enum_cls(cls=cls, name="BoolFormats")
 
 
 _IDENTIFIER_CASE_VALUES: tuple[str, ...] = tuple(

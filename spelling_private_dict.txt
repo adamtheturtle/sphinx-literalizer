@@ -32,6 +32,8 @@ astext
 backend
 backends
 behaviour
+bool
+booleans
 compilable
 config
 const
@@ -43,12 +45,14 @@ datetimes
 dicts
 doctree
 enum
+enums
 fallbacks
 fortran
 frozenset
 getter
 honours
 iso
+iterable
 json
 julia
 kwarg
