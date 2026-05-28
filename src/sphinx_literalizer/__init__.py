@@ -42,7 +42,9 @@ from literalizer.exceptions import (
     InvalidRecordNameError,
     ParameterCountMismatchError,
     PerElementNotListError,
+    UnrepresentableEmptyDictError,
     UnrepresentableInputError,
+    UnrepresentableIntegerError,
     UnsupportedCallShapeError,
     UnsupportedIdentifierCaseError,
     VariableNameNotSupportedError,
@@ -101,6 +103,11 @@ _FORMAT_OPTION_GETTERS: dict[
     "empty-dict-key": lambda cls: cls.EmptyDictKey,
     "heterogeneous-strategy": lambda cls: cls.HeterogeneousStrategies,
     "call-style": lambda cls: cls.CallStyles,
+    # Only a subset of languages expose ``JsonTypes`` / ``BoolFormats``;
+    # ``getattr`` keeps the cross-language enumeration uniform without
+    # forcing literalizer to add empty enums to every language.
+    "json-type": lambda cls: getattr(cls, "JsonTypes", ()),
+    "bool-format": lambda cls: getattr(cls, "BoolFormats", ()),
 }
 
 
@@ -391,7 +398,9 @@ _USER_FACING_LITERALIZER_ERRORS: tuple[type[Exception], ...] = (
     HeterogeneousCollectionError,
     InvalidRecordNameError,
     PerElementNotListError,
+    UnrepresentableEmptyDictError,
     UnrepresentableInputError,
+    UnrepresentableIntegerError,
     UnsupportedCallShapeError,
     UnsupportedIdentifierCaseError,
     VariableNameNotSupportedError,
@@ -920,9 +929,14 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
                 try:
                     language_spec = _build(strategy_value=strategy_value)
                     return render(language_spec), language_spec
-                except UnrepresentableInputError:
+                except (
+                    UnrepresentableInputError,
+                    UnrepresentableEmptyDictError,
+                    UnrepresentableIntegerError,
+                ):
                     # No heterogeneous strategy can fix a shape-level
-                    # rejection, so do not fall back; skip or surface it.
+                    # rejection (or an out-of-range integer / empty-map
+                    # ambiguity), so do not fall back; skip or surface it.
                     if skip:
                         return None
                     raise
@@ -976,6 +990,8 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :language-version: py39
            :empty-dict-key: positional
            :heterogeneous-strategy: auto
+           :json-type: serde_json_value
+           :bool-format: json_pp_ref
            :default-set-element-type: String
            :default-sequence-element-type: String
            :default-dict-key-type: String
