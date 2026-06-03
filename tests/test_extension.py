@@ -8077,3 +8077,30 @@ def test_json_type_rejected_for_unsupported_language(
     ):
         app.build()
     app.cleanup()
+
+
+def test_optional_enum_cls_returns_empty_when_attribute_missing() -> None:
+    """``_optional_enum_cls`` returns an empty iterable for unknown names."""
+    from literalizer.languages import Python
+
+    from sphinx_literalizer import _optional_enum_cls
+
+    assert list(_optional_enum_cls(cls=Python, name="NoSuchEnum")) == []
+
+
+def test_optional_enum_cls_walks_mro() -> None:
+    """``_optional_enum_cls`` finds enums defined on base classes."""
+    import enum
+
+    from sphinx_literalizer import _optional_enum_cls
+
+    class _Base:
+        class TargetEnum(enum.Enum):
+            A = "a"
+
+    class _Child(_Base):
+        pass
+
+    assert (
+        _optional_enum_cls(cls=_Child, name="TargetEnum") is _Base.TargetEnum
+    )
