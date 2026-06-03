@@ -7028,8 +7028,8 @@ def test_fortran_language_version_v2003(
     tmp_path: Path,
 ) -> None:
     """Fortran accepts :language-version: v2003 again, defining int64
-    via selected_int_kind instead of importing it from
-    iso_fortran_env.
+    via selected_int_kind and real64 via selected_real_kind instead of
+    importing them from iso_fortran_env.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -7063,6 +7063,7 @@ def test_fortran_language_version_v2003(
         "module fval_m\n"
         "  implicit none\n"
         "  integer, parameter :: int64 = selected_int_kind(18)\n"
+        "  integer, parameter :: real64 = selected_real_kind(15, 307)\n"
         "  type :: fval_t\n"
         "    integer :: t = 0\n"
         "  end type fval_t\n"
@@ -7072,7 +7073,7 @@ def test_fortran_language_version_v2003(
         "type(fval_t) :: v; end function\n"
         "  function fint(n) result(v); integer(kind=int64), intent(in) "
         ":: n; type(fval_t) :: v; end function\n"
-        "  function freal(x) result(v); real, intent(in) :: x; "
+        "  function freal(x) result(v); real(kind=real64), intent(in) :: x; "
         "type(fval_t) :: v; end function\n"
         "  function fstr(s) result(v); character(len=*), intent(in) :: "
         "s; type(fval_t) :: v; end function\n"
