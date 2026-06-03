@@ -92,13 +92,13 @@ urls.Source = "https://github.com/adamtheturtle/sphinx-literalizer"
 dev = []
 
 [tool.setuptools]
-zip-safe = false
-package-data.sphinx_literalizer = [
-    "py.typed",
-]
 packages.find.where = [
     "src",
 ]
+package-data.sphinx_literalizer = [
+    "py.typed",
+]
+zip-safe = false
 
 [tool.setuptools_scm]
 version_scheme = "post-release"
@@ -177,16 +177,28 @@ lint.mccabe.max-complexity = 12
 lint.pydocstyle.convention = "google"
 
 [tool.pylint]
+DEPRECATED_BUILTINS.bad-functions = [
+    # Use Pylint until Ruff can ban bare builtin calls, or until custom rules
+    # make this removable:
+    # https://github.com/astral-sh/ruff/issues/10079
+    # https://github.com/astral-sh/ruff/issues/970
+    "filter",
+    "getattr",
+    "hasattr",
+    "map",
+    "setattr",
+]
 # Allow the body of an if to be on the same line as the test if there is no
 # else.
 FORMAT.single-line-if-stmt = false
-# Pickle collected data for later comparisons.
-MASTER.persistent = true
-# Use multiple processes to speed up Pylint.
-MASTER.jobs = 0
+MAIN.fail-on = [
+    "useless-suppression",
+]
 # Top-level investigation script with intentional ``exec`` and shell
 # fragments in its docstring; not part of the shipped package.
 MASTER.ignore-paths = [ "repro.py" ]
+# Use multiple processes to speed up Pylint.
+MASTER.jobs = 0
 # List of plugins (as comma separated values of python modules names) to load,
 # usually to register additional checkers.
 # See https://chezsoi.org/lucas/blog/pylint-strict-base-configuration.html.
@@ -196,7 +208,6 @@ MASTER.ignore-paths = [ "repro.py" ]
 # - pylint.extensions.while_used
 # as they seemed to get in the way.
 MASTER.load-plugins = [
-    "pylint_per_file_ignores",
     "pylint.extensions.bad_builtin",
     "pylint.extensions.comparison_placement",
     "pylint.extensions.consider_refactoring_into_while_condition",
@@ -212,23 +223,45 @@ MASTER.load-plugins = [
     "pylint.extensions.redefined_variable_type",
     "pylint.extensions.set_membership",
     "pylint.extensions.typing",
+    "pylint_per_file_ignores",
 ]
+# Pickle collected data for later comparisons.
+MASTER.persistent = true
 # Allow loading of arbitrary C extensions. Extensions are imported into the
 # active Python interpreter and may run arbitrary code.
 MASTER.unsafe-load-any-extension = false
-MAIN.fail-on = [
-    "useless-suppression",
-]
-DEPRECATED_BUILTINS.bad-functions = [
-    # Use Pylint until Ruff can ban bare builtin calls, or until custom rules
-    # make this removable:
-    # https://github.com/astral-sh/ruff/issues/10079
-    # https://github.com/astral-sh/ruff/issues/970
-    "filter",
-    "getattr",
-    "hasattr",
-    "map",
-    "setattr",
+# Disable the message, report, category or checker with the given id(s). You
+# can either give multiple identifiers separated by comma (,) or put this
+# option multiple times (only on the command line, not in the configuration
+# file where it should appear only once).You can also use "--disable=all" to
+# disable everything first and then reenable specific checks. For example, if
+# you want to run only the similarities checker, you can use "--disable=all
+# --enable=similarities". If you want to run only the classes checker, but have
+# no Warning level messages displayed, use"--disable=all --enable=classes
+# --disable=W"
+MESSAGES-CONTROL.disable = [
+    # Too difficult to please
+    "duplicate-code",
+    # Let ruff handle long lines
+    "line-too-long",
+    "locally-disabled",
+    "missing-return-type-doc",
+    # We don't need everything to be documented because of mypy
+    "missing-type-doc",
+    "too-few-public-methods",
+    "too-many-arguments",
+    "too-many-instance-attributes",
+    "too-many-lines",
+    "too-many-locals",
+    "too-many-public-methods",
+    "too-many-return-statements",
+    "too-many-statements",
+    # Let ruff deal with sorting
+    "ungrouped-imports",
+    # Let ruff handle unused imports
+    "unused-import",
+    # Let ruff handle imports
+    "wrong-import-order",
 ]
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -241,39 +274,6 @@ MESSAGES-CONTROL.enable = [
     "spelling",
     "use-symbolic-message-instead",
     "useless-suppression",
-]
-# Disable the message, report, category or checker with the given id(s). You
-# can either give multiple identifiers separated by comma (,) or put this
-# option multiple times (only on the command line, not in the configuration
-# file where it should appear only once).You can also use "--disable=all" to
-# disable everything first and then reenable specific checks. For example, if
-# you want to run only the similarities checker, you can use "--disable=all
-# --enable=similarities". If you want to run only the classes checker, but have
-# no Warning level messages displayed, use"--disable=all --enable=classes
-# --disable=W"
-MESSAGES-CONTROL.disable = [
-    "too-few-public-methods",
-    "too-many-locals",
-    "too-many-arguments",
-    "too-many-instance-attributes",
-    "too-many-public-methods",
-    "too-many-return-statements",
-    "too-many-statements",
-    "too-many-lines",
-    "locally-disabled",
-    # Let ruff handle long lines
-    "line-too-long",
-    # Let ruff handle unused imports
-    "unused-import",
-    # Let ruff deal with sorting
-    "ungrouped-imports",
-    # We don't need everything to be documented because of mypy
-    "missing-type-doc",
-    "missing-return-type-doc",
-    # Too difficult to please
-    "duplicate-code",
-    # Let ruff handle imports
-    "wrong-import-order",
 ]
 # We ignore invalid names because:
 # - We want to use generated module names, which may not be valid, but are
@@ -297,28 +297,33 @@ SPELLING.spelling-private-dict-file = "spelling_private_dict.txt"
 # --spelling-private-dict-file option instead of raising a message.
 SPELLING.spelling-store-unknown-words = "no"
 
+[tool.interrogate]
+fail-under = 100
+verbose = 2
+omit-covered-files = true
+
 [tool.check-manifest]
 ignore = [
+    ".git_archival.txt",
     ".gitattributes",
     ".pre-commit-config.yaml",
-    "uv.lock",
     ".vscode/*.json",
-    "conftest.py",
     "CHANGELOG.rst",
-    "newsfragments",
-    "newsfragments/**",
-    "CODE_OF_CONDUCT.rst",
-    "CONTRIBUTING.rst",
-    "LICENSE",
-    "Makefile",
     "ci",
     "ci/**",
+    "CODE_OF_CONDUCT.rst",
+    "conftest.py",
+    "CONTRIBUTING.rst",
     "docs",
     "docs/**",
-    ".git_archival.txt",
+    "LICENSE",
+    "Makefile",
+    "newsfragments",
+    "newsfragments/**",
     "spelling_private_dict.txt",
     "tests",
     "tests/**",
+    "uv.lock",
     "zizmor.yml",
 ]
 
@@ -328,44 +333,89 @@ optional_dependencies_dev_groups = [
     "release",
 ]
 
+[tool.vulture]
+exclude = [
+    ".venv",
+    "build",
+]
+ignore_names = [
+    # Sphinx
+    "autoclass_content",
+    "autodoc_member_order",
+    "copybutton_exclude",
+    "extensions",
+    # pytest fixtures - we name fixtures like this for this purpose
+    "fixture_*",
+    # Sphinx directive attributes and methods
+    "has_content",
+    "html_show_copyright",
+    "html_show_sourcelink",
+    "html_show_sphinx",
+    "html_theme",
+    "html_theme_options",
+    "html_title",
+    "htmlhelp_basename",
+    "intersphinx_mapping",
+    "language",
+    "linkcheck_ignore",
+    "linkcheck_retries",
+    "master_doc",
+    "nitpicky",
+    "option_spec",
+    "project_copyright",
+    "pygments_style",
+    # pytest configuration
+    "pytest_plugins",
+    "required_arguments",
+    "rst_prolog",
+    "run",
+    "source_suffix",
+    "spelling_word_list_filename",
+    "templates_path",
+    "towncrier_draft_autoversion_mode",
+    "towncrier_draft_include_empty",
+    "towncrier_draft_working_directory",
+    "warning_is_error",
+]
+
 [tool.pyproject-fmt]
 indent = 4
 keep_full_version = true
 max_supported_python = "3.14"
 
 [tool.mypy]
-strict = true
 files = [ "." ]
 exclude = [
     "build",
 ]
-plugins = [ "mypy_strict_kwargs" ]
 follow_untyped_imports = true
+strict = true
+plugins = [ "mypy_strict_kwargs" ]
 
 [tool.pyrefly]
-disable-project-excludes-heuristics = true
+search_path = [ ".", "src" ]
 errors.unused-ignore = "error"
+disable-project-excludes-heuristics = true
 project-excludes = [
     "build",
 ]
-search_path = [ ".", "src" ]
 
 [tool.pyright]
-enableTypeIgnoreComments = false
+typeCheckingMode = "strict"
 exclude = [
     ".venv",
 ]
+enableTypeIgnoreComments = false
 reportUnnecessaryTypeIgnoreComment = true
-typeCheckingMode = "strict"
 
 [tool.ty]
-analysis.respect-type-ignore-comments = false
 terminal.error-on-warning = true
+analysis.respect-type-ignore-comments = false
 
 [tool.pytest]
+ini_options.addopts = "-n auto"
 ini_options.xfail_strict = true
 ini_options.log_cli = true
-ini_options.addopts = "-n auto"
 
 [tool.coverage]
 run.branch = true
@@ -386,11 +436,11 @@ filename = "CHANGELOG.rst"
 # date) followed by a flat bullet list with no per-type sub-headings.
 template = "docs/towncrier_template.rst.jinja"
 title_format = "{version}"
+issue_format = "#{issue}"
 # ``title_format`` underline first, then any nested headings.  A bare
 # version such as ``2026.05.18`` underlined with ``-`` matches every
 # pre-towncrier entry in CHANGELOG.rst.
 underlines = [ "-", "~", "^" ]
-issue_format = "#{issue}"
 type = [
     # A single, unnamed fragment type keeps the assembled output as one
     # flat bullet list, matching the historical changelog (which never
@@ -409,61 +459,11 @@ ignore_path = [
     "./src/*/_setuptools_scm_version.txt",
 ]
 
-[tool.interrogate]
-fail-under = 100
-omit-covered-files = true
-verbose = 2
-
 [tool.pydocstringformatter]
 write = true
 split-summary-body = false
 max-line-length = 75
 linewrap-full-docstring = true
-
-[tool.vulture]
-ignore_names = [
-    # pytest configuration
-    "pytest_plugins",
-    # pytest fixtures - we name fixtures like this for this purpose
-    "fixture_*",
-    # Sphinx directive attributes and methods
-    "has_content",
-    "option_spec",
-    "required_arguments",
-    "run",
-    # Sphinx
-    "autoclass_content",
-    "autodoc_member_order",
-    "copybutton_exclude",
-    "extensions",
-    "html_show_copyright",
-    "html_show_sourcelink",
-    "html_show_sphinx",
-    "html_theme",
-    "html_theme_options",
-    "html_title",
-    "htmlhelp_basename",
-    "intersphinx_mapping",
-    "language",
-    "linkcheck_ignore",
-    "linkcheck_retries",
-    "master_doc",
-    "nitpicky",
-    "project_copyright",
-    "pygments_style",
-    "rst_prolog",
-    "source_suffix",
-    "spelling_word_list_filename",
-    "templates_path",
-    "warning_is_error",
-    "towncrier_draft_autoversion_mode",
-    "towncrier_draft_include_empty",
-    "towncrier_draft_working_directory",
-]
-exclude = [
-    ".venv",
-    "build",
-]
 
 [tool.yamlfix]
 section_whitelines = 1
