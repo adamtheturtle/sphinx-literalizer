@@ -1,4 +1,5 @@
 # pyright: reportPrivateUsage=false
+# pylint: disable=import-private-name
 """Unit tests for ``sphinx_literalizer._optional_enum_cls``."""
 
 import enum
@@ -6,9 +7,7 @@ import enum
 from literalizer._language import LanguageCls
 from literalizer.languages import Python
 
-from sphinx_literalizer import (
-    _optional_enum_cls,  # pylint: disable=import-private-name
-)
+from sphinx_literalizer import _optional_enum_cls
 
 
 def test_optional_enum_cls_returns_empty_when_attribute_missing() -> None:
