@@ -18,6 +18,7 @@ PascalCase
 PureScript
 Pygments
 Pylint
+Pyright
 Pytest
 Raku
 Roc
@@ -69,6 +70,7 @@ positionally
 pragma
 pre
 prepends
+pyright
 rawsource
 repr
 representable

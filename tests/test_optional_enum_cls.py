@@ -6,14 +6,16 @@ import enum
 from literalizer._language import LanguageCls
 from literalizer.languages import Python
 
-from sphinx_literalizer import _optional_enum_cls
+from sphinx_literalizer import (
+    _optional_enum_cls,  # pylint: disable=import-private-name
+)
 
 
 def test_optional_enum_cls_returns_empty_when_attribute_missing() -> None:
     """``_optional_enum_cls`` returns an empty iterable for unknown
     names.
     """
-    assert list(_optional_enum_cls(cls=Python, name="NoSuchEnum")) == []
+    assert not list(_optional_enum_cls(cls=Python, name="NoSuchEnum"))
 
 
 def test_optional_enum_cls_walks_mro() -> None:
