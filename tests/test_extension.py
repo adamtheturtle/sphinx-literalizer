@@ -8044,9 +8044,9 @@ def test_json_type_rejected_for_unsupported_language(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """A language that does not expose ``JsonTypes`` (e.g. Python)
-    surfaces a clean ``ExtensionError`` rather than crashing on the
-    constructor kwarg.
+    """A language whose ``JsonTypes`` enum has no matching member
+    (e.g. Python) surfaces a clean ``ExtensionError`` rather than
+    crashing on the constructor kwarg.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
