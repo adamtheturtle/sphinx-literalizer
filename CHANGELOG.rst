@@ -3,6 +3,11 @@ Changelog
 
 .. towncrier release notes start
 
+2026.07.15
+----------
+
+- Bumped ``literalizer`` and documented how ``:heterogeneous-strategy: record`` preserves a uniform outer record while falling back to native maps for incompatible nested sibling shapes.
+
 2026.07.14
 ----------
 
