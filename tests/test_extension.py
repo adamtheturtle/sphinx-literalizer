@@ -6618,6 +6618,136 @@ def test_heterogeneous_strategy_record_go(
     app.cleanup()
 
 
+@pytest.mark.parametrize(
+    argnames=("language", "record_declaration", "nested_map_literal"),
+    argvalues=[
+        (
+            "csharp",
+            (
+                "record Record0(string Name, Dictionary<string, object> "
+                "Input, Dictionary<string, object> Expected);"
+            ),
+            "new Dictionary<string, object>",
+        ),
+        (
+            "cpp",
+            (
+                "struct Record0 { std::string name; "
+                "std::map<std::string, LiteralizerRecordValue> input; "
+                "std::map<std::string, LiteralizerRecordValue> expected; "
+                "};"
+            ),
+            "std::map<std::string, LiteralizerRecordValue>",
+        ),
+        ("go", "type Record0 struct {", "map[string]any"),
+        (
+            "java",
+            (
+                "record Record0(String name, java.util.Map<String, Object> "
+                "input, java.util.Map<String, Object> expected) {}"
+            ),
+            "Map.ofEntries",
+        ),
+        (
+            "kotlin",
+            (
+                "data class Record0(val name: String, "
+                "val input: Map<String, Any?>, "
+                "val expected: Map<String, Any?>)"
+            ),
+            "mapOf<String, Any?>",
+        ),
+        (
+            "rust",
+            (
+                "struct Record0 {\n"
+                "    name: &'static str,\n"
+                "    input: HashMap<&'static str, Value>,\n"
+                "    expected: HashMap<&'static str, Value>,\n"
+                "}"
+            ),
+            "HashMap::from",
+        ),
+        (
+            "scala",
+            (
+                "case class Record0(name: String, input: Map[String, Any], "
+                "expected: Map[String, Any])"
+            ),
+            "Map[String, Any]",
+        ),
+    ],
+)
+def test_record_nested_map_fallback(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+    language: str,
+    record_declaration: str,
+    nested_map_literal: str,
+) -> None:
+    """Record rendering keeps one outer shape and falls back to maps
+    for incompatible nested sibling shapes in statically typed targets.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(
+            obj=[
+                {
+                    "name": "test_1",
+                    "input": {
+                        "type": "create",
+                        "pr_id": "pr_1",
+                        "draft": True,
+                    },
+                    "expected": {"pr_id": "pr_1", "status": "draft"},
+                },
+                {
+                    "name": "test_2",
+                    "input": {"type": "publish", "pr_id": "pr_1"},
+                    "expected": {"error": "invalid_operation"},
+                },
+            ],
+        ),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text=f"""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: {language}
+           :heterogeneous-strategy: record
+           :include-delimiters:
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    output = literal_block.astext()
+    assert record_declaration in output
+    assert output.count("Record0") == 3
+    assert "Record1" not in output
+    assert nested_map_literal in output
+    assert all(
+        value in output
+        for value in ("test_1", "test_2", "draft", "invalid_operation")
+    )
+    app.cleanup()
+
+
 def test_record_struct_name_prefix_python(
     *,
     make_app: Callable[..., SphinxTestApp],

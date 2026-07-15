@@ -143,6 +143,29 @@ With :file:`_examples/record.json`:
       :heterogeneous-strategy: record
       :include-preamble:
 
+Nested map fallback (Rust)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``record`` keeps a uniform outer record even when maps nested under the same
+field have incompatible sibling shapes.  The nested level falls back to the
+language's native map representation and value carrier; no ``:json-type:`` or
+additional directive option is required.  This is useful for test-case data
+such as :file:`_examples/record_nested_maps.json`:
+
+.. literalinclude:: _examples/record_nested_maps.json
+   :language: json
+
+The same ``record`` path is available for C#, C++, Go, Java, Kotlin, Rust, and
+Scala.  For example, Rust remains standard-library-only:
+
+.. rest-example::
+
+   .. literalizer:: _examples/record_nested_maps.json
+      :language: rust
+      :heterogeneous-strategy: record
+      :include-delimiters:
+      :include-preamble:
+
 ``tuple`` (Rust)
 ~~~~~~~~~~~~~~~~
 
@@ -217,7 +240,7 @@ Languages not listed support only ``error`` (set explicitly) and ``auto`` (which
      - Rust
      - A generated tagged ``enum`` plus wrapped values.
    * - ``record``
-     - Go, Java, Kotlin, Rust, Scala
+     - C#, C++, Go, Java, Kotlin, Rust, Scala
      - A generated ``struct`` / record declaration plus a matching literal, for record-shaped mappings.
    * - ``tuple``
      - C++, Rust

@@ -1,0 +1,1 @@
+Bumped ``literalizer`` and documented how ``:heterogeneous-strategy: record`` preserves a uniform outer record while falling back to native maps for incompatible nested sibling shapes.
