@@ -1,0 +1,1 @@
+``:call-transform:`` placeholders are now substituted in a single pass, so a ``$zipped`` literal rendered from user data (or a rendered ``$call`` expression containing ``$0``) that itself contains a placeholder token is inserted verbatim instead of being silently re-expanded.

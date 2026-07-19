@@ -4756,6 +4756,73 @@ def test_literalizer_call_call_transform_index(
     assert content_html == expected_html
 
 
+def test_literalizer_call_call_transform_no_reexpansion(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A ``$zipped`` literal that itself contains a placeholder token is
+    inserted verbatim rather than being re-expanded.
+
+    The zip element renders to the Python literal ``"$call"``; a naive
+    sequential substitution would rewrite that ``$call`` into the whole
+    call expression.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[[1]]))
+    (source_directory / "zip.json").write_text(
+        data=json.dumps(obj=["$call"]),
+    )
+    source_file = source_directory / "index.rst"
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: python
+           :target-function: my_func
+           :parameter-names: x
+           :per-element:
+           :zip-file: zip.json
+           :call-transform: $call  # $zipped
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    content_html = (app.outdir / "index.html").read_text()
+    app.cleanup()
+
+    source_file.write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. code-block:: python
+
+           my_func(x=1)  # "$call"
+    """
+        )
+    )
+    expected_app = make_app(srcdir=source_directory)
+    expected_app.build()
+    assert expected_app.statuscode == 0
+    expected_html = (expected_app.outdir / "index.html").read_text()
+    expected_app.cleanup()
+
+    assert content_html == expected_html
+
+
 def test_literalizer_call_zip_file(
     *,
     make_app: Callable[..., SphinxTestApp],
