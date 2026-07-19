@@ -1,0 +1,1 @@
+Format options whose enum every language defines but only some accept as a constructor keyword (``:empty-dict-key:``, ``:call-style:``) now raise a clean ``ExtensionError`` on unsupported languages instead of crashing the build with an uncaught ``TypeError``.

@@ -108,6 +108,19 @@ _FORMAT_OPTION_GETTERS: dict[
 }
 
 
+# Format options whose enum is defined on *every* language but whose
+# constructor keyword only some languages accept.  Membership in the enum
+# (which is all ``_lookup_format`` checks) is therefore not enough to know
+# the option is applicable, so these are gated on a ``supports_*``
+# capability flag -- mirroring :data:`_DEFAULT_TYPE_OPTIONS` -- to raise a
+# clean ``ExtensionError`` rather than letting an unexpected keyword reach
+# the language constructor as an uncaught ``TypeError``.
+_FORMAT_OPTION_SUPPORTS_CHECKS: dict[str, Callable[[LanguageCls], bool]] = {
+    "empty-dict-key": lambda cls: cls.supports_empty_dict_key,
+    "call-style": lambda cls: cls.supports_call_style,
+}
+
+
 _IDENTIFIER_CASE_VALUES: tuple[str, ...] = tuple(
     sorted(m.name.lower() for m in IdentifierCase)
 )
@@ -579,12 +592,24 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
         value is never the ``auto`` sentinel.
         """
         all_formats = _all_formats()
+        language_cls = _language_types()[language_name]
         for option_name in _FORMAT_OPTION_GETTERS:
             if option_name == "heterogeneous-strategy":
                 value = heterogeneous_strategy_value
             else:
                 value = options.format_options.get(option_name)
             if value is not None:
+                supports_check = _FORMAT_OPTION_SUPPORTS_CHECKS.get(
+                    option_name
+                )
+                if supports_check is not None and not supports_check(
+                    language_cls
+                ):
+                    msg = (
+                        f"Language '{language_name}' does not support "
+                        f"'{option_name}'."
+                    )
+                    raise ExtensionError(message=msg)
                 param_name = option_name.replace("-", "_")
                 constructor = partial(
                     constructor,
