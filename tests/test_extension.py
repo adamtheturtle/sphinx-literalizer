@@ -3261,7 +3261,7 @@ def test_empty_dict_key_error(
     )
     with pytest.raises(
         expected_exception=ExtensionError,
-        match=r"Language 'python' does not support empty-dict-key 'positional'\.",
+        match=r"Language 'python' does not support 'empty-dict-key'\.",
     ):
         app.build()
 
@@ -3515,6 +3515,82 @@ def test_unsupported_default_set_element_type_error(
     with pytest.raises(
         expected_exception=ExtensionError,
         match=r"Language 'javascript' does not support 'default-set-element-type'\.",
+    ):
+        app.build()
+
+
+def test_unsupported_empty_dict_key_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A language that defines the ``EmptyDictKey`` enum but does not
+    accept the ``empty_dict_key`` constructor keyword raises a clean
+    ``ExtensionError`` rather than an uncaught ``TypeError``.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj={}))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: cpp
+           :empty-dict-key: allow
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=r"Language 'cpp' does not support 'empty-dict-key'\.",
+    ):
+        app.build()
+
+
+def test_unsupported_call_style_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A language that defines the ``CallStyles`` enum but does not accept
+    the ``call_style`` constructor keyword raises a clean
+    ``ExtensionError`` rather than an uncaught ``TypeError``.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[[1]]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: forth
+           :target-function: f
+           :parameter-names: x
+           :call-style: postfix
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=r"Language 'forth' does not support 'call-style'\.",
     ):
         app.build()
 
