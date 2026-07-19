@@ -1206,7 +1206,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         All placeholders are substituted in a single pass so that text
         inserted for one placeholder -- a ``$zipped`` literal rendered
         from user data, or a rendered ``$call`` expression that itself
-        contains a ``$0`` -- is never rescanned and re-expanded.
+        contains a ``$0`` -- is never re-scanned and re-expanded.
         """
         template = options.call_transform
         if template is None:
