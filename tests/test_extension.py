@@ -5498,6 +5498,42 @@ def test_both_variable_forms_requires_variable_name(
         app.build()
 
 
+def test_existing_variable_requires_variable_name(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Using :existing-variable: without :variable-name: raises an
+    ExtensionError rather than silently emitting a plain literal.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj={"x": 1}))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :existing-variable:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=r"^':existing-variable:' requires ':variable-name:'\.$",
+    ):
+        app.build()
+
+
 def test_both_variable_forms_incompatible_with_existing_variable(
     *,
     make_app: Callable[..., SphinxTestApp],
