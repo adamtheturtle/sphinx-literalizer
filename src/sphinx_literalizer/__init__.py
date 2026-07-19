@@ -842,6 +842,9 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
                 "':existing-variable:'."
             )
             raise ExtensionError(message=msg)
+        if existing_variable and variable_name is None:
+            msg = "':existing-variable:' requires ':variable-name:'."
+            raise ExtensionError(message=msg)
 
         if variable_name is None:
             return None
