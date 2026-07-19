@@ -5,6 +5,7 @@ read data files and render them as native language code blocks.
 """
 
 import enum
+import re
 from collections.abc import Callable, Generator, Iterable, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -1202,25 +1203,32 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
     ) -> Callable[[CallContext], str] | None:
         """Build the ``:call-transform:`` callback from the template.
 
-        ``$index`` and ``$zipped`` are resolved before ``$call`` / ``$0``
-        so a placeholder-like substring inside the rendered call
-        expression is never re-expanded.
+        All placeholders are substituted in a single pass so that text
+        inserted for one placeholder -- a ``$zipped`` literal rendered
+        from user data, or a rendered ``$call`` expression that itself
+        contains a ``$0`` -- is never rescanned and re-expanded.
         """
         template = options.call_transform
         if template is None:
             return None
-        resolved_template = template
+
+        # Longer tokens first so alternation never matches a prefix; none
+        # of these actually share a prefix, but this keeps it robust.
+        placeholder = re.compile(pattern=r"\$index|\$zipped|\$call|\$0")
 
         def _call_transform(context: CallContext) -> str:
             """Substitute call-context placeholders in the template."""
             zipped = "" if context.zipped is None else context.zipped
-            result = resolved_template.replace(
-                "$index",
-                str(object=context.index),
+            replacements = {
+                "$index": str(object=context.index),
+                "$zipped": zipped,
+                "$call": context.call,
+                "$0": context.call,
+            }
+            return placeholder.sub(
+                repl=lambda match: replacements[match.group()],
+                string=template,
             )
-            result = result.replace("$zipped", zipped)
-            result = result.replace("$call", context.call)
-            return result.replace("$0", context.call)
 
         return _call_transform
 
