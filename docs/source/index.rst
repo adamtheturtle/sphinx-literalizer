@@ -95,7 +95,7 @@ Directive options
    names in lowercase, e.g. ``py39`` for Python, ``jdk_11`` for Java,
    ``ada_2022`` for Ada, and ``cpp14``, ``cpp17``, or ``cpp20`` for
    C++ (the default).  Select C++14 or C++17 when generated code must
-   avoid C++20-only syntax such as designated initializers.  Some other
+   avoid C++20-only field-name syntax.  Some other
    languages also expose more than one version (e.g. ``v2003`` and
    ``v2008`` for Fortran); unsupported values raise an error.
 

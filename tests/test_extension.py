@@ -6728,9 +6728,7 @@ def test_cpp17_language_version(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """``:language-version: cpp17`` avoids C++20 designated
-    initializers.
-    """
+    """``:language-version: cpp17`` avoids C++20 field-name syntax."""
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
