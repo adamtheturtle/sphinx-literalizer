@@ -1,1 +1,0 @@
-``:existing-variable:`` without ``:variable-name:`` now raises an ``ExtensionError`` -- consistent with ``:modifiers:`` and ``:both-variable-forms:`` -- instead of silently ignoring the flag and emitting a plain literal.

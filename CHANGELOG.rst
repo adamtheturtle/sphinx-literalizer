@@ -3,6 +3,15 @@ Changelog
 
 .. towncrier release notes start
 
+2026.07.20
+----------
+
+- Format options whose enum every language defines but only some accept as a constructor keyword (``:empty-dict-key:``, ``:call-style:``) now raise a clean ``ExtensionError`` on unsupported languages instead of crashing the build with an uncaught ``TypeError``.
+
+- ``:call-transform:`` placeholders are now substituted in a single pass, so a ``$zipped`` literal rendered from user data (or a rendered ``$call`` expression containing ``$0``) that itself contains a placeholder token is inserted verbatim instead of being silently re-expanded.
+
+- ``:existing-variable:`` without ``:variable-name:`` now raises an ``ExtensionError`` -- consistent with ``:modifiers:`` and ``:both-variable-forms:`` -- instead of silently ignoring the flag and emitting a plain literal.
+
 Next
 ----
 
