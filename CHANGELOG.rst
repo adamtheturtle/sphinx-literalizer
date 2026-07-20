@@ -3,6 +3,14 @@ Changelog
 
 .. towncrier release notes start
 
+Next
+----
+
+- Bump ``literalizer`` to ``2026.7.20.1``.  ``literalizer-call`` now
+  correctly produces shared preambles for heterogeneous arguments across
+  ``:per-element:`` calls; the feature is documented with a Rust
+  ``:heterogeneous-strategy: tagged_enum`` example.
+
 2026.07.15
 ----------
 

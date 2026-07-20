@@ -4403,6 +4403,62 @@ def test_literalizer_call_basic_python(
     assert content_html == expected_html
 
 
+def test_literalizer_call_heterogeneous_per_element_preamble(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Heterogeneous per-element calls include one complete Rust preamble.
+
+    The preamble must include the variants used by every call argument,
+    including the empty nested list in the second call.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[[1, "two"]], [[False, []]]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: rust
+           :target-function: process
+           :parameter-names: value
+           :per-element:
+           :heterogeneous-strategy: tagged_enum
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        "enum Value {\n"
+        "    I32(i32),\n"
+        "    Str(&'static str),\n"
+        "    Bool(bool),\n"
+        "    List(Vec<Value>),\n"
+        "}\n"
+        "\n"
+        'process(vec![Value::I32(1), Value::Str("two")]);\n'
+        "process(vec![Value::Bool(false), Value::List(vec![])]);"
+    )
+    app.cleanup()
+
+
 def test_literalizer_call_go(
     *,
     make_app: Callable[..., SphinxTestApp],
@@ -6664,6 +6720,48 @@ def test_language_version(
     doctree = app.env.get_doctree(docname="index")
     (literal_block,) = doctree.findall(condition=nodes.literal_block)
     assert literal_block.astext() == "1,\n2,"
+    app.cleanup()
+
+
+def test_cpp17_language_version(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """``:language-version: cpp17`` avoids C++20 designated
+    initializers.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"name": "Ada", "active": True}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: cpp
+           :language-version: cpp17
+           :heterogeneous-strategy: record
+           :include-delimiters:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert 'Record0{"Ada", true}' in literal_block.astext()
     app.cleanup()
 
 
