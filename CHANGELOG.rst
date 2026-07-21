@@ -3,6 +3,15 @@ Changelog
 
 .. towncrier release notes start
 
+2026.07.21.2
+------------
+
+- Bump ``literalizer`` to ``2026.7.21.2`` and expose its C++14 nested
+  ``tuple`` rendering.  With ``:heterogeneous-strategy: tuple``, a homogeneous
+  outer sequence of fixed-shape heterogeneous sequences now renders as
+  ``std::vector<std::tuple<...>>`` rather than exposing a
+  ``LiteralizerVariant`` wrapper.
+
 2026.07.21.1
 ------------
 
