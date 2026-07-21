@@ -7229,6 +7229,66 @@ def test_record_shape_names_java(
     app.cleanup()
 
 
+def test_record_shape_names_cpp14_external_record(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """C++14 maps a named record shape to a caller-declared struct."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(
+            obj=[
+                {"title": "Write docs", "done": False},
+                {"title": "Review PR", "done": True},
+            ],
+        ),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: cpp
+           :language-version: cpp14
+           :heterogeneous-strategy: record
+           :record-shape-names: title,done=Task
+           :include-delimiters:
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    output = literal_block.astext()
+    assert output == (
+        "#include <initializer_list>\n"
+        "#include <string>\n"
+        "#include <map>\n"
+        "#include <vector>\n"
+        "\n"
+        "std::vector<Task>{\n"
+        '    Task{"Write docs", false},\n'
+        '    Task{"Review PR", true},\n'
+        "}"
+    )
+    assert "struct Task" not in output
+    assert "LiteralizerVariant" not in output
+    app.cleanup()
+
+
 def test_record_shape_names_invalid_name_error(
     *,
     make_app: Callable[..., SphinxTestApp],

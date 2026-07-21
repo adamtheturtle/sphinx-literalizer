@@ -129,9 +129,11 @@ Directive options
    of keys to the name used instead of the auto-generated one; for
    example ``x,y=Point; a,b,c=Vec3``.  The name must be a valid
    PascalCase identifier for the selected language and must not collide
-   with the auto-generated names or with another entry.  Available for
-   Go, Java, Kotlin, Rust, and Scala; using it with any other language
-   raises an error.
+   with the auto-generated names or with another entry.  For C++, the
+   name refers to an externally declared struct, so literalizer emits no
+   duplicate declaration; C++14 record lists use an explicit type such
+   as ``std::vector<Task>{...}``.  Available for C++, Go, Java, Kotlin,
+   Rust, and Scala; using it with any other language raises an error.
 
 ``:wrap-in-file:`` (optional flag)
    Wrap the generated code in a complete file/module when the selected
