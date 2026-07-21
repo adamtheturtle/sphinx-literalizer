@@ -3,6 +3,14 @@ Changelog
 
 .. towncrier release notes start
 
+2026.07.21
+----------
+
+- Expose C++14's candidate-facing heterogeneous ``tuple`` and named-record
+  representations through the existing ``:heterogeneous-strategy:`` and
+  ``:record-struct-name-prefix:`` directive options, following the
+  ``literalizer`` 2026.7.21 release.
+
 2026.07.20
 ----------
 
