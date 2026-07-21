@@ -7139,6 +7139,50 @@ def test_cpp14_candidate_facing_heterogeneous_strategies(
     app.cleanup()
 
 
+def test_cpp14_nested_tuple_strategy_uses_standard_tuple_types(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Nested C++14 tuples do not fall back to variant wrappers."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[[1, "Mainframe1"]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: cpp
+           :language-version: cpp14
+           :heterogeneous-strategy: tuple
+           :include-delimiters:
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    output = literal_block.astext()
+    assert "std::vector<std::tuple<int, std::string>>" in output
+    assert "std::make_tuple(" in output
+    assert "LiteralizerVariant" not in output
+    app.cleanup()
+
+
 def test_record_struct_name_prefix_unsupported_language_error(
     *,
     make_app: Callable[..., SphinxTestApp],
