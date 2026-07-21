@@ -182,6 +182,33 @@ renders (no preamble -- the tuple is a native literal):
       :language: rust
       :heterogeneous-strategy: tuple
 
+Candidate-facing C++14
+~~~~~~~~~~~~~~~~~~~~~~
+
+C++14 has two native, candidate-facing representations for heterogeneous
+input.  Use ``tuple`` for a fixed-shape sequence; it emits
+``std::make_tuple(...)`` without exposing a ``LiteralizerVariant`` wrapper:
+
+.. rest-example::
+
+   .. literalizer:: _examples/tuple.json
+      :language: cpp
+      :language-version: cpp14
+      :heterogeneous-strategy: tuple
+      :include-preamble:
+
+For object-shaped input, use ``record`` and give the generated struct a
+domain name with ``:record-struct-name-prefix:``:
+
+.. rest-example::
+
+   .. literalizer:: _examples/record.json
+      :language: cpp
+      :language-version: cpp14
+      :heterogeneous-strategy: record
+      :record-struct-name-prefix: Candidate
+      :include-preamble:
+
 ``object_variant`` (Nim)
 ~~~~~~~~~~~~~~~~~~~~~~~~
 

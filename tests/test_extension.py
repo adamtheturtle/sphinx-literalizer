@@ -7078,6 +7078,67 @@ def test_record_struct_name_prefix_python(
     app.cleanup()
 
 
+@pytest.mark.parametrize(
+    argnames=("strategy", "data", "expected"),
+    argvalues=[
+        (
+            "tuple",
+            [1, "Ada", True],
+            'std::make_tuple(\n    1,\n    "Ada",\n    true\n)',
+        ),
+        (
+            "record",
+            [{"name": "Ada", "score": 42}],
+            "struct Candidate0 { std::string name; int score{}; };",
+        ),
+    ],
+)
+def test_cpp14_candidate_facing_heterogeneous_strategies(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+    strategy: str,
+    data: list[object] | dict[str, int | str],
+    expected: str,
+) -> None:
+    """C++14 exposes tuple and named-record alternatives to wrappers."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=data))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text=f"""\\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: cpp
+           :language-version: cpp14
+           :heterogeneous-strategy: {strategy}
+           :record-struct-name-prefix: Candidate
+           :include-delimiters:
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    output = literal_block.astext()
+    assert expected in output
+    if strategy == "tuple":
+        assert "LiteralizerVariant" not in output
+    app.cleanup()
+
+
 def test_record_struct_name_prefix_unsupported_language_error(
     *,
     make_app: Callable[..., SphinxTestApp],
