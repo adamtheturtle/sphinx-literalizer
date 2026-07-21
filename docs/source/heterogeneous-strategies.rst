@@ -197,6 +197,22 @@ input.  Use ``tuple`` for a fixed-shape sequence; it emits
       :heterogeneous-strategy: tuple
       :include-preamble:
 
+This also composes through a homogeneous outer sequence.  With
+:file:`_examples/nested_tuple.yaml`:
+
+.. literalinclude:: _examples/nested_tuple.yaml
+   :language: yaml
+
+the same strategy produces a standard ``std::vector<std::tuple<...>>``:
+
+.. rest-example::
+
+   .. literalizer:: _examples/nested_tuple.yaml
+      :language: cpp
+      :language-version: cpp14
+      :heterogeneous-strategy: tuple
+      :include-preamble:
+
 For object-shaped input, use ``record`` and give the generated struct a
 domain name with ``:record-struct-name-prefix:``:
 
