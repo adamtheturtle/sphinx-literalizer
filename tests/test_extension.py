@@ -6842,6 +6842,95 @@ def test_record_null_substitutions_cpp14(
     app.cleanup()
 
 
+@pytest.mark.parametrize(
+    argnames=("substitutions", "error_message"),
+    argvalues=[
+        ("{not JSON}", r"must be a valid JSON object"),
+        ("[]", r"must be a JSON object"),
+    ],
+)
+def test_record_null_substitutions_invalid_value_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+    substitutions: str,
+    error_message: str,
+) -> None:
+    """Invalid record null substitutions raise a clear ExtensionError."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text=f"""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :record-null-substitutions: {substitutions}
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(expected_exception=ExtensionError, match=error_message):
+        app.build()
+
+
+@pytest.mark.parametrize(
+    argnames=("defaults", "error_message"),
+    argvalues=[
+        ("cpp14", r"entries must be dictionaries"),
+        (
+            {"include-preamble": "true"},
+            r"only supports shared format options",
+        ),
+        (
+            {"language-version": 14},
+            r"option values must be strings",
+        ),
+    ],
+)
+def test_language_defaults_invalid_value_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+    defaults: object,
+    error_message: str,
+) -> None:
+    """Invalid language defaults raise a clear ExtensionError."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: cpp
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={
+            "extensions": ["sphinx_literalizer"],
+            "literalizer_language_defaults": {"cpp": defaults},
+        },
+    )
+    with pytest.raises(expected_exception=ExtensionError, match=error_message):
+        app.build()
+
+
 def test_cpp17_language_version(
     *,
     make_app: Callable[..., SphinxTestApp],
