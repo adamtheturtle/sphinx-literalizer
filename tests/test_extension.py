@@ -6735,7 +6735,7 @@ def test_language_defaults_apply_to_both_directives(
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
     (source_directory / "data.json").write_text(
-        data=json.dumps(obj={"name": "Ada", "active": True}),
+        data=json.dumps(obj=[{"name": "Ada", "active": True}]),
     )
     (source_directory / "calls.json").write_text(
         data=json.dumps(obj=[{"name": "Ada", "active": True}]),
@@ -6748,6 +6748,9 @@ def test_language_defaults_apply_to_both_directives(
 
         .. literalizer:: data.json
            :language: cpp
+           :heterogeneous-strategy: record
+           :record-shape-names: name,active=Task
+           :include-delimiters:
            :include-preamble:
 
         .. literalizer-call:: calls.json
@@ -6755,11 +6758,15 @@ def test_language_defaults_apply_to_both_directives(
            :target-function: process
            :parameter-names: task
            :per-element:
+           :heterogeneous-strategy: record
+           :record-shape-names: name,active=Task
            :include-preamble:
 
         .. literalizer:: data.json
            :language: cpp
            :language-version: cpp20
+           :heterogeneous-strategy: record
+           :record-shape-names: name,active=Task
            :include-preamble:
     """
         )
@@ -6780,9 +6787,58 @@ def test_language_defaults_apply_to_both_directives(
     doctree = app.env.get_doctree(docname="index")
     literal_blocks = list(doctree.findall(condition=nodes.literal_block))
     default_literal, default_call, explicit_override = literal_blocks
-    assert "LiteralizerVariant" in default_literal.astext()
+    assert 'Task{"Ada", true}' in default_literal.astext()
     assert "LiteralizerVariant" in default_call.astext()
-    assert "#include <variant>" in explicit_override.astext()
+    assert '.name = "Ada"' in explicit_override.astext()
+    app.cleanup()
+
+
+def test_record_null_substitutions_cpp14(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Record field null substitutions keep a C++14 task typed."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "task.json").write_text(
+        data=json.dumps(
+            obj=[
+                {
+                    "task_id": None,
+                    "assignee": None,
+                    "status": "todo",
+                },
+            ]
+        ),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: task.json
+           :language: cpp
+           :language-version: cpp14
+           :heterogeneous-strategy: record
+           :record-shape-names: task_id,assignee,status=Task
+           :record-null-substitutions: {"task_id": -1, "assignee": ""}
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert 'Task{-1, "", "todo"}' in literal_block.astext()
     app.cleanup()
 
 

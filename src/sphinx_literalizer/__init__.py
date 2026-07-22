@@ -5,6 +5,7 @@ read data files and render them as native language code blocks.
 """
 
 import enum
+import json
 import re
 from collections.abc import Callable, Generator, Iterable, Mapping
 from contextlib import contextmanager
@@ -244,6 +245,27 @@ def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
     return result
 
 
+def _parse_record_null_substitutions(value: str) -> dict[str, Any]:
+    """Parse the ``:record-null-substitutions:`` JSON object.
+
+    Values replace ``null`` only when it appears in a record field of the
+    given name. They are parsed as ordinary JSON values so their type
+    inference remains language-neutral.
+    """
+    try:
+        substitutions = json.loads(s=value)
+    except json.JSONDecodeError as exc:
+        msg = (
+            "':record-null-substitutions:' must be a valid JSON object: "
+            f"{exc.msg}."
+        )
+        raise ExtensionError(message=msg) from exc
+    if not isinstance(substitutions, dict):
+        msg = "':record-null-substitutions:' must be a JSON object."
+        raise ExtensionError(message=msg)
+    return substitutions
+
+
 def _make_format_validator(
     option_name: str,
 ) -> Callable[[str], str]:
@@ -481,6 +503,7 @@ class _LiteralizerOptions(_CommonOptions):
 
     include_delimiters: bool
     both_variable_forms: bool
+    record_null_substitutions: Mapping[str, Any] | None
 
 
 @beartype
@@ -1063,6 +1086,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :module-name: MyModule
            :record-struct-name-prefix: Record
            :record-shape-names: x,y=Point; a,b,c=Vec3
+           :record-null-substitutions: {"id": -1, "assignee": ""}
            :skip-if-unrepresentable:
            :wrap-in-file:
            :ref-case: camel
@@ -1093,6 +1117,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         "existing-variable": directives.flag,
         "both-variable-forms": directives.flag,
         "modifiers": directives.unchanged,
+        "record-null-substitutions": directives.unchanged_required,
     }
 
     def _parse_options(self) -> _LiteralizerOptions:
@@ -1102,6 +1127,13 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
             **_common_option_args(options=options),
             include_delimiters="include-delimiters" in self.options,
             both_variable_forms="both-variable-forms" in self.options,
+            record_null_substitutions=(
+                None
+                if "record-null-substitutions" not in self.options
+                else _parse_record_null_substitutions(
+                    value=self.options["record-null-substitutions"],
+                )
+            ),
         )
 
     def run(self) -> list[nodes.Node]:
@@ -1145,6 +1177,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
                 wrap_in_file=wrap_in_file,
                 ref_case=ref_case,
                 ref_key=ref_key,
+                record_null_substitutions=options.record_null_substitutions,
                 collection_layout=collection_layout,
             )
 
