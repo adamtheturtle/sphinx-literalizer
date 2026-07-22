@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from functools import cache, partial
 from importlib.metadata import version
 from pathlib import Path
-from typing import Any, ClassVar, TypedDict, TypeGuard
+from typing import Any, ClassVar, TypedDict, cast  # noqa: TID251
 
 from beartype import beartype
 from docutils import nodes
@@ -245,16 +245,6 @@ def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
     return result
 
 
-def _is_json_object(value: object) -> TypeGuard[dict[str, Any]]:
-    """Return whether *value* is a JSON object."""
-    return isinstance(value, dict)
-
-
-def _is_string_object_dict(value: object) -> TypeGuard[dict[str, object]]:
-    """Return whether *value* is a string-keyed dictionary."""
-    return isinstance(value, dict)
-
-
 def _parse_record_null_substitutions(value: str) -> dict[str, Any]:
     """Parse the ``:record-null-substitutions:`` JSON object.
 
@@ -270,10 +260,10 @@ def _parse_record_null_substitutions(value: str) -> dict[str, Any]:
             f"{exc.msg}."
         )
         raise ExtensionError(message=msg) from exc
-    if not _is_json_object(value=substitutions):
+    if not isinstance(substitutions, dict):
         msg = "':record-null-substitutions:' must be a JSON object."
         raise ExtensionError(message=msg)
-    return substitutions
+    return cast("dict[str, Any]", substitutions)
 
 
 def _make_format_validator(
@@ -622,7 +612,7 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
             self.env.config.literalizer_language_defaults,
         )
         defaults = configured.get(language_name, {})
-        if not _is_string_object_dict(value=defaults):
+        if not isinstance(defaults, dict):
             msg = (
                 "'literalizer_language_defaults' entries must be "
                 "dictionaries of directive options."
@@ -630,7 +620,8 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
             raise ExtensionError(message=msg)
 
         validated_defaults: dict[str, str] = {}
-        for option_name, value in defaults.items():
+        typed_defaults = cast("dict[str, object]", defaults)
+        for option_name, value in typed_defaults.items():
             if option_name not in _FORMAT_OPTION_GETTERS:
                 msg = (
                     "'literalizer_language_defaults' only supports shared "
