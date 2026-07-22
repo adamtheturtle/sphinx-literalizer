@@ -3,6 +3,15 @@ Changelog
 
 .. towncrier release notes start
 
+2026.07.22.1
+------------
+
+- Added the ``:record-null-substitutions:`` option for language-neutral,
+  field-specific record null replacements.
+
+- Added ``literalizer_language_defaults`` to configure shared format-option
+  defaults by directive language for both literalizer directives.
+
 2026.07.22
 ----------
 
