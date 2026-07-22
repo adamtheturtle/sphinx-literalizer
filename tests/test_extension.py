@@ -6723,6 +6723,69 @@ def test_language_version(
     app.cleanup()
 
 
+def test_language_defaults_apply_to_both_directives(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Configured language defaults apply unless a directive overrides
+    them.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"name": "Ada", "active": True}),
+    )
+    (source_directory / "calls.json").write_text(
+        data=json.dumps(obj=[{"name": "Ada", "active": True}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: cpp
+           :include-preamble:
+
+        .. literalizer-call:: calls.json
+           :language: cpp
+           :target-function: process
+           :parameter-names: task
+           :per-element:
+           :include-preamble:
+
+        .. literalizer:: data.json
+           :language: cpp
+           :language-version: cpp20
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={
+            "extensions": ["sphinx_literalizer"],
+            "literalizer_language_defaults": {
+                "cpp": {"language-version": "cpp14"},
+            },
+        },
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    literal_blocks = list(doctree.findall(condition=nodes.literal_block))
+    default_literal, default_call, explicit_override = literal_blocks
+    assert "LiteralizerVariant" in default_literal.astext()
+    assert "LiteralizerVariant" in default_call.astext()
+    assert "#include <variant>" in explicit_override.astext()
+    app.cleanup()
+
+
 def test_cpp17_language_version(
     *,
     make_app: Callable[..., SphinxTestApp],

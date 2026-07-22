@@ -577,6 +577,42 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
     required_arguments = 1
     has_content = False
 
+    def _options_with_language_defaults(self) -> dict[str, Any]:
+        """Merge configured language defaults with explicit options.
+
+        The literalizer_language_defaults setting contains only shared
+        format options, keyed by directive language. Values written on a
+        directive override those defaults.
+        """
+        language_name = self.options["language"]
+        configured = self.env.config.literalizer_language_defaults
+        defaults = configured.get(language_name, {})
+        if not isinstance(defaults, dict):
+            msg = (
+                "'literalizer_language_defaults' entries must be "
+                "dictionaries of directive options."
+            )
+            raise ExtensionError(message=msg)
+
+        validated_defaults: dict[str, str] = {}
+        for option_name, value in defaults.items():
+            if option_name not in _FORMAT_OPTION_GETTERS:
+                msg = (
+                    "'literalizer_language_defaults' only supports shared "
+                    f"format options; '{option_name}' is not one."
+                )
+                raise ExtensionError(message=msg)
+            if not isinstance(value, str):
+                msg = (
+                    "'literalizer_language_defaults' option values must be "
+                    f"strings; '{option_name}' is not."
+                )
+                raise ExtensionError(message=msg)
+            validated_defaults[option_name] = _COMMON_OPTIONS[option_name](
+                value
+            )
+        return {**validated_defaults, **self.options}
+
     @staticmethod
     def _apply_format_options(
         language_name: str,
@@ -1061,8 +1097,9 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
 
     def _parse_options(self) -> _LiteralizerOptions:
         """Parse ``self.options`` into the typed options dataclass."""
+        options = self._options_with_language_defaults()
         return _LiteralizerOptions(
-            **_common_option_args(options=self.options),
+            **_common_option_args(options=options),
             include_delimiters="include-delimiters" in self.options,
             both_variable_forms="both-variable-forms" in self.options,
         )
@@ -1301,6 +1338,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
     def _parse_options(self) -> _LiteralizerCallOptions:
         """Parse ``self.options`` into the typed options dataclass."""
+        options = self._options_with_language_defaults()
         target_function = self.options.get("target-function")
         constructor_class = self.options.get("constructor-class")
         if target_function is None and constructor_class is None:
@@ -1316,7 +1354,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             )
             raise ExtensionError(message=msg)
         return _LiteralizerCallOptions(
-            **_common_option_args(options=self.options),
+            **_common_option_args(options=options),
             target_function=target_function,
             constructor_class=constructor_class,
             parameter_names=self.options.get("parameter-names", ""),
@@ -1484,6 +1522,12 @@ def setup(app: Sphinx) -> ExtensionMetadata:
         default=list(_DEFAULT_HETEROGENEOUS_STRATEGY_PRECEDENCE),
         rebuild="env",
         types=frozenset({list, tuple}),
+    )
+    app.add_config_value(
+        name="literalizer_language_defaults",
+        default={},
+        rebuild="env",
+        types=frozenset({dict}),
     )
     return {
         "version": version(distribution_name="sphinx-literalizer"),

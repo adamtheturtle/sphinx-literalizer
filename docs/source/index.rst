@@ -746,6 +746,23 @@ Configuration
           "tuple",
       ]
 
+``literalizer_language_defaults``
+   Shared format-option defaults for both directives, grouped by the
+   directive's ``:language:`` value. Explicit directive options take
+   precedence. For example, make all C++ directives use C++14 unless a
+   directive selects another version::
+
+      literalizer_language_defaults = {
+          "cpp": {
+              "language-version": "cpp14",
+          },
+      }
+
+   This setting accepts the shared language and format options, including
+   ``language-version``, ``string-format``, and ``trailing-comma``. It
+   does not set directive-specific options such as ``target-function`` or
+   ``include-delimiters``.
+
 
 Reference
 ---------
