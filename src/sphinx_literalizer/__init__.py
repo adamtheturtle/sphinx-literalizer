@@ -263,7 +263,7 @@ def _parse_record_null_substitutions(value: str) -> dict[str, Any]:
     if not isinstance(substitutions, dict):
         msg = "':record-null-substitutions:' must be a JSON object."
         raise ExtensionError(message=msg)
-    return substitutions
+    return dict[str, Any](substitutions)  # pyright: ignore[reportUnknownArgumentType]
 
 
 def _make_format_validator(
@@ -608,7 +608,9 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
         directive override those defaults.
         """
         language_name = self.options["language"]
-        configured = self.env.config.literalizer_language_defaults
+        configured = dict[str, object](
+            self.env.config.literalizer_language_defaults,
+        )
         defaults = configured.get(language_name, {})
         if not isinstance(defaults, dict):
             msg = (
@@ -618,7 +620,8 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
             raise ExtensionError(message=msg)
 
         validated_defaults: dict[str, str] = {}
-        for option_name, value in defaults.items():
+        typed_defaults = dict[str, object](defaults)  # pyright: ignore[reportUnknownArgumentType]
+        for option_name, value in typed_defaults.items():
             if option_name not in _FORMAT_OPTION_GETTERS:
                 msg = (
                     "'literalizer_language_defaults' only supports shared "
