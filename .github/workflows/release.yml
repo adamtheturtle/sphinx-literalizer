@@ -78,10 +78,6 @@ jobs:
       - name: Build a binary wheel and a source tarball
         env:
           NEW_TAG: ${{ steps.tag_version.outputs.new_tag }}
-          # The freshly-created tag may not be visible to setuptools-scm in
-          # this checkout yet.  Use the calculated public release version so
-          # PyPI never receives a local ``+g<commit>`` version identifier.
-          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ steps.calver.outputs.release }}
         run: |
           git fetch --tags
           git checkout "$NEW_TAG"
