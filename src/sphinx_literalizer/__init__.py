@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from functools import cache, partial
 from importlib.metadata import version
 from pathlib import Path
-from typing import Any, ClassVar, TypedDict
+from typing import Any, ClassVar, TypedDict, TypeGuard
 
 from beartype import beartype
 from docutils import nodes
@@ -245,6 +245,16 @@ def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
     return result
 
 
+def _is_json_object(value: object) -> TypeGuard[dict[str, Any]]:
+    """Return whether *value* is a JSON object."""
+    return isinstance(value, dict)
+
+
+def _is_string_object_dict(value: object) -> TypeGuard[dict[str, object]]:
+    """Return whether *value* is a string-keyed dictionary."""
+    return isinstance(value, dict)
+
+
 def _parse_record_null_substitutions(value: str) -> dict[str, Any]:
     """Parse the ``:record-null-substitutions:`` JSON object.
 
@@ -253,17 +263,17 @@ def _parse_record_null_substitutions(value: str) -> dict[str, Any]:
     inference remains language-neutral.
     """
     try:
-        substitutions = json.loads(s=value)
+        substitutions: object = json.loads(s=value)
     except json.JSONDecodeError as exc:
         msg = (
             "':record-null-substitutions:' must be a valid JSON object: "
             f"{exc.msg}."
         )
         raise ExtensionError(message=msg) from exc
-    if not isinstance(substitutions, dict):
+    if not _is_json_object(value=substitutions):
         msg = "':record-null-substitutions:' must be a JSON object."
         raise ExtensionError(message=msg)
-    return dict[str, Any](substitutions)  # pyright: ignore[reportUnknownArgumentType]
+    return substitutions
 
 
 def _make_format_validator(
@@ -612,7 +622,7 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
             self.env.config.literalizer_language_defaults,
         )
         defaults = configured.get(language_name, {})
-        if not isinstance(defaults, dict):
+        if not _is_string_object_dict(value=defaults):
             msg = (
                 "'literalizer_language_defaults' entries must be "
                 "dictionaries of directive options."
@@ -620,8 +630,7 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
             raise ExtensionError(message=msg)
 
         validated_defaults: dict[str, str] = {}
-        typed_defaults = dict[str, object](defaults)  # pyright: ignore[reportUnknownArgumentType]
-        for option_name, value in typed_defaults.items():
+        for option_name, value in defaults.items():
             if option_name not in _FORMAT_OPTION_GETTERS:
                 msg = (
                     "'literalizer_language_defaults' only supports shared "
