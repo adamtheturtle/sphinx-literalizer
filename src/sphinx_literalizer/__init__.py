@@ -5,6 +5,7 @@ read data files and render them as native language code blocks.
 """
 
 import enum
+import json
 import re
 from collections.abc import Callable, Generator, Iterable, Mapping
 from contextlib import contextmanager
@@ -12,7 +13,7 @@ from dataclasses import dataclass
 from functools import cache, partial
 from importlib.metadata import version
 from pathlib import Path
-from typing import Any, ClassVar, TypedDict
+from typing import Any, ClassVar, TypedDict, cast  # noqa: TID251
 
 from beartype import beartype
 from docutils import nodes
@@ -242,6 +243,27 @@ def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
             raise ExtensionError(message=msg)
         result[keys] = name
     return result
+
+
+def _parse_record_null_substitutions(value: str) -> dict[str, Any]:
+    """Parse the ``:record-null-substitutions:`` JSON object.
+
+    Values replace ``null`` only when it appears in a record field of the
+    given name. They are parsed as ordinary JSON values so their type
+    inference remains language-neutral.
+    """
+    try:
+        substitutions: object = json.loads(s=value)
+    except json.JSONDecodeError as exc:
+        msg = (
+            "':record-null-substitutions:' must be a valid JSON object: "
+            f"{exc.msg}."
+        )
+        raise ExtensionError(message=msg) from exc
+    if not isinstance(substitutions, dict):
+        msg = "':record-null-substitutions:' must be a JSON object."
+        raise ExtensionError(message=msg)
+    return cast("dict[str, Any]", substitutions)
 
 
 def _make_format_validator(
@@ -481,6 +503,7 @@ class _LiteralizerOptions(_CommonOptions):
 
     include_delimiters: bool
     both_variable_forms: bool
+    record_null_substitutions: Mapping[str, Any] | None
 
 
 @beartype
@@ -576,6 +599,45 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
 
     required_arguments = 1
     has_content = False
+
+    def _options_with_language_defaults(self) -> dict[str, Any]:
+        """Merge configured language defaults with explicit options.
+
+        The literalizer_language_defaults setting contains only shared
+        format options, keyed by directive language. Values written on a
+        directive override those defaults.
+        """
+        language_name = self.options["language"]
+        configured = dict[str, object](
+            self.env.config.literalizer_language_defaults,
+        )
+        defaults = configured.get(language_name, {})
+        if not isinstance(defaults, dict):
+            msg = (
+                "'literalizer_language_defaults' entries must be "
+                "dictionaries of directive options."
+            )
+            raise ExtensionError(message=msg)
+
+        validated_defaults: dict[str, str] = {}
+        typed_defaults = cast("dict[str, object]", defaults)
+        for option_name, value in typed_defaults.items():
+            if option_name not in _FORMAT_OPTION_GETTERS:
+                msg = (
+                    "'literalizer_language_defaults' only supports shared "
+                    f"format options; '{option_name}' is not one."
+                )
+                raise ExtensionError(message=msg)
+            if not isinstance(value, str):
+                msg = (
+                    "'literalizer_language_defaults' option values must be "
+                    f"strings; '{option_name}' is not."
+                )
+                raise ExtensionError(message=msg)
+            validated_defaults[option_name] = _COMMON_OPTIONS[option_name](
+                value
+            )
+        return {**validated_defaults, **self.options}
 
     @staticmethod
     def _apply_format_options(
@@ -1027,6 +1089,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :module-name: MyModule
            :record-struct-name-prefix: Record
            :record-shape-names: x,y=Point; a,b,c=Vec3
+           :record-null-substitutions: {"id": -1, "assignee": ""}
            :skip-if-unrepresentable:
            :wrap-in-file:
            :ref-case: camel
@@ -1057,14 +1120,23 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         "existing-variable": directives.flag,
         "both-variable-forms": directives.flag,
         "modifiers": directives.unchanged,
+        "record-null-substitutions": directives.unchanged_required,
     }
 
     def _parse_options(self) -> _LiteralizerOptions:
         """Parse ``self.options`` into the typed options dataclass."""
+        options = self._options_with_language_defaults()
         return _LiteralizerOptions(
-            **_common_option_args(options=self.options),
+            **_common_option_args(options=options),
             include_delimiters="include-delimiters" in self.options,
             both_variable_forms="both-variable-forms" in self.options,
+            record_null_substitutions=(
+                None
+                if "record-null-substitutions" not in self.options
+                else _parse_record_null_substitutions(
+                    value=self.options["record-null-substitutions"],
+                )
+            ),
         )
 
     def run(self) -> list[nodes.Node]:
@@ -1108,6 +1180,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
                 wrap_in_file=wrap_in_file,
                 ref_case=ref_case,
                 ref_key=ref_key,
+                record_null_substitutions=options.record_null_substitutions,
                 collection_layout=collection_layout,
             )
 
@@ -1301,6 +1374,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
     def _parse_options(self) -> _LiteralizerCallOptions:
         """Parse ``self.options`` into the typed options dataclass."""
+        options = self._options_with_language_defaults()
         target_function = self.options.get("target-function")
         constructor_class = self.options.get("constructor-class")
         if target_function is None and constructor_class is None:
@@ -1316,7 +1390,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             )
             raise ExtensionError(message=msg)
         return _LiteralizerCallOptions(
-            **_common_option_args(options=self.options),
+            **_common_option_args(options=options),
             target_function=target_function,
             constructor_class=constructor_class,
             parameter_names=self.options.get("parameter-names", ""),
@@ -1484,6 +1558,12 @@ def setup(app: Sphinx) -> ExtensionMetadata:
         default=list(_DEFAULT_HETEROGENEOUS_STRATEGY_PRECEDENCE),
         rebuild="env",
         types=frozenset({list, tuple}),
+    )
+    app.add_config_value(
+        name="literalizer_language_defaults",
+        default={},
+        rebuild="env",
+        types=frozenset({dict}),
     )
     return {
         "version": version(distribution_name="sphinx-literalizer"),

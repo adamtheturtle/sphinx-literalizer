@@ -6723,6 +6723,214 @@ def test_language_version(
     app.cleanup()
 
 
+def test_language_defaults_apply_to_both_directives(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Configured language defaults apply unless a directive overrides
+    them.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[{"name": "Ada", "active": True}]),
+    )
+    (source_directory / "calls.json").write_text(
+        data=json.dumps(obj=[{"name": "Ada", "active": True}]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: cpp
+           :heterogeneous-strategy: record
+           :record-shape-names: name,active=Task
+           :include-delimiters:
+           :include-preamble:
+
+        .. literalizer-call:: calls.json
+           :language: cpp
+           :target-function: process
+           :parameter-names: task
+           :per-element:
+           :heterogeneous-strategy: record
+           :record-shape-names: name,active=Task
+           :include-preamble:
+
+        .. literalizer:: data.json
+           :language: cpp
+           :language-version: cpp20
+           :heterogeneous-strategy: record
+           :record-shape-names: name,active=Task
+           :include-preamble:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={
+            "extensions": ["sphinx_literalizer"],
+            "literalizer_language_defaults": {
+                "cpp": {"language-version": "cpp14"},
+            },
+        },
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    literal_blocks = list(doctree.findall(condition=nodes.literal_block))
+    default_literal, default_call, explicit_override = literal_blocks
+    assert 'Task{"Ada", true}' in default_literal.astext()
+    assert "LiteralizerVariant" in default_call.astext()
+    assert '.name = "Ada"' in explicit_override.astext()
+    app.cleanup()
+
+
+def test_record_null_substitutions_cpp14(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Record field null substitutions keep a C++14 task typed."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "task.json").write_text(
+        data=json.dumps(
+            obj=[
+                {
+                    "task_id": None,
+                    "assignee": None,
+                    "status": "todo",
+                },
+            ]
+        ),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: task.json
+           :language: cpp
+           :language-version: cpp14
+           :heterogeneous-strategy: record
+           :record-shape-names: task_id,assignee,status=Task
+           :record-null-substitutions: {"task_id": -1, "assignee": ""}
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert 'Task{-1, "", "todo"}' in literal_block.astext()
+    app.cleanup()
+
+
+@pytest.mark.parametrize(
+    argnames=("substitutions", "error_message"),
+    argvalues=[
+        ("{not JSON}", r"must be a valid JSON object"),
+        ("[]", r"must be a JSON object"),
+    ],
+)
+def test_record_null_substitutions_invalid_value_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+    substitutions: str,
+    error_message: str,
+) -> None:
+    """Invalid record null substitutions raise a clear ExtensionError."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text=f"""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :record-null-substitutions: {substitutions}
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(expected_exception=ExtensionError, match=error_message):
+        app.build()
+
+
+@pytest.mark.parametrize(
+    argnames=("defaults", "error_message"),
+    argvalues=[
+        ("cpp14", r"entries must be dictionaries"),
+        (
+            {"include-preamble": "true"},
+            r"only supports shared format options",
+        ),
+        (
+            {"language-version": 14},
+            r"option values must be strings",
+        ),
+    ],
+)
+def test_language_defaults_invalid_value_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+    defaults: object,
+    error_message: str,
+) -> None:
+    """Invalid language defaults raise a clear ExtensionError."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: cpp
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={
+            "extensions": ["sphinx_literalizer"],
+            "literalizer_language_defaults": {"cpp": defaults},
+        },
+    )
+    with pytest.raises(expected_exception=ExtensionError, match=error_message):
+        app.build()
+
+
 def test_cpp17_language_version(
     *,
     make_app: Callable[..., SphinxTestApp],

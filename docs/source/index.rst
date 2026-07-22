@@ -135,6 +135,22 @@ Directive options
    as ``std::vector<Task>{...}``.  Available for C++, Go, Java, Kotlin,
    Rust, and Scala; using it with any other language raises an error.
 
+``:record-null-substitutions:`` (optional)
+   A JSON object mapping record field names to values that replace source
+   ``null`` values in those fields. The substitutions are language-neutral
+   JSON values and participate in normal type inference. For example, use a
+   canonical task fixture with C++14 sentinel values::
+
+      .. literalizer:: _examples/task.json
+         :language: cpp
+         :language-version: cpp14
+         :heterogeneous-strategy: record
+         :record-shape-names: task_id,assignee,status=Task
+         :record-null-substitutions: {"task_id": -1, "assignee": ""}
+
+   This replaces null ``task_id`` and ``assignee`` values with ``-1`` and an
+   empty string while leaving null values in other fields unchanged.
+
 ``:wrap-in-file:`` (optional flag)
    Wrap the generated code in a complete file/module when the selected
    language supports that mode.
@@ -745,6 +761,23 @@ Configuration
           "record",
           "tuple",
       ]
+
+``literalizer_language_defaults``
+   Shared format-option defaults for both directives, grouped by the
+   directive's ``:language:`` value. Explicit directive options take
+   precedence. For example, make all C++ directives use C++14 unless a
+   directive selects another version::
+
+      literalizer_language_defaults = {
+          "cpp": {
+              "language-version": "cpp14",
+          },
+      }
+
+   This setting accepts the shared language and format options, including
+   ``language-version``, ``string-format``, and ``trailing-comma``. It
+   does not set directive-specific options such as ``target-function`` or
+   ``include-delimiters``.
 
 
 Reference
