@@ -329,6 +329,7 @@ _COMMON_OPTIONS: dict[str, Callable[[str], Any]] = {
         values=("spaces", "tabs"),
     ),
     "include-preamble": directives.flag,
+    "preamble-only": directives.flag,
     **{
         option_name: _make_format_validator(option_name=option_name)
         for option_name in _FORMAT_OPTION_GETTERS
@@ -344,6 +345,7 @@ _COMMON_OPTIONS: dict[str, Callable[[str], Any]] = {
     "module-name": directives.unchanged,
     "record-struct-name-prefix": directives.unchanged_required,
     "record-shape-names": directives.unchanged_required,
+    "heterogeneous-value-name": directives.unchanged_required,
     "skip-if-unrepresentable": directives.flag,
     "wrap-in-file": directives.flag,
     "ref-case": lambda x: directives.choice(
@@ -390,6 +392,17 @@ _DEFAULT_TYPE_OPTIONS: dict[str, _DefaultTypeOption] = {
         param_name="default_ordered_map_value_type",
         supports_check=lambda cls: cls.supports_default_ordered_map_value_type,
     ),
+}
+
+
+# Literalizer exposes the same generated heterogeneous carrier concept under
+# language-idiomatic constructor parameter names.
+_HETEROGENEOUS_VALUE_NAME_PARAMETERS: dict[str, str] = {
+    "cpp": "heterogeneous_value_variant_name",
+    "dhall": "heterogeneous_value_union_name",
+    "mojo": "heterogeneous_value_variant_name",
+    "nim": "heterogeneous_value_variant_name",
+    "rust": "heterogeneous_value_enum_name",
 }
 
 
@@ -480,12 +493,14 @@ class _CommonOptions:
     indent: int | None
     indent_char: str | None
     include_preamble: bool
+    preamble_only: bool
     format_options: Mapping[str, str]
     heterogeneous_strategy: str | None
     default_type_options: Mapping[str, str]
     module_name: str | None
     record_struct_name_prefix: str | None
     record_shape_names: str | None
+    heterogeneous_value_name: str | None
     skip_if_unrepresentable: bool
     wrap_in_file: bool
     ref_case: str | None
@@ -537,12 +552,14 @@ class _CommonOptionArgs(TypedDict):
     indent: int | None
     indent_char: str | None
     include_preamble: bool
+    preamble_only: bool
     format_options: Mapping[str, str]
     heterogeneous_strategy: str | None
     default_type_options: Mapping[str, str]
     module_name: str | None
     record_struct_name_prefix: str | None
     record_shape_names: str | None
+    heterogeneous_value_name: str | None
     skip_if_unrepresentable: bool
     wrap_in_file: bool
     ref_case: str | None
@@ -568,6 +585,7 @@ def _common_option_args(options: dict[str, Any]) -> _CommonOptionArgs:
         indent=options.get("indent"),
         indent_char=options.get("indent-char"),
         include_preamble="include-preamble" in options,
+        preamble_only="preamble-only" in options,
         format_options={
             name: options[name]
             for name in _FORMAT_OPTION_GETTERS
@@ -582,6 +600,7 @@ def _common_option_args(options: dict[str, Any]) -> _CommonOptionArgs:
         module_name=options.get("module-name"),
         record_struct_name_prefix=options.get("record-struct-name-prefix"),
         record_shape_names=options.get("record-shape-names"),
+        heterogeneous_value_name=options.get("heterogeneous-value-name"),
         skip_if_unrepresentable="skip-if-unrepresentable" in options,
         wrap_in_file="wrap-in-file" in options,
         ref_case=options.get("ref-case"),
@@ -789,6 +808,22 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
                 record_shape_names=_parse_record_shape_names(
                     value=shape_names_value,
                 ),
+            )
+
+        heterogeneous_value_name = options.heterogeneous_value_name
+        if heterogeneous_value_name is not None:
+            parameter_name = _HETEROGENEOUS_VALUE_NAME_PARAMETERS.get(
+                language_name,
+            )
+            if parameter_name is None:
+                msg = (
+                    f"Language '{language_name}' does not support "
+                    "':heterogeneous-value-name:'."
+                )
+                raise ExtensionError(message=msg)
+            constructor = partial(
+                constructor,
+                **{parameter_name: heterogeneous_value_name},
             )
 
         with _literalize_errors_as_extension_errors():
@@ -1055,6 +1090,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :indent-char: spaces
            :include-delimiters:
            :include-preamble:
+           :preamble-only:
            :date-format: python
            :datetime-format: python
            :variable-name: my_var
@@ -1089,6 +1125,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :module-name: MyModule
            :record-struct-name-prefix: Record
            :record-shape-names: x,y=Point; a,b,c=Vec3
+           :heterogeneous-value-name: Value
            :record-null-substitutions: {"id": -1, "assignee": ""}
            :skip-if-unrepresentable:
            :wrap-in-file:
@@ -1153,6 +1190,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         pre_indent_level = options.pre_indent_level
         include_delimiters = options.include_delimiters
         include_preamble = options.include_preamble
+        preamble_only = options.preamble_only
         variable_form = self._resolve_variable_form(
             language_cls=language_cls,
             options=options,
@@ -1194,9 +1232,10 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
             return []
         result, _ = rendered
         parts: list[str] = []
-        if include_preamble and result.preamble:
+        if (include_preamble or preamble_only) and result.preamble:
             parts.append("\n".join(result.preamble))
-        parts.append(result.code)
+        if not preamble_only:
+            parts.append(result.code)
         text = "\n\n".join(parts)
 
         # First positional arg sets rawsource; Sphinx requires
@@ -1232,12 +1271,14 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :indent: 4
            :indent-char: spaces
            :include-preamble:
+           :preamble-only:
            :omit-code:
            :ref-case: camel
            :ref-key: $reference
            :module-name: MyModule
            :record-struct-name-prefix: Record
            :record-shape-names: x,y=Point; a,b,c=Vec3
+           :heterogeneous-value-name: Value
            :consumable-refs: my_var,other_var
            :collection-layout: multiline
            :heterogeneous-strategy: auto
@@ -1433,6 +1474,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
         pre_indent_level = options.pre_indent_level
         include_preamble = options.include_preamble
+        preamble_only = options.preamble_only
         omit_code = options.omit_code
         # An empty (or omitted) ``:parameter-names:`` means *no*
         # arguments rather than one empty-named argument: splitting ``""``
@@ -1532,9 +1574,9 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             )
 
         parts: list[str] = []
-        if include_preamble and result.preamble:
+        if (include_preamble or preamble_only) and result.preamble:
             parts.append("\n".join(result.preamble))
-        if not omit_code:
+        if not omit_code and not preamble_only:
             parts.append(code)
         text = "\n\n".join(parts)
 
