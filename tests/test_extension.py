@@ -7807,6 +7807,61 @@ def test_record_shape_names_cpp14_external_record(
     app.cleanup()
 
 
+def test_record_shape_names_cpp14_error_external_map_alias(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """C++14 ERROR uses a named map shape as the vector element type."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "expenses.json").write_text(
+        data=json.dumps(
+            obj=[
+                {
+                    "expense_id": "001",
+                    "trip_id": "001",
+                    "amount_usd": "49.99",
+                },
+            ],
+        ),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: expenses.json
+           :language: cpp
+           :language-version: cpp14
+           :heterogeneous-strategy: error
+           :record-shape-names: expense_id,trip_id,amount_usd=Expense
+           :include-delimiters:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        "std::vector<Expense>{\n"
+        "    std::map<std::string, std::string>{"
+        '{"expense_id", "001"}, {"trip_id", "001"}, '
+        '{"amount_usd", "49.99"}},\n'
+        "}"
+    )
+    app.cleanup()
+
+
 def test_record_shape_names_invalid_name_error(
     *,
     make_app: Callable[..., SphinxTestApp],
