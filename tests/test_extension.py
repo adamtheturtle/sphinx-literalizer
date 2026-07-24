@@ -7420,7 +7420,7 @@ def test_literalizer_call_named_carrier_preamble_only(
 ) -> None:
     """Literalizer-call composes a named carrier with later C++14 code."""
     compiler = shutil.which(cmd="clang++") or shutil.which(cmd="g++")
-    if compiler is None:  # pragma: no cover - depends on runner toolchain
+    if compiler is None:  # pragma: no cover - depends on runner tool-chain
         pytest.skip(reason="A C++ compiler is required for this test.")
 
     source_directory = tmp_path / "source"
