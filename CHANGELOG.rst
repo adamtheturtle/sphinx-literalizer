@@ -3,6 +3,12 @@ Changelog
 
 .. towncrier release notes start
 
+2026.07.24.2
+------------
+
+- Pin ``literalizer`` 2026.7.24.2 so published distributions include the C++14
+  external map alias fix without an unsupported direct Git dependency.
+
 2026.07.24.1
 ------------
 
