@@ -3,6 +3,13 @@ Changelog
 
 .. towncrier release notes start
 
+2026.07.24.1
+------------
+
+- C++14 ``:record-shape-names:`` now preserves an externally declared map alias
+  as the outer sequence element type with ``:heterogeneous-strategy: error``,
+  while retaining native ``std::map`` element expressions.
+
 2026.07.24
 ----------
 
