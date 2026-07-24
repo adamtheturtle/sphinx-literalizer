@@ -3,6 +3,18 @@ Changelog
 
 .. towncrier release notes start
 
+2026.07.24
+----------
+
+- Expose configurable heterogeneous value carrier names and preamble-only
+  rendering on both ``literalizer`` directives, including self-contained C++14
+  composition.
+
+- C++14 output now preserves externally named records in calls and wraps
+  heterogeneous carrier elements explicitly. Carrier strings rendered through
+  either directive remain owning ``std::string`` values and can be inspected
+  with ``is<std::string>()`` and ``get<std::string>()``.
+
 2026.07.22.1
 ------------
 

@@ -1,3 +1,0 @@
-Expose configurable heterogeneous value carrier names and preamble-only
-rendering on both ``literalizer`` directives, including self-contained C++14
-composition.

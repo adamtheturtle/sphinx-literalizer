@@ -1,4 +1,0 @@
-C++14 output now preserves externally named records in calls and wraps
-heterogeneous carrier elements explicitly. Carrier strings rendered through
-either directive remain owning ``std::string`` values and can be inspected
-with ``is<std::string>()`` and ``get<std::string>()``.
