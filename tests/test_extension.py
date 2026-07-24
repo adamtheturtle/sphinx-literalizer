@@ -2,9 +2,12 @@
 """Integration tests for the Sphinx extension."""
 
 import json
+import shutil
+import subprocess
 from collections.abc import Callable
 from pathlib import Path
 from textwrap import dedent
+from unittest.mock import Mock
 
 import pytest
 from docutils import nodes
@@ -6788,7 +6791,7 @@ def test_language_defaults_apply_to_both_directives(
     literal_blocks = list(doctree.findall(condition=nodes.literal_block))
     default_literal, default_call, explicit_override = literal_blocks
     assert 'Task{"Ada", true}' in default_literal.astext()
-    assert "LiteralizerVariant" in default_call.astext()
+    assert "std::map<std::string, Value>" in default_call.astext()
     assert '.name = "Ada"' in explicit_override.astext()
     app.cleanup()
 
@@ -7344,6 +7347,265 @@ def test_cpp14_candidate_facing_heterogeneous_strategies(
     assert expected in output
     if strategy == "tuple":
         assert "LiteralizerVariant" not in output
+    app.cleanup()
+
+
+def test_cpp14_named_carrier_preamble_only(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Literalizer forwards a carrier name and can omit literal code."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(
+            obj=[{"name": "build", "args": [1, "fast", None]}],
+        ),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: cpp
+           :language-version: cpp14
+           :heterogeneous-strategy: record
+           :heterogeneous-value-name: TaskValue
+           :record-struct-name-prefix: Task
+           :include-delimiters:
+           :preamble-only:
+
+        .. literalizer:: data.json
+           :language: cpp
+           :language-version: cpp14
+           :heterogeneous-strategy: record
+           :heterogeneous-value-name: TaskValue
+           :record-struct-name-prefix: Task
+           :include-delimiters:
+           :variable-name: task
+           :pre-indent-level: 1
+    """
+        ),
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    preamble_block, literal_block = doctree.findall(
+        condition=nodes.literal_block,
+    )
+    preamble = preamble_block.astext()
+    literal = literal_block.astext()
+    assert "struct TaskValue {" in preamble
+    assert "struct Task0 {" in preamble
+    assert "auto task =" not in preamble
+    assert "struct TaskValue {" not in literal
+    assert "auto task = std::vector{" in literal
+
+    app.cleanup()
+
+
+def _find_cpp_compiler() -> str:
+    """Return an available C++ compiler."""
+    compiler = shutil.which(cmd="clang++") or shutil.which(cmd="g++")
+    if compiler is None:
+        msg = "A C++ compiler is required for this test."
+        raise RuntimeError(msg)
+    return compiler
+
+
+def test_cpp_compiler_is_required(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A missing C++ compiler fails instead of skipping the composition
+    test.
+    """
+    monkeypatch.setattr(
+        target=shutil, name="which", value=Mock(return_value=None)
+    )
+    with pytest.raises(
+        expected_exception=RuntimeError,
+        match="A C\\+\\+ compiler is required",
+    ):
+        _find_cpp_compiler()
+
+
+def test_literalizer_call_named_carrier_preamble_only(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Literalizer-call composes a named carrier with later C++14 code."""
+    compiler = _find_cpp_compiler()
+
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[["build", [1, "fast", None]]]),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.json
+           :language: cpp
+           :language-version: cpp14
+           :heterogeneous-strategy: record
+           :heterogeneous-value-name: TaskValue
+           :target-function: run
+           :parameter-names: name,args
+           :per-element:
+           :preamble-only:
+
+        .. literalizer-call:: data.json
+           :language: cpp
+           :language-version: cpp14
+           :heterogeneous-strategy: record
+           :heterogeneous-value-name: TaskValue
+           :target-function: run
+           :parameter-names: name,args
+           :per-element:
+    """
+        ),
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    preamble_block, call_block = doctree.findall(
+        condition=nodes.literal_block,
+    )
+    assert "struct TaskValue {" in preamble_block.astext()
+    assert "run(" not in preamble_block.astext()
+    assert "struct TaskValue {" not in call_block.astext()
+    assert call_block.astext() == (
+        'run("build", std::vector<TaskValue>{1, "fast", nullptr});'
+    )
+    combined = (
+        f"{preamble_block.astext()}\n\n"
+        "void run(const std::string&, const std::vector<TaskValue>&) {}\n\n"
+        "int main() {\n"
+        f"    {call_block.astext()}\n"
+        "    return 0;\n"
+        "}\n"
+    )
+    assert combined.count("struct TaskValue {") == 1
+    combined_path = tmp_path / "combined.cpp"
+    combined_path.write_text(data=combined)
+    subprocess.run(
+        args=[
+            compiler,
+            "-std=c++14",
+            "-fsyntax-only",
+            str(object=combined_path),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    app.cleanup()
+
+
+def test_heterogeneous_value_name_unsupported_language_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A carrier name on an unsupported language raises a clear error."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data="[1, 2]")
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :heterogeneous-value-name: Value
+    """
+        ),
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=(
+            r"Language 'python' does not support "
+            r"':heterogeneous-value-name:'\."
+        ),
+    ):
+        app.build()
+
+
+@pytest.mark.parametrize(
+    argnames=("language", "strategy", "data", "expected"),
+    argvalues=[
+        ("rust", "tagged_enum", [1, "x", None], "enum TaskValue {"),
+        ("mojo", "variant", [1, "x"], "comptime TaskValue = Variant["),
+        ("nim", "object_variant", [1, "x", None], "TaskValueKind = enum"),
+        ("dhall", "union_type", [1, "x", None], "let TaskValue = <"),
+    ],
+)
+def test_heterogeneous_value_name_supported_languages(  # noqa: PLR0913
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+    language: str,
+    strategy: str,
+    data: list[object],
+    expected: str,
+) -> None:
+    """The general name option reaches each language-specific setting."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=data))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text=f"""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: {language}
+           :heterogeneous-strategy: {strategy}
+           :heterogeneous-value-name: TaskValue
+           :include-delimiters:
+           :include-preamble:
+    """
+        ),
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert expected in literal_block.astext()
     app.cleanup()
 
 
