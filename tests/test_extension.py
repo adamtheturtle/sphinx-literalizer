@@ -6791,7 +6791,7 @@ def test_language_defaults_apply_to_both_directives(
     literal_blocks = list(doctree.findall(condition=nodes.literal_block))
     default_literal, default_call, explicit_override = literal_blocks
     assert 'Task{"Ada", true}' in default_literal.astext()
-    assert "std::map<std::string, Value>" in default_call.astext()
+    assert 'process(Task{"Ada", true});' in default_call.astext()
     assert '.name = "Ada"' in explicit_override.astext()
     app.cleanup()
 
@@ -7491,10 +7491,14 @@ def test_literalizer_call_named_carrier_preamble_only(
         condition=nodes.literal_block,
     )
     assert "struct TaskValue {" in preamble_block.astext()
+    assert (
+        "std::make_shared<TypedHolder<std::string>>" in preamble_block.astext()
+    )
     assert "run(" not in preamble_block.astext()
     assert "struct TaskValue {" not in call_block.astext()
     assert call_block.astext() == (
-        'run("build", std::vector<TaskValue>{1, "fast", nullptr});'
+        'run("build", std::vector<TaskValue>{'
+        'TaskValue{1}, TaskValue{"fast"}, TaskValue{nullptr}});'
     )
     combined = (
         f"{preamble_block.astext()}\n\n"
