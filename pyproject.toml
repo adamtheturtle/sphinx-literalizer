@@ -35,7 +35,7 @@ dynamic = [
 dependencies = [
     "beartype==0.22.9",
     "docutils",
-    "literalizer==2026.7.24.1",
+    "literalizer @ git+https://github.com/adamtheturtle/literalizer.git@d2d035432359e953d10c9b618215f62c43ba4f09",
     "sphinx>=7.0",
 ]
 optional-dependencies.dev = [
