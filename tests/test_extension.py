@@ -7,6 +7,7 @@ import subprocess
 from collections.abc import Callable
 from pathlib import Path
 from textwrap import dedent
+from unittest.mock import Mock
 
 import pytest
 from docutils import nodes
@@ -7413,15 +7414,36 @@ def test_cpp14_named_carrier_preamble_only(
     app.cleanup()
 
 
+def _find_cpp_compiler() -> str:
+    """Return an available C++ compiler."""
+    compiler = shutil.which(cmd="clang++") or shutil.which(cmd="g++")
+    if compiler is None:
+        msg = "A C++ compiler is required for this test."
+        raise RuntimeError(msg)
+    return compiler
+
+
+def test_cpp_compiler_is_required(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A missing C++ compiler fails instead of skipping the composition
+    test.
+    """
+    monkeypatch.setattr(
+        target=shutil, name="which", value=Mock(return_value=None)
+    )
+    with pytest.raises(
+        expected_exception=RuntimeError,
+        match="A C\\+\\+ compiler is required",
+    ):
+        _find_cpp_compiler()
+
+
 def test_literalizer_call_named_carrier_preamble_only(
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
     """Literalizer-call composes a named carrier with later C++14 code."""
-    compiler = shutil.which(cmd="clang++") or shutil.which(cmd="g++")
-    if compiler is None:  # pragma: no cover - depends on runner tool-chain
-        pytest.skip(reason="A C++ compiler is required for this test.")
+    compiler = _find_cpp_compiler()
 
     source_directory = tmp_path / "source"
     source_directory.mkdir()
