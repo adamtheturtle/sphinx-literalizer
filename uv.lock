@@ -773,8 +773,8 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.7.24.1.post7+gd2d035432"
-source = { git = "https://github.com/adamtheturtle/literalizer.git?rev=d2d035432359e953d10c9b618215f62c43ba4f09#d2d035432359e953d10c9b618215f62c43ba4f09" }
+version = "2026.7.24.2"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
     { name = "pyhumps" },
@@ -783,6 +783,10 @@ dependencies = [
     { name = "ruamel-yaml-clib", marker = "platform_python_implementation == 'CPython'" },
     { name = "tomlkit" },
     { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f5/a8/f73b6d4d974593059ec015a6f9b67faac1e57caf1ace397bc6a556a0e923/literalizer-2026.7.24.2.tar.gz", hash = "sha256:5dc07dd31a445c4f3461ce5cf7336d27fbb54d642001bd20bdfdb824283372dc", size = 3704908, upload-time = "2026-07-24T16:33:30.373Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/df/02/aecd9e0d2800a2cef197a378687016c0e821d6e25bbe3cb0f02e96d19b52/literalizer-2026.7.24.2-py3-none-any.whl", hash = "sha256:c240b4b5e9847a38b040ac6d131eeae1ebfd5d307d81ff6bff1b63e6767c2e2e", size = 848985, upload-time = "2026-07-24T16:33:28.247Z" },
 ]
 
 [[package]]
@@ -2111,7 +2115,7 @@ requires-dist = [
     { name = "docutils" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
     { name = "interrogate", marker = "extra == 'dev'", specifier = "==1.7.0" },
-    { name = "literalizer", git = "https://github.com/adamtheturtle/literalizer.git?rev=d2d035432359e953d10c9b618215f62c43ba4f09" },
+    { name = "literalizer", specifier = "==2026.7.24.2" },
     { name = "mypy", extras = ["faster-cache"], marker = "extra == 'dev'", specifier = "==2.3.0" },
     { name = "mypy-strict-kwargs", marker = "extra == 'dev'", specifier = "==2026.7.19.1" },
     { name = "prek", marker = "extra == 'dev'", specifier = "==0.4.10" },
