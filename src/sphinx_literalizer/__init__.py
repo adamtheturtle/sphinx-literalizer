@@ -74,10 +74,7 @@ def _language_owned_enum(
     *, lang_cls: LanguageCls, name: str
 ) -> type[enum.Enum]:
     """Return an enum defined only by a particular language class."""
-    enum_cls = vars(lang_cls)[name]
-    if not isinstance(enum_cls, type) or not issubclass(enum_cls, enum.Enum):
-        msg = f"{lang_cls.__name__}.{name} is not an enum"
-        raise TypeError(msg)
+    enum_cls: type[enum.Enum] = vars(lang_cls)[name]
     return enum_cls
 
 
