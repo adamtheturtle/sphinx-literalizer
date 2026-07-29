@@ -2758,6 +2758,53 @@ def test_variable_type_hints_always(
     app.cleanup()
 
 
+def test_python_union_format(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Python annotation and union options reach literalizer."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text(data="- hello\n- 42\n")
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.yaml
+           :language: python
+           :variable-name: my_data
+           :wrap-in-file:
+           :include-delimiters:
+           :variable-type-hints: always
+           :annotation-evaluation: postponed
+           :union-format: typing
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        "from __future__ import annotations\n"
+        "from typing import Union\n"
+        "my_data: tuple[Union[str, int], ...] = (\n"
+        '    "hello",\n'
+        "    42,\n"
+        ")"
+    )
+    app.cleanup()
+
+
 def test_declaration_style_let(
     *,
     make_app: Callable[..., SphinxTestApp],
@@ -7409,7 +7456,7 @@ def test_cpp14_named_carrier_preamble_only(
     assert "struct Task0 {" in preamble
     assert "auto task =" not in preamble
     assert "struct TaskValue {" not in literal
-    assert "auto task = std::vector{" in literal
+    assert "auto task = std::vector<Task0>{" in literal
 
     app.cleanup()
 
