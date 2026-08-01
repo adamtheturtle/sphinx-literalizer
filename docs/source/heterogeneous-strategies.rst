@@ -128,6 +128,60 @@ The ``record`` and ``tuple`` examples use their own input files, shown inline.
       :heterogeneous-strategy: tagged_enum
       :include-preamble:
 
+Empty containers in tagged-enum output
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Every element of a Rust ``Vec`` must have the same type.  In a mixed
+collection, ``tagged_enum`` therefore wraps every element in the generated
+``Value`` enum.  An empty map especially needs its ``Value::Map`` wrapper:
+it has no entries from which Rust could infer key and value types, while the
+variant fixes its type as ``HashMap<&'static str, Value>``.
+
+For example, :file:`_examples/tagged_enum_empty_map.json` contains:
+
+.. literalinclude:: _examples/tagged_enum_empty_map.json
+   :language: json
+
+With ``:include-preamble:``, the directive emits the required ``HashMap``
+import and surrounding ``Value`` enum as well as the wrapped literal:
+
+.. rest-example::
+
+   .. literalizer:: _examples/tagged_enum_empty_map.json
+      :language: rust
+      :heterogeneous-strategy: tagged_enum
+      :include-delimiters:
+      :include-preamble:
+
+The generated pieces fit into a complete program like this:
+
+.. code-block:: rust
+
+   use std::collections::HashMap;
+
+   enum Value {
+       Str(&'static str),
+       Map(HashMap<&'static str, Value>),
+   }
+
+   fn main() {
+       let values: Vec<Value> = vec![
+           Value::Map(HashMap::new()),
+           Value::Str("tech"),
+       ];
+
+       assert!(matches!(&values[0], Value::Map(entries) if entries.is_empty()));
+       assert!(matches!(&values[1], Value::Str("tech")));
+   }
+
+Keep ``:include-preamble:`` when the rendered block must be self-contained.
+If imports and the ``Value`` declaration already live elsewhere, omit it and
+render only the expression.  When tagged values are not the API you want,
+choose a representation that matches the data: ``record`` for a non-empty
+object with stable fields, ``tuple`` for a fixed-shape sequence, or ``error``
+to reject heterogeneous input.  An empty map has no fields, so it cannot
+itself become a generated record.
+
 ``record`` (Go)
 ~~~~~~~~~~~~~~~
 

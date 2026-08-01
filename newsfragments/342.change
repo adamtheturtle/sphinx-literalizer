@@ -1,0 +1,2 @@
+Document Rust ``tagged_enum`` wrappers for empty containers, including the
+required preamble, a complete example, and alternative strategies.
