@@ -70,6 +70,14 @@ def _language_name(lang_cls: LanguageCls) -> str:
     return pygments_name
 
 
+def _language_owned_enum(
+    *, lang_cls: LanguageCls, name: str
+) -> type[enum.Enum]:
+    """Return an enum defined only by a particular language class."""
+    enum_cls: type[enum.Enum] = vars(lang_cls)[name]
+    return enum_cls
+
+
 @cache
 def _language_types() -> dict[str, LanguageCls]:
     """Map directive language keys to their language classes."""
@@ -107,6 +115,14 @@ _FORMAT_OPTION_GETTERS: dict[
     "call-style": lambda cls: cls.CallStyles,
     "json-type": lambda cls: cls.JsonTypes,
     "bool-format": lambda cls: cls.BoolFormats,
+    "annotation-evaluation": lambda cls: _language_owned_enum(
+        lang_cls=cls,
+        name="AnnotationEvaluations",
+    ),
+    "union-format": lambda cls: _language_owned_enum(
+        lang_cls=cls,
+        name="UnionFormats",
+    ),
 }
 
 
@@ -120,6 +136,13 @@ _FORMAT_OPTION_GETTERS: dict[
 _FORMAT_OPTION_SUPPORTS_CHECKS: dict[str, Callable[[LanguageCls], bool]] = {
     "empty-dict-key": lambda cls: cls.supports_empty_dict_key,
     "call-style": lambda cls: cls.supports_call_style,
+    "annotation-evaluation": lambda cls: "AnnotationEvaluations" in vars(cls),
+    "union-format": lambda cls: "UnionFormats" in vars(cls),
+}
+
+_FORMAT_OPTION_ENUM_CHECKS: dict[str, Callable[[LanguageCls], bool]] = {
+    "annotation-evaluation": lambda cls: "AnnotationEvaluations" in vars(cls),
+    "union-format": lambda cls: "UnionFormats" in vars(cls),
 }
 
 
@@ -138,6 +161,11 @@ def _all_formats() -> dict[str, dict[tuple[str, str], enum.Enum]]:
         option_name: {
             (lang_name, member.name.lower()): member
             for lang_name, lang_cls in _language_types().items()
+            if (
+                (supports_check := _FORMAT_OPTION_ENUM_CHECKS.get(option_name))
+                is None
+                or supports_check(lang_cls)
+            )
             for member in getter(lang_cls)
         }
         for option_name, getter in _FORMAT_OPTION_GETTERS.items()
