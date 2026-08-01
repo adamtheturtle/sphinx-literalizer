@@ -480,6 +480,13 @@ Directive options
       ``multiline`` targets ``jdk_16`` even when ``:language-version: jdk_11``
       is also specified.
 
+For example, a small YAML dictionary can keep its message on multiple lines:
+
+.. literalizer:: _examples/multiline.yaml
+   :language: python
+   :include-delimiters:
+   :string-format: multiline
+
 ``:trailing-comma:`` (optional)
    Whether to include a trailing comma after the last element in
    collections.  Supported values:
