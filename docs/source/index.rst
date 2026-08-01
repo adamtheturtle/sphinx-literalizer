@@ -468,6 +468,24 @@ Directive options
       Double-quoted strings (default for all languages).
    ``single``
       Single-quoted strings.  Available for JavaScript.
+   ``multiline``
+      Native multiline string syntax.  Available for Python (triple-quoted
+      strings), Java (text blocks), C++ and Rust (collision-free raw string
+      delimiters), C# (verbatim strings), Go (raw string literals), JavaScript
+      (template literals), Kotlin and Scala (triple-quoted strings), and Ruby
+      (multiline single-quoted strings).  Leading and trailing newlines, blank
+      lines, and embedded indentation are preserved.  When a native form
+      cannot safely represent a value, ``literalizer`` uses an escaped string
+      literal instead.  Java text blocks require Java 16, so selecting
+      ``multiline`` targets ``jdk_16`` even when ``:language-version: jdk_11``
+      is also specified.
+
+For example, a small YAML dictionary can keep its message on multiple lines:
+
+.. literalizer:: _examples/multiline.yaml
+   :language: python
+   :include-delimiters:
+   :string-format: multiline
 
 ``:trailing-comma:`` (optional)
    Whether to include a trailing comma after the last element in
