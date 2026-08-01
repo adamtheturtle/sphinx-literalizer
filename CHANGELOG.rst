@@ -3,6 +3,18 @@ Changelog
 
 .. towncrier release notes start
 
+2026.08.01
+----------
+
+- Document Rust ``tagged_enum`` wrappers for empty containers, including the
+  required preamble, a complete example, and alternative strategies.
+
+- Expose Python annotation evaluation and union format options.
+
+- Expose Literalizer's native ``:string-format: multiline`` option on both
+  directives for Python, Java, C++, C#, Go, JavaScript, Kotlin, Ruby, Scala, and
+  Rust, including exact whitespace preservation and Java 16 text blocks.
+
 2026.07.24.2
 ------------
 

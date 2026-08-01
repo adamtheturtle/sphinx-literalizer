@@ -1,3 +1,0 @@
-Expose Literalizer's native ``:string-format: multiline`` option on both
-directives for Python, Java, C++, C#, Go, JavaScript, Kotlin, Ruby, Scala, and
-Rust, including exact whitespace preservation and Java 16 text blocks.
