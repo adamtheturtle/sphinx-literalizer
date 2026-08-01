@@ -3074,6 +3074,226 @@ def test_string_format_single(
     app.cleanup()
 
 
+def test_string_format_multiline_native_delimiters(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The shared multiline member uses each language's native syntax."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj="first\n\n  indented\nlast"),
+    )
+    languages = (
+        "python",
+        "java",
+        "cpp",
+        "csharp",
+        "go",
+        "javascript",
+        "kotlin",
+        "ruby",
+        "scala",
+        "rust",
+    )
+    directives = "\n\n".join(
+        f".. literalizer:: data.json\n"
+        f"   :language: {language}\n"
+        "   :string-format: multiline"
+        for language in languages
+    )
+    (source_directory / "index.rst").write_text(
+        data=f"Test\n====\n\n{directives}\n",
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    actual = [
+        literal_block.astext()
+        for literal_block in doctree.findall(condition=nodes.literal_block)
+    ]
+    assert actual == [
+        '"""first\n\n  indented\nlast"""',
+        '"""\nfirst\n\n  indented\nlast"""',
+        'R"LITERALIZER(first\n\n  indented\nlast)LITERALIZER"',
+        '@"first\n\n  indented\nlast"',
+        "`first\n\n  indented\nlast`",
+        "`first\n\n  indented\nlast`",
+        '"""first\n\n  indented\nlast"""',
+        "'first\n\n  indented\nlast'",
+        '"""first\n\n  indented\nlast"""',
+        'r#"first\n\n  indented\nlast"#',
+    ]
+    app.cleanup()
+
+
+def test_string_format_multiline_preserves_edge_newlines(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Multiline JSON scalars preserve edge newlines and indentation."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj="\nfirst\n\n  indented\nlast\n"),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :string-format: multiline
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == ('"""\nfirst\n\n  indented\nlast\n"""')
+    app.cleanup()
+
+
+def test_string_format_multiline_literalizer_call_yaml(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Multiline applies to YAML scalars in literalizer-call."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text(
+        data="- |+\n  first\n\n    indented\n  last\n",
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer-call:: data.yaml
+           :language: python
+           :target-function: emit
+           :parameter-names: message
+           :per-element:
+           :string-format: multiline
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        'emit(message="""first\n\n  indented\nlast\n""")'
+    )
+    app.cleanup()
+
+
+def test_string_format_multiline_java_promotes_jdk_11(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Java multiline output uses the Java 16 text-block syntax."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj="first\nsecond"),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: java
+           :language-version: jdk_11
+           :string-format: multiline
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == '"""\nfirst\nsecond"""'
+    app.cleanup()
+
+
+def test_unsupported_string_format_multiline_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """An unsupported multiline string format raises ExtensionError."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj="first\nsecond"),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: typescript
+           :string-format: multiline
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=(
+            r"Language 'typescript' does not support string-format "
+            r"'multiline'\."
+        ),
+    ):
+        app.build()
+
+
 def test_trailing_comma_no(
     *,
     make_app: Callable[..., SphinxTestApp],
