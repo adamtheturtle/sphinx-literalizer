@@ -3,6 +3,14 @@ Changelog
 
 .. towncrier release notes start
 
+2026.08.02
+----------
+
+- Adopt Literalizer's neutral C++ multiline raw-string delimiters, expose a
+  configurable ``:multiline-raw-string-delimiter-base:``, and add multiline
+  string support for Crystal, D, Dart, Groovy, Lua, Nim, PHP, Swift, and
+  TypeScript.
+
 2026.08.01
 ----------
 
