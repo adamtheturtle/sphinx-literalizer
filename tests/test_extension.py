@@ -3097,6 +3097,15 @@ def test_string_format_multiline_native_delimiters(
         "ruby",
         "scala",
         "rust",
+        "crystal",
+        "d",
+        "dart",
+        "groovy",
+        "lua",
+        "nim",
+        "php",
+        "swift",
+        "typescript",
     )
     directives = "\n\n".join(
         f".. literalizer:: data.json\n"
@@ -3121,9 +3130,9 @@ def test_string_format_multiline_native_delimiters(
         for literal_block in doctree.findall(condition=nodes.literal_block)
     ]
     assert actual == [
-        '"""first\n\n  indented\nlast"""',
+        '"""\\\nfirst\n\n  indented\nlast"""',
         '"""\nfirst\n\n  indented\nlast"""',
-        'R"LITERALIZER(first\n\n  indented\nlast)LITERALIZER"',
+        'R"(first\n\n  indented\nlast)"',
         '@"first\n\n  indented\nlast"',
         "`first\n\n  indented\nlast`",
         "`first\n\n  indented\nlast`",
@@ -3131,8 +3140,122 @@ def test_string_format_multiline_native_delimiters(
         "'first\n\n  indented\nlast'",
         '"""first\n\n  indented\nlast"""',
         'r#"first\n\n  indented\nlast"#',
+        "%q|first\n\n  indented\nlast|",
+        "`first\n\n  indented\nlast`",
+        "'''first\n\n  indented\nlast'''",
+        "'''first\n\n  indented\nlast'''",
+        "[[first\n\n  indented\nlast]]",
+        '"""first\n\n  indented\nlast"""',
+        "'first\n\n  indented\nlast'",
+        '#"""\nfirst\n\n  indented\nlast\n"""#',
+        "`first\n\n  indented\nlast`",
     ]
     app.cleanup()
+
+
+def test_cpp_multiline_raw_string_delimiters(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """C++ uses neutral delimiters and accepts a custom fallback base."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj='first\n)"\nlast'),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: cpp
+           :string-format: multiline
+
+        .. literalizer:: data.json
+           :language: cpp
+           :string-format: multiline
+           :multiline-raw-string-delimiter-base: TAG
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    actual = [
+        literal_block.astext()
+        for literal_block in doctree.findall(condition=nodes.literal_block)
+    ]
+    assert actual == [
+        'R"x(first\n)"\nlast)x"',
+        'R"TAG(first\n)"\nlast)TAG"',
+    ]
+    assert "LITERALIZER" not in "".join(actual)
+    app.cleanup()
+
+
+@pytest.mark.parametrize(
+    argnames=("language", "delimiter_base", "match"),
+    argvalues=[
+        (
+            "python",
+            "TAG",
+            (
+                r"Language 'python' does not support "
+                r"':multiline-raw-string-delimiter-base:'\."
+            ),
+        ),
+        (
+            "cpp",
+            "(",
+            r"Cpp multiline_raw_string_delimiter_base .* is invalid",
+        ),
+    ],
+)
+def test_multiline_raw_string_delimiter_base_error(
+    language: str,
+    delimiter_base: str,
+    match: str,
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """The C++-only delimiter option reports invalid uses cleanly."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj="first\nsecond"),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text=f"""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: {language}
+           :string-format: multiline
+           :multiline-raw-string-delimiter-base: {delimiter_base}
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(expected_exception=ExtensionError, match=match):
+        app.build()
 
 
 def test_string_format_multiline_preserves_edge_newlines(
@@ -3169,7 +3292,9 @@ def test_string_format_multiline_preserves_edge_newlines(
 
     doctree = app.env.get_doctree(docname="index")
     (literal_block,) = doctree.findall(condition=nodes.literal_block)
-    assert literal_block.astext() == ('"""\nfirst\n\n  indented\nlast\n"""')
+    assert literal_block.astext() == (
+        '"""\\\n\nfirst\n\n  indented\nlast\n"""'
+    )
     app.cleanup()
 
 
@@ -3211,7 +3336,7 @@ def test_string_format_multiline_literalizer_call_yaml(
     doctree = app.env.get_doctree(docname="index")
     (literal_block,) = doctree.findall(condition=nodes.literal_block)
     assert literal_block.astext() == (
-        'emit(message="""first\n\n  indented\nlast\n""")'
+        'emit(message="""\\\nfirst\n\n  indented\nlast\n""")'
     )
     app.cleanup()
 
@@ -3274,7 +3399,7 @@ def test_unsupported_string_format_multiline_error(
         ====
 
         .. literalizer:: data.json
-           :language: typescript
+           :language: c
            :string-format: multiline
     """
         )
@@ -3287,7 +3412,7 @@ def test_unsupported_string_format_multiline_error(
     with pytest.raises(
         expected_exception=ExtensionError,
         match=(
-            r"Language 'typescript' does not support string-format "
+            r"Language 'c' does not support string-format "
             r"'multiline'\."
         ),
     ):

@@ -469,16 +469,16 @@ Directive options
    ``single``
       Single-quoted strings.  Available for JavaScript.
    ``multiline``
-      Native multiline string syntax.  Available for Python (triple-quoted
-      strings), Java (text blocks), C++ and Rust (collision-free raw string
-      delimiters), C# (verbatim strings), Go (raw string literals), JavaScript
-      (template literals), Kotlin and Scala (triple-quoted strings), and Ruby
-      (multiline single-quoted strings).  Leading and trailing newlines, blank
-      lines, and embedded indentation are preserved.  When a native form
-      cannot safely represent a value, ``literalizer`` uses an escaped string
-      literal instead.  Java text blocks require Java 16, so selecting
-      ``multiline`` targets ``jdk_16`` even when ``:language-version: jdk_11``
-      is also specified.
+      Native multiline string syntax.  Available for C#, C++, Crystal, D,
+      Dart, Go, Groovy, Java, JavaScript, Kotlin, Lua, Nim, PHP, Python, Ruby,
+      Rust, Scala, Swift, and TypeScript.  The generated form follows the
+      language: for example, Java uses text blocks, C++ and Rust use
+      collision-free raw strings, and JavaScript and TypeScript use template
+      literals.  Leading and trailing newlines, blank lines, and embedded
+      indentation are preserved.  When a native form cannot safely represent
+      a value, ``literalizer`` uses an escaped string literal instead.  Java
+      text blocks require Java 16, so selecting ``multiline`` targets
+      ``jdk_16`` even when ``:language-version: jdk_11`` is also specified.
 
 For example, a small YAML dictionary can keep its message on multiple lines:
 
@@ -486,6 +486,14 @@ For example, a small YAML dictionary can keep its message on multiple lines:
    :language: python
    :include-delimiters:
    :string-format: multiline
+
+``:multiline-raw-string-delimiter-base:`` (optional)
+   Fallback delimiter base for C++ ``:string-format: multiline`` raw strings.
+   Literalizer first uses an empty delimiter when it does not collide with the
+   value.  On a collision, it tries this base and then numbered variants that
+   fit C++'s 16-character delimiter limit.  The default is ``x``.  The value
+   must be a non-empty sequence of valid C++ raw-string delimiter characters;
+   using this option with another language raises an error.
 
 ``:trailing-comma:`` (optional)
    Whether to include a trailing comma after the last element in

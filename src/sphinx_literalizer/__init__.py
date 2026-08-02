@@ -41,6 +41,7 @@ from literalizer.exceptions import (
     CommentSourceMultilineError,
     DottedCallTargetNotSupportedError,
     HeterogeneousCollectionError,
+    InvalidCppRawStringDelimiterError,
     InvalidRecordNameError,
     ParameterCountMismatchError,
     PerElementNotListError,
@@ -371,6 +372,7 @@ _COMMON_OPTIONS: dict[str, Callable[[str], Any]] = {
     "default-dict-value-type": directives.unchanged,
     "default-ordered-map-value-type": directives.unchanged,
     "module-name": directives.unchanged,
+    "multiline-raw-string-delimiter-base": directives.unchanged_required,
     "record-struct-name-prefix": directives.unchanged_required,
     "record-shape-names": directives.unchanged_required,
     "heterogeneous-value-name": directives.unchanged_required,
@@ -470,6 +472,7 @@ _USER_FACING_LITERALIZER_ERRORS: tuple[type[Exception], ...] = (
     CommentSourceMultilineError,
     DottedCallTargetNotSupportedError,
     HeterogeneousCollectionError,
+    InvalidCppRawStringDelimiterError,
     InvalidRecordNameError,
     PerElementNotListError,
     UnrepresentableEmptyDictError,
@@ -526,6 +529,7 @@ class _CommonOptions:
     heterogeneous_strategy: str | None
     default_type_options: Mapping[str, str]
     module_name: str | None
+    multiline_raw_string_delimiter_base: str | None
     record_struct_name_prefix: str | None
     record_shape_names: str | None
     heterogeneous_value_name: str | None
@@ -585,6 +589,7 @@ class _CommonOptionArgs(TypedDict):
     heterogeneous_strategy: str | None
     default_type_options: Mapping[str, str]
     module_name: str | None
+    multiline_raw_string_delimiter_base: str | None
     record_struct_name_prefix: str | None
     record_shape_names: str | None
     heterogeneous_value_name: str | None
@@ -626,6 +631,9 @@ def _common_option_args(options: dict[str, Any]) -> _CommonOptionArgs:
             if name in options
         },
         module_name=options.get("module-name"),
+        multiline_raw_string_delimiter_base=options.get(
+            "multiline-raw-string-delimiter-base"
+        ),
         record_struct_name_prefix=options.get("record-struct-name-prefix"),
         record_shape_names=options.get("record-shape-names"),
         heterogeneous_value_name=options.get("heterogeneous-value-name"),
@@ -758,6 +766,28 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
                 )
         return constructor
 
+    @staticmethod
+    def _apply_multiline_raw_string_delimiter_base(
+        language_name: str,
+        constructor: partial[Language],
+        *,
+        options: _CommonOptions,
+    ) -> partial[Language]:
+        """Apply the C++ multiline raw-string delimiter base."""
+        delimiter_base = options.multiline_raw_string_delimiter_base
+        if delimiter_base is None:
+            return constructor
+        if language_name != "cpp":
+            msg = (
+                f"Language '{language_name}' does not support "
+                "':multiline-raw-string-delimiter-base:'."
+            )
+            raise ExtensionError(message=msg)
+        return partial(
+            constructor,
+            multiline_raw_string_delimiter_base=delimiter_base,
+        )
+
     def _build_language(
         self,
         language_name: str,
@@ -792,6 +822,11 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
             heterogeneous_strategy_value=heterogeneous_strategy_value,
         )
         constructor = self._apply_default_type_options(
+            language_name=language_name,
+            constructor=constructor,
+            options=options,
+        )
+        constructor = self._apply_multiline_raw_string_delimiter_base(
             language_name=language_name,
             constructor=constructor,
             options=options,
