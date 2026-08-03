@@ -7893,8 +7893,14 @@ def test_literalizer_call_named_carrier_preamble_only(
         'TaskValue{1}, TaskValue{"fast"}, TaskValue{nullptr}});'
     )
     combined = (
+        "#include <cassert>\n\n"
         f"{preamble_block.astext()}\n\n"
-        "void run(const std::string&, const std::vector<TaskValue>&) {}\n\n"
+        "void run(const std::string&, "
+        "const std::vector<TaskValue>& values) {\n"
+        "    assert(values.at(1).is<std::string>());\n"
+        '    assert(values.at(1).get<std::string>() == "fast");\n'
+        "    assert(!values.at(1).is<const char*>());\n"
+        "}\n\n"
         "int main() {\n"
         f"    {call_block.astext()}\n"
         "    return 0;\n"
@@ -7903,13 +7909,21 @@ def test_literalizer_call_named_carrier_preamble_only(
     assert combined.count("struct TaskValue {") == 1
     combined_path = tmp_path / "combined.cpp"
     combined_path.write_text(data=combined)
+    executable_path = tmp_path / "combined"
     subprocess.run(
         args=[
             compiler,
             "-std=c++14",
-            "-fsyntax-only",
             str(object=combined_path),
+            "-o",
+            str(object=executable_path),
         ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        args=[str(object=executable_path)],
         check=True,
         capture_output=True,
         text=True,
