@@ -33,3 +33,6 @@ htmlcov/
 
 # Docs build
 docs/build/
+
+# Vale styles downloaded by ``vale sync``
+styles/
