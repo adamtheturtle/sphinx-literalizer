@@ -1,2 +1,0 @@
-Bump ``literalizer`` to 2026.8.12.3.
-Strings with embedded NUL bytes now render valid target-language literals, and C++ ``:json-type: nlohmann_json`` structural output honors ``:collection-layout: multiline`` under a variable form.

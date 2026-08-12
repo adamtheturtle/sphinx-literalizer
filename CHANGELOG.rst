@@ -3,6 +3,15 @@ Changelog
 
 .. towncrier release notes start
 
+2026.08.12.2
+------------
+
+- Bump ``literalizer`` to 2026.8.12.2.
+  The new ``:json-rendering:`` option (C++ only) chooses how ``:json-type:`` values are rendered: ``:json-rendering: inline_document`` renders the whole value as one inline JSON document handed to ``nlohmann::json::parse`` in a ``R"json(...)json"`` raw string instead of the default structural ``nlohmann::json`` factory expressions.
+
+- Bump ``literalizer`` to 2026.8.12.3.
+  Strings with embedded NUL bytes now render valid target-language literals, and C++ ``:json-type: nlohmann_json`` structural output honors ``:collection-layout: multiline`` under a variable form.
+
 2026.08.12.1
 ------------
 
