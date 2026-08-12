@@ -9771,6 +9771,139 @@ def test_json_type_rejected_for_unsupported_language(
     app.cleanup()
 
 
+def test_json_rendering_cpp_inline_document(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """``:json-rendering: inline_document`` renders the C++ JSON value
+    as one inline JSON document handed to ``nlohmann::json::parse``
+    instead of structural ``nlohmann::json`` factory expressions.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"a": 1, "b": "two"}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: cpp
+           :json-type: nlohmann_json
+           :json-rendering: inline_document
+           :variable-name: data
+           :include-delimiters:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == (
+        'auto data = nlohmann::json::parse(R"json({\n'
+        '    "a": 1,\n'
+        '    "b": "two"\n'
+        '})json");'
+    )
+    app.cleanup()
+
+
+def test_json_rendering_rejected_for_unsupported_language(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A language without a ``JsonRenderings`` enum (e.g. Python)
+    surfaces a clean directive error rather than crashing on the
+    constructor kwarg.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"a": 1}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :json-rendering: inline_document
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'python' does not support 'json-rendering'.",
+    )
+    app.cleanup()
+
+
+def test_json_rendering_requires_json_type(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """``:json-rendering:`` without ``:json-type:`` surfaces
+    literalizer's validation error against the directive.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"a": 1}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: cpp
+           :json-rendering: inline_document
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "Cpp json_rendering selects how json_type values are "
+            "rendered and requires json_type to be set."
+        ),
+    )
+    app.cleanup()
+
+
 def test_error_reports_directive_line(
     *,
     make_app: Callable[..., SphinxTestApp],

@@ -768,6 +768,19 @@ This option is available only for languages and JSON-value variants that
 ``literalizer`` supports.  Use ``:include-preamble:`` when the generated
 snippet also needs its imports.
 
+``:json-rendering:`` (optional, C++ only) chooses how ``:json-type:`` values are rendered.
+The default renders structural ``nlohmann::json`` factory expressions.
+``:json-rendering: inline_document`` instead renders the whole value as one inline JSON document handed to ``nlohmann::json::parse`` in a ``R"json(...)json"`` raw string, honoring ``:collection-layout:``, so readers see the data as JSON at the cost of the structural form's compile-time validation.
+It requires ``:json-type:``, and rejects non-finite floats and integers outside ``[-2^63, 2^64 - 1]`` because a JSON document cannot carry them exactly.
+
+.. literalizer-call:: _examples/calls_json.json
+   :language: cpp
+   :target-function: process
+   :parameter-names: profile,labels
+   :per-element:
+   :json-type: nlohmann_json
+   :json-rendering: inline_document
+
 Heterogeneous call arguments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
