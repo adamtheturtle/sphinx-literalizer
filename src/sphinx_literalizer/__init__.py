@@ -37,6 +37,7 @@ from literalizer.exceptions import (
     HeterogeneousCollectionError,
     LiteralizerError,
     ParameterCountMismatchError,
+    ParseError,
     UnrepresentableEmptyDictError,
     UnrepresentableInputError,
     UnrepresentableIntegerError,
@@ -497,6 +498,10 @@ def _literalize_errors_as_directive_errors() -> Generator[None]:
     the build report the offending directive's document and line and
     carry on with the rest of the build.
 
+    A ``ParseError`` carrying a parser position reports it alongside the
+    message, so a malformed data file is located by its own line and
+    column rather than only by the directive that read it.
+
     ``ParameterCountMismatchError`` propagates unchanged: the
     ``literalizer-call`` directive catches it itself to add the
     ``:parameter-names:`` count to the message.
@@ -505,6 +510,20 @@ def _literalize_errors_as_directive_errors() -> Generator[None]:
         yield
     except ParameterCountMismatchError:
         raise
+    except ParseError as exc:
+        message = str(object=exc)
+        # ``line`` and ``column`` are the underlying parser's one-based
+        # position, set as a pair when the parser supplies one (a
+        # position-less parse failure -- e.g. a duplicate JSON key -- has
+        # neither).  The directive's document and line stay the reported
+        # location; the parser position is appended so an author of a
+        # large data file is not left bisecting it by hand.
+        if exc.line is not None:
+            message = (
+                f"{message} (at line {exc.line}, column {exc.column} "
+                "of the data file)"
+            )
+        raise _DirectiveError(message=message) from exc
     except LiteralizerError as exc:
         message = str(object=exc)
         # ``path`` locates the offending value within the input data

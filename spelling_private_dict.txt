@@ -68,6 +68,7 @@ mojo
 multiline
 norg
 overridable
+parser's
 php
 positionally
 pragma

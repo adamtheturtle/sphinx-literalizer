@@ -9953,6 +9953,93 @@ def test_error_reports_input_path(
     app.cleanup()
 
 
+def test_parse_error_reports_position(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A malformed data file reports the parser's line and column.
+
+    literalizer attaches the underlying parser's one-based position to
+    its parse errors; the directive error appends it so the author of a
+    large data file can jump to the offending line rather than bisecting
+    the input by hand.  The directive's own document and line remain the
+    reported location.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data='{\n  "a": [1, 2,\n}',
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "Invalid JSON: Expecting value at line 3 column 1 "
+            "(at line 3, column 1 of the data file)"
+        ),
+    )
+    app.cleanup()
+
+
+def test_parse_error_without_position(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A parse error without a parser position reports only its message.
+
+    A duplicate JSON key is rejected by literalizer itself rather than
+    the underlying parser, so the error carries no line or column and no
+    position suffix is appended.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data='{"a": 1, "a": 2}')
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Invalid JSON: duplicate key 'a'",
+    )
+    app.cleanup()
+
+
 def test_error_reports_directive_line(
     *,
     make_app: Callable[..., SphinxTestApp],
