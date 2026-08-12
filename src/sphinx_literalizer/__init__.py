@@ -119,6 +119,10 @@ _FORMAT_OPTION_GETTERS: dict[
     "heterogeneous-strategy": lambda cls: cls.HeterogeneousStrategies,
     "call-style": lambda cls: cls.CallStyles,
     "json-type": lambda cls: cls.JsonTypes,
+    "json-rendering": lambda cls: _language_owned_enum(
+        lang_cls=cls,
+        name="JsonRenderings",
+    ),
     "bool-format": lambda cls: cls.BoolFormats,
     "annotation-evaluation": lambda cls: _language_owned_enum(
         lang_cls=cls,
@@ -143,11 +147,13 @@ _FORMAT_OPTION_SUPPORTS_CHECKS: dict[str, Callable[[LanguageCls], bool]] = {
     "call-style": lambda cls: cls.supports_call_style,
     "annotation-evaluation": lambda cls: "AnnotationEvaluations" in vars(cls),
     "union-format": lambda cls: "UnionFormats" in vars(cls),
+    "json-rendering": lambda cls: "JsonRenderings" in vars(cls),
 }
 
 _FORMAT_OPTION_ENUM_CHECKS: dict[str, Callable[[LanguageCls], bool]] = {
     "annotation-evaluation": lambda cls: "AnnotationEvaluations" in vars(cls),
     "union-format": lambda cls: "UnionFormats" in vars(cls),
+    "json-rendering": lambda cls: "JsonRenderings" in vars(cls),
 }
 
 
@@ -1181,6 +1187,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :empty-dict-key: positional
            :heterogeneous-strategy: auto
            :json-type: serde_json_value
+           :json-rendering: inline_document
            :bool-format: json_pp_ref
            :default-set-element-type: String
            :default-sequence-element-type: String
