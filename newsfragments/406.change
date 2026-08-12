@@ -1,0 +1,2 @@
+Bump ``literalizer`` to 2026.8.12.4.
+When an error concerns one particular value in the data file, the directive error message now ends with that value's input path -- for example ``(at input path 'tasks[0].items')`` -- so the offending value can be found without searching the whole file.
