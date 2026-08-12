@@ -467,6 +467,24 @@ _EXTENSION_TO_INPUT_FORMAT: dict[str, InputFormat] = {
 }
 
 
+def _format_input_path(*, path: tuple[str | int, ...]) -> str:
+    """Render a literalizer input path as a compact locator string.
+
+    Mapping keys join with ``.`` and zero-based sequence indexes render
+    as ``[N]``, so the offending value in ``{"tasks": [{"name": ...}]}``
+    is located as ``tasks[0].name``.
+    """
+    rendered = ""
+    for element in path:
+        if isinstance(element, int):
+            rendered += f"[{element}]"
+        elif rendered:
+            rendered += f".{element}"
+        else:
+            rendered = element
+    return rendered
+
+
 @contextmanager
 def _literalize_errors_as_directive_errors() -> Generator[None]:
     """Convert user-facing literalizer exceptions into
@@ -488,7 +506,13 @@ def _literalize_errors_as_directive_errors() -> Generator[None]:
     except ParameterCountMismatchError:
         raise
     except LiteralizerError as exc:
-        raise _DirectiveError(message=str(object=exc)) from exc
+        message = str(object=exc)
+        # ``path`` locates the offending value within the input data
+        # (``None`` or empty when the error concerns the whole input).
+        if exc.path:
+            locator = _format_input_path(path=exc.path)
+            message = f"{message} (at input path '{locator}')"
+        raise _DirectiveError(message=message) from exc
 
 
 @beartype

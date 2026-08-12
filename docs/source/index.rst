@@ -808,6 +808,8 @@ A directive that cannot render its data -- because of an option the language doe
 Such an error does not stop the build, so one run reports every failing block rather than only the first.
 Build with ``-W`` to turn these errors into a build failure.
 
+When an error concerns one particular value in the data file, the message ends with that value's input path -- for example ``(at input path 'tasks[0].items')`` -- so the offending value can be found without searching the whole file.
+
 Problems that are not attributable to a directive, such as an invalid value for one of the configuration settings below, still fail the build immediately.
 
 
