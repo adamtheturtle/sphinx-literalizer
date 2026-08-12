@@ -9062,7 +9062,7 @@ def test_concrete_heterogeneous_strategy_unrepresentable_error(
         message=(
             "Dict has values of mixed type families including a "
             "container, which this heterogeneous strategy cannot "
-            "represent"
+            "represent (at input path '[0]')"
         ),
     )
 
@@ -9899,6 +9899,55 @@ def test_json_rendering_requires_json_type(
         message=(
             "Cpp json_rendering selects how json_type values are "
             "rendered and requires json_type to be set."
+        ),
+    )
+    app.cleanup()
+
+
+def test_error_reports_input_path(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """An error tied to one input value reports that value's path.
+
+    literalizer attaches the offending value's input path to its
+    errors; the directive error appends it as a compact locator so an
+    author can find the value in a large data file.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(
+            obj={"tasks": [{"name": "a", "items": [1, "two"]}]},
+        ),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+           :heterogeneous-strategy: error
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "Collection contains heterogeneous scalar types that cannot "
+            "be represented in the target language (found types: int, "
+            "str) (at input path 'tasks[0].items')"
         ),
     )
     app.cleanup()
