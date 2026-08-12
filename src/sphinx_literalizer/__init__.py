@@ -34,27 +34,12 @@ from literalizer import (
     literalize_call,
 )
 from literalizer.exceptions import (
-    CallArgNotSupportedError,
-    CallsNotSupportedByLanguageError,
-    CallsNotSupportedByToolError,
-    CommentSourceLengthMismatchError,
-    CommentSourceMultilineError,
-    DottedCallTargetNotSupportedError,
     HeterogeneousCollectionError,
-    InvalidCppRawStringDelimiterError,
-    InvalidRecordNameError,
+    LiteralizerError,
     ParameterCountMismatchError,
-    PerElementNotListError,
     UnrepresentableEmptyDictError,
     UnrepresentableInputError,
     UnrepresentableIntegerError,
-    UnsupportedCallShapeError,
-    UnsupportedIdentifierCaseError,
-    VariableNameNotSupportedError,
-    WrapCombinedInFileNotSupportedError,
-    WrapInFileWithoutVariableNotSupportedError,
-    ZipSourceWithoutInputFormatError,
-    ZipValuesLengthMismatchError,
 )
 from literalizer.languages import ALL_LANGUAGES
 from sphinx.application import Sphinx
@@ -476,46 +461,27 @@ _EXTENSION_TO_INPUT_FORMAT: dict[str, InputFormat] = {
 }
 
 
-# Literalizer exceptions that signal a directive option combination the
-# selected language cannot represent.  Surfacing these as a clean
-# ``_DirectiveError`` (rather than a traceback) lets the build report the
-# offending directive's document and line and carry on with the rest of
-# the build.  This includes ``HeterogeneousCollectionError`` so a
-# record-shaped or mixed-scalar input rendered with a concrete
-# (non-``auto``) strategy that cannot represent it fails loudly rather
-# than with a traceback.
-_USER_FACING_LITERALIZER_ERRORS: tuple[type[Exception], ...] = (
-    CallArgNotSupportedError,
-    CallsNotSupportedByLanguageError,
-    CallsNotSupportedByToolError,
-    CommentSourceLengthMismatchError,
-    CommentSourceMultilineError,
-    DottedCallTargetNotSupportedError,
-    HeterogeneousCollectionError,
-    InvalidCppRawStringDelimiterError,
-    InvalidRecordNameError,
-    PerElementNotListError,
-    UnrepresentableEmptyDictError,
-    UnrepresentableInputError,
-    UnrepresentableIntegerError,
-    UnsupportedCallShapeError,
-    UnsupportedIdentifierCaseError,
-    VariableNameNotSupportedError,
-    WrapCombinedInFileNotSupportedError,
-    WrapInFileWithoutVariableNotSupportedError,
-    ZipSourceWithoutInputFormatError,
-    ZipValuesLengthMismatchError,
-)
-
-
 @contextmanager
 def _literalize_errors_as_directive_errors() -> Generator[None]:
     """Convert user-facing literalizer exceptions into
     ``_DirectiveError``.
+
+    Every public literalizer exception derives from ``LiteralizerError``
+    and signals input the directive author wrote -- a bad option
+    combination, a language that cannot represent the data.  Surfacing
+    them as a clean ``_DirectiveError`` (rather than a traceback) lets
+    the build report the offending directive's document and line and
+    carry on with the rest of the build.
+
+    ``ParameterCountMismatchError`` propagates unchanged: the
+    ``literalizer-call`` directive catches it itself to add the
+    ``:parameter-names:`` count to the message.
     """
     try:
         yield
-    except _USER_FACING_LITERALIZER_ERRORS as exc:
+    except ParameterCountMismatchError:
+        raise
+    except LiteralizerError as exc:
         raise _DirectiveError(message=str(object=exc)) from exc
 
 

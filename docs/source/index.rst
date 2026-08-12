@@ -469,8 +469,8 @@ Directive options
    ``single``
       Single-quoted strings.  Available for JavaScript.
    ``multiline``
-      Native multiline string syntax.  Available for C#, C++, Crystal, D,
-      Dart, Go, Groovy, Java, JavaScript, Kotlin, Lua, Nim, PHP, Python, Ruby,
+      Native multiline string syntax.  Available for C++, Crystal, D,
+      Dart, Go, Groovy, Java, JavaScript, Kotlin, Lua, Nim, Python,
       Rust, Scala, Swift, and TypeScript.  The generated form follows the
       language: for example, Java uses text blocks, C++ and Rust use
       collision-free raw strings, and JavaScript and TypeScript use template
@@ -515,10 +515,9 @@ For example, a small YAML dictionary can keep its message on multiple lines:
    Supported values:
 
    ``positional``
-      Use positional arguments for empty keys (default).
-      Available for R.
+      Use positional arguments for empty keys.  Available for R.
    ``error``
-      Raise an error on empty keys.  Available for R.
+      Raise an error on empty keys (default).  Available for R.
 
 ``:heterogeneous-strategy:`` (optional, defaults to ``auto``)
    How to render scalar collections whose elements have more than one

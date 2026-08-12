@@ -9,6 +9,7 @@ Jsonnet
 Lua
 MATLAB
 Mojo
+NaN
 Nim
 Nim's
 Norg
@@ -28,6 +29,7 @@ Tcl
 Vec
 Wren
 Zig
+allowlist
 arg
 astext
 backend
