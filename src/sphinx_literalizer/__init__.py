@@ -41,6 +41,7 @@ from literalizer.exceptions import (
     UnrepresentableEmptyDictError,
     UnrepresentableInputError,
     UnrepresentableIntegerError,
+    UnsupportedOptionError,
 )
 from literalizer.languages import ALL_LANGUAGES
 from sphinx.application import Sphinx
@@ -76,12 +77,20 @@ def _language_name(lang_cls: LanguageCls) -> str:
     return pygments_name
 
 
-def _language_owned_enum(
+def _language_owned_enum_members(
     *, lang_cls: LanguageCls, name: str
-) -> type[enum.Enum]:
-    """Return an enum defined only by a particular language class."""
-    enum_cls: type[enum.Enum] = vars(lang_cls)[name]
-    return enum_cls
+) -> tuple[enum.Enum, ...]:
+    """Return the members of an enum defined only by some language
+    classes.
+
+    A language without the enum contributes no members, so the format
+    lookup tables derive an option's availability from the language
+    class itself rather than a hand-maintained capability table.
+    """
+    enum_cls: type[enum.Enum] | None = vars(lang_cls).get(name)
+    if enum_cls is None:
+        return ()
+    return tuple(enum_cls)
 
 
 @cache
@@ -120,41 +129,19 @@ _FORMAT_OPTION_GETTERS: dict[
     "heterogeneous-strategy": lambda cls: cls.HeterogeneousStrategies,
     "call-style": lambda cls: cls.CallStyles,
     "json-type": lambda cls: cls.JsonTypes,
-    "json-rendering": lambda cls: _language_owned_enum(
+    "json-rendering": lambda cls: _language_owned_enum_members(
         lang_cls=cls,
         name="JsonRenderings",
     ),
     "bool-format": lambda cls: cls.BoolFormats,
-    "annotation-evaluation": lambda cls: _language_owned_enum(
+    "annotation-evaluation": lambda cls: _language_owned_enum_members(
         lang_cls=cls,
         name="AnnotationEvaluations",
     ),
-    "union-format": lambda cls: _language_owned_enum(
+    "union-format": lambda cls: _language_owned_enum_members(
         lang_cls=cls,
         name="UnionFormats",
     ),
-}
-
-
-# Format options whose enum is defined on *every* language but whose
-# constructor keyword only some languages accept.  Membership in the enum
-# (which is all ``_lookup_format`` checks) is therefore not enough to know
-# the option is applicable, so these are gated on a ``supports_*``
-# capability flag -- mirroring :data:`_DEFAULT_TYPE_OPTIONS` -- to raise a
-# clean ``_DirectiveError`` rather than letting an unexpected keyword reach
-# the language constructor as an uncaught ``TypeError``.
-_FORMAT_OPTION_SUPPORTS_CHECKS: dict[str, Callable[[LanguageCls], bool]] = {
-    "empty-dict-key": lambda cls: cls.supports_empty_dict_key,
-    "call-style": lambda cls: cls.supports_call_style,
-    "annotation-evaluation": lambda cls: "AnnotationEvaluations" in vars(cls),
-    "union-format": lambda cls: "UnionFormats" in vars(cls),
-    "json-rendering": lambda cls: "JsonRenderings" in vars(cls),
-}
-
-_FORMAT_OPTION_ENUM_CHECKS: dict[str, Callable[[LanguageCls], bool]] = {
-    "annotation-evaluation": lambda cls: "AnnotationEvaluations" in vars(cls),
-    "union-format": lambda cls: "UnionFormats" in vars(cls),
-    "json-rendering": lambda cls: "JsonRenderings" in vars(cls),
 }
 
 
@@ -173,11 +160,6 @@ def _all_formats() -> dict[str, dict[tuple[str, str], enum.Enum]]:
         option_name: {
             (lang_name, member.name.lower()): member
             for lang_name, lang_cls in _language_types().items()
-            if (
-                (supports_check := _FORMAT_OPTION_ENUM_CHECKS.get(option_name))
-                is None
-                or supports_check(lang_cls)
-            )
             for member in getter(lang_cls)
         }
         for option_name, getter in _FORMAT_OPTION_GETTERS.items()
@@ -411,7 +393,11 @@ class _DefaultTypeOption:
 
 # Default element/key/value type options, lifted to module scope so the
 # typed-options parse boundary and ``_apply_default_type_options`` share
-# one source of truth.
+# one source of truth.  These keep an explicit ``supports_check`` (rather
+# than relying on the constructor's ``UnsupportedOptionError``) because
+# the ``supports_default_*`` flags are not derivable from constructor
+# field presence: Haxe defines several ``default_*`` fields whose flags
+# are nonetheless ``False`` (literalizer issue #3614).
 _DEFAULT_TYPE_OPTIONS: dict[str, _DefaultTypeOption] = {
     "default-set-element-type": _DefaultTypeOption(
         param_name="default_set_element_type",
@@ -436,27 +422,16 @@ _DEFAULT_TYPE_OPTIONS: dict[str, _DefaultTypeOption] = {
 }
 
 
-# Literalizer exposes the same generated heterogeneous carrier concept under
-# language-idiomatic constructor parameter names.
-_HETEROGENEOUS_VALUE_NAME_PARAMETERS: dict[str, str] = {
-    "cpp": "heterogeneous_value_variant_name",
-    "dhall": "heterogeneous_value_union_name",
-    "mojo": "heterogeneous_value_variant_name",
-    "nim": "heterogeneous_value_variant_name",
-    "rust": "heterogeneous_value_enum_name",
-}
-
-
-@cache
-def _languages_supporting_module_name() -> frozenset[str]:
-    """Return directive language keys whose class accepts
-    ``module_name``.
-    """
-    return frozenset(
-        name
-        for name, lang_cls in _language_types().items()
-        if lang_cls.supports_module_name
-    )
+# Literalizer exposes the same generated heterogeneous carrier concept
+# under language-idiomatic constructor parameter names
+# (``..._variant_name`` / ``..._union_name`` / ``..._enum_name``); the
+# name a language accepts is discovered from its constructor fields, so
+# adding a carrier-capable language upstream needs no change here.
+_HETEROGENEOUS_VALUE_NAME_PARAMETERS: tuple[str, ...] = (
+    "heterogeneous_value_variant_name",
+    "heterogeneous_value_union_name",
+    "heterogeneous_value_enum_name",
+)
 
 
 _EXTENSION_TO_INPUT_FORMAT: dict[str, InputFormat] = {
@@ -762,24 +737,12 @@ class _BaseLiteralizerDirective(SphinxDirective):
         value is never the ``auto`` sentinel.
         """
         all_formats = _all_formats()
-        language_cls = _language_types()[language_name]
         for option_name in _FORMAT_OPTION_GETTERS:
             if option_name == "heterogeneous-strategy":
                 value = heterogeneous_strategy_value
             else:
                 value = options.format_options.get(option_name)
             if value is not None:
-                supports_check = _FORMAT_OPTION_SUPPORTS_CHECKS.get(
-                    option_name
-                )
-                if supports_check is not None and not supports_check(
-                    language_cls
-                ):
-                    msg = (
-                        f"Language '{language_name}' does not support "
-                        f"'{option_name}'."
-                    )
-                    raise _DirectiveError(message=msg)
                 param_name = option_name.replace("-", "_")
                 constructor = partial(
                     constructor,
@@ -820,21 +783,19 @@ class _BaseLiteralizerDirective(SphinxDirective):
 
     @staticmethod
     def _apply_multiline_raw_string_delimiter_base(
-        language_name: str,
         constructor: partial[Language],
         *,
         options: _CommonOptions,
     ) -> partial[Language]:
-        """Apply the C++ multiline raw-string delimiter base."""
+        """Apply the multiline raw-string delimiter base option.
+
+        A language whose constructor does not accept the parameter
+        rejects it with ``UnsupportedOptionError``, reported by
+        :meth:`_build_language` as a clean directive error.
+        """
         delimiter_base = options.multiline_raw_string_delimiter_base
         if delimiter_base is None:
             return constructor
-        if language_name != "cpp":
-            msg = (
-                f"Language '{language_name}' does not support "
-                "':multiline-raw-string-delimiter-base:'."
-            )
-            raise _DirectiveError(message=msg)
         return partial(
             constructor,
             multiline_raw_string_delimiter_base=delimiter_base,
@@ -879,14 +840,16 @@ class _BaseLiteralizerDirective(SphinxDirective):
             options=options,
         )
         constructor = self._apply_multiline_raw_string_delimiter_base(
-            language_name=language_name,
             constructor=constructor,
             options=options,
         )
 
         module_name = options.module_name
         if module_name is not None:
-            if language_name not in _languages_supporting_module_name():
+            # ``module_name_case`` exists only on languages that accept
+            # ``module_name``, so this conversion needs a flag check
+            # before the constructor can reject the option itself.
+            if not language_cls.supports_module_name:
                 msg = (
                     f"Language '{language_name}' does not support "
                     f"':module-name:'."
@@ -899,12 +862,6 @@ class _BaseLiteralizerDirective(SphinxDirective):
 
         prefix = options.record_struct_name_prefix
         if prefix is not None:
-            if not language_cls.supports_record_struct_name_prefix:
-                msg = (
-                    f"Language '{language_name}' does not support "
-                    f"':record-struct-name-prefix:'."
-                )
-                raise _DirectiveError(message=msg)
             constructor = partial(
                 constructor,
                 record_struct_name_prefix=prefix,
@@ -912,12 +869,6 @@ class _BaseLiteralizerDirective(SphinxDirective):
 
         shape_names_value = options.record_shape_names
         if shape_names_value is not None:
-            if not language_cls.supports_record_shape_names:
-                msg = (
-                    f"Language '{language_name}' does not support "
-                    f"':record-shape-names:'."
-                )
-                raise _DirectiveError(message=msg)
             constructor = partial(
                 constructor,
                 record_shape_names=_parse_record_shape_names(
@@ -927,8 +878,13 @@ class _BaseLiteralizerDirective(SphinxDirective):
 
         heterogeneous_value_name = options.heterogeneous_value_name
         if heterogeneous_value_name is not None:
-            parameter_name = _HETEROGENEOUS_VALUE_NAME_PARAMETERS.get(
-                language_name,
+            parameter_name = next(
+                (
+                    candidate
+                    for candidate in _HETEROGENEOUS_VALUE_NAME_PARAMETERS
+                    if candidate in language_cls.__dataclass_fields__
+                ),
+                None,
             )
             if parameter_name is None:
                 msg = (
@@ -942,7 +898,18 @@ class _BaseLiteralizerDirective(SphinxDirective):
             )
 
         with _literalize_errors_as_directive_errors():
-            return constructor()
+            try:
+                return constructor()
+            except UnsupportedOptionError as exc:
+                # The constructor is the single authority on which
+                # options a language accepts; translate its error back
+                # into the directive's option spelling.
+                option_name = exc.option.replace("_", "-")
+                msg = (
+                    f"Language '{language_name}' does not support "
+                    f"':{option_name}:'."
+                )
+                raise _DirectiveError(message=msg) from exc
 
     @staticmethod
     def _resolve_format(

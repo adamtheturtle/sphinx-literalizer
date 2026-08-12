@@ -1,0 +1,2 @@
+Unsupported directive options are now reported through literalizer's typed ``UnsupportedOptionError`` instead of hand-maintained per-option capability tables, so adding a language upstream needs no change here.
+Some error messages changed spelling: ``Language 'cpp' does not support ':empty-dict-key:'.`` (previously without colons), and an option value a language does not define is now named, for example ``Language 'python' does not support json-rendering 'inline_document'.``.
