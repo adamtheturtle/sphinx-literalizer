@@ -3676,7 +3676,7 @@ def test_empty_dict_key_error(
         app=app,
         source_directory=source_directory,
         line=4,
-        message="Language 'python' does not support 'empty-dict-key'.",
+        message="Language 'python' does not support empty-dict-key 'positional'.",
     )
 
 
@@ -3969,7 +3969,7 @@ def test_unsupported_empty_dict_key_error(
         app=app,
         source_directory=source_directory,
         line=4,
-        message="Language 'cpp' does not support 'empty-dict-key'.",
+        message="Language 'cpp' does not support ':empty-dict-key:'.",
     )
 
 
@@ -4009,7 +4009,7 @@ def test_unsupported_call_style_error(
         app=app,
         source_directory=source_directory,
         line=4,
-        message="Language 'forth' does not support 'call-style'.",
+        message="Language 'forth' does not support ':call-style:'.",
     )
 
 
@@ -9856,7 +9856,10 @@ def test_json_rendering_rejected_for_unsupported_language(
         app=app,
         source_directory=source_directory,
         line=4,
-        message="Language 'python' does not support 'json-rendering'.",
+        message=(
+            "Language 'python' does not support json-rendering "
+            "'inline_document'."
+        ),
     )
     app.cleanup()
 

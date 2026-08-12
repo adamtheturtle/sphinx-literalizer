@@ -3,6 +3,7 @@ Changelog
 Dhall
 Dhall's
 Fortran
+Haxe
 Initializer
 Jinja
 Jsonnet
