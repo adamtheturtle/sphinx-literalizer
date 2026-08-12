@@ -3,6 +3,17 @@ Changelog
 
 .. towncrier release notes start
 
+2026.08.12
+----------
+
+- Directive errors are now reported against the failing directive's document and line, for example ``docs/index.rst:5: ERROR: ...``, instead of aborting the build with an ``ExtensionError`` and Sphinx's "report this to the developers" footer.
+  One build now reports every failing directive; use ``-W`` to keep such an error failing the build.
+
+- Bump ``literalizer`` to 2026.8.12.
+  ``:string-format: multiline`` is no longer available for C#, PHP, or Ruby, whose existing ``verbatim`` and ``single`` formats already produce multiline-capable strings.
+  R now rejects empty-string dictionary keys by default; set ``:empty-dict-key: positional`` to restore the previous behaviour.
+  Perl booleans render as ``JSON::PP`` singletons, and every literalizer failure -- including exceptions added in future literalizer releases -- is reported as a directive error rather than a traceback.
+
 2026.08.02
 ----------
 
