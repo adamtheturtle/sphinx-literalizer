@@ -1,0 +1,4 @@
+Bump ``literalizer`` to 2026.8.12.
+``:string-format: multiline`` is no longer available for C#, PHP, or Ruby, whose existing ``verbatim`` and ``single`` formats already produce multiline-capable strings.
+R now rejects empty-string dictionary keys by default; set ``:empty-dict-key: positional`` to restore the previous behaviour.
+Perl booleans render as ``JSON::PP`` singletons, and every literalizer failure -- including exceptions added in future literalizer releases -- is reported as a directive error rather than a traceback.
