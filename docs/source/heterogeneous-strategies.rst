@@ -26,7 +26,7 @@ To keep a mixed-scalar collection a hard build failure instead, set ``:heterogen
       :language: rust
       :heterogeneous-strategy: error
 
-with ``data.json`` containing ``[1, "hello"]`` raises an ``ExtensionError`` describing the heterogeneous scalar types.
+with ``data.json`` containing ``[1, "hello"]`` reports an error on the directive describing the heterogeneous scalar types.
 Without that explicit ``error``, the same input falls back through the configured precedence under ``auto``.
 
 Choosing a strategy
@@ -103,7 +103,7 @@ The ``:skip-if-unrepresentable:`` flag (on both directives) keeps that knowledge
       :heterogeneous-strategy: auto
       :skip-if-unrepresentable:
 
-Without ``:skip-if-unrepresentable:`` the same unrepresentable input raises an ``ExtensionError`` and fails the build, as before.
+Without ``:skip-if-unrepresentable:`` the same unrepresentable input is reported as an error on the directive, as before.
 
 Worked examples
 ---------------
@@ -355,7 +355,7 @@ Languages not listed support only ``error`` (set explicitly) and ``auto`` (which
      - Mojo
      - A ``Variant`` alias plus wrapped values.
 
-Selecting a strategy a language does not support raises an ``ExtensionError`` rather than silently falling back, so a typo such as ``:heterogeneous-strategy: tagged_enum`` on a Go directive fails loudly.
+Selecting a strategy a language does not support is an error rather than a silent fallback, so a typo such as ``:heterogeneous-strategy: tagged_enum`` on a Go directive fails loudly.
 
 This matrix tracks the upstream `literalizer`_ release pinned by |project|; new languages and strategies are announced in the :doc:`changelog`.
 

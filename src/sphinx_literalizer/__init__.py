@@ -63,6 +63,25 @@ from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
 
 
+class _DirectiveError(Exception):
+    """A failure attributable to a single directive in a document.
+
+    Raised anywhere under a directive's ``run()`` for input the author
+    wrote -- a bad option combination, a language that cannot represent
+    the data, an unreadable format.  The base directive converts these
+    into docutils directive errors, so they are reported with the
+    document and line of the offending directive rather than aborting
+    the build with an ``ExtensionError`` traceback.
+
+    Failures that are *not* attributable to a directive -- an invalid
+    ``conf.py`` value, for instance -- keep raising ``ExtensionError``.
+    """
+
+    def __init__(self, *, message: str) -> None:
+        """Report *message* as the directive's error text."""
+        super().__init__(message)
+
+
 def _language_name(lang_cls: LanguageCls) -> str:
     """Return the directive language key for a language class."""
     pygments_name = lang_cls.pygments_name
@@ -132,7 +151,7 @@ _FORMAT_OPTION_GETTERS: dict[
 # (which is all ``_lookup_format`` checks) is therefore not enough to know
 # the option is applicable, so these are gated on a ``supports_*``
 # capability flag -- mirroring :data:`_DEFAULT_TYPE_OPTIONS` -- to raise a
-# clean ``ExtensionError`` rather than letting an unexpected keyword reach
+# clean ``_DirectiveError`` rather than letting an unexpected keyword reach
 # the language constructor as an uncaught ``TypeError``.
 _FORMAT_OPTION_SUPPORTS_CHECKS: dict[str, Callable[[LanguageCls], bool]] = {
     "empty-dict-key": lambda cls: cls.supports_empty_dict_key,
@@ -197,14 +216,14 @@ def _lookup_format(
             f"Language '{language_name}' does not support "
             f"{directive_name} '{format_value}'."
         )
-        raise ExtensionError(message=msg) from None
+        raise _DirectiveError(message=msg) from None
 
 
 @beartype
 def _enum_member[E: enum.Enum](cls: type[E], value: str) -> E:
     """Look up an enum member by its case-insensitive name.
 
-    Raises a clean ``ExtensionError`` (rather than the ``KeyError`` from
+    Raises a clean ``_DirectiveError`` (rather than the ``KeyError`` from
     a bare ``cls[value.upper()]``) when *value* is not a member name, so
     callers need not rely on an upstream ``directives.choice`` validator
     to constrain the string.
@@ -215,7 +234,7 @@ def _enum_member[E: enum.Enum](cls: type[E], value: str) -> E:
         choices = sorted(member.name.lower() for member in cls)
         detail = f" Choose from: {', '.join(choices)}." if choices else ""
         msg = f"'{value}' is not a valid value.{detail}"
-        raise ExtensionError(message=msg) from None
+        raise _DirectiveError(message=msg) from None
 
 
 def _parse_modifiers(
@@ -251,7 +270,7 @@ def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
                 f"':record-shape-names:' entry {entry!r} is missing the "
                 f"'=' between the comma-separated keys and the name."
             )
-            raise ExtensionError(message=msg)
+            raise _DirectiveError(message=msg)
         keys_part, name = entry.rsplit(sep="=", maxsplit=1)
         keys = frozenset(
             key.strip() for key in keys_part.split(sep=",") if key.strip()
@@ -262,14 +281,14 @@ def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
                 f"':record-shape-names:' entry {entry!r} must have at "
                 f"least one key and a non-empty name."
             )
-            raise ExtensionError(message=msg)
+            raise _DirectiveError(message=msg)
         if keys in result:
             sorted_keys = ", ".join(sorted(keys))
             msg = (
                 f"':record-shape-names:' has multiple entries for the "
                 f"key set {{{sorted_keys}}}."
             )
-            raise ExtensionError(message=msg)
+            raise _DirectiveError(message=msg)
         result[keys] = name
     return result
 
@@ -288,10 +307,10 @@ def _parse_record_null_substitutions(value: str) -> dict[str, Any]:
             "':record-null-substitutions:' must be a valid JSON object: "
             f"{exc.msg}."
         )
-        raise ExtensionError(message=msg) from exc
+        raise _DirectiveError(message=msg) from exc
     if not isinstance(substitutions, dict):
         msg = "':record-null-substitutions:' must be a JSON object."
-        raise ExtensionError(message=msg)
+        raise _DirectiveError(message=msg)
     return cast("dict[str, Any]", substitutions)
 
 
@@ -459,11 +478,12 @@ _EXTENSION_TO_INPUT_FORMAT: dict[str, InputFormat] = {
 
 # Literalizer exceptions that signal a directive option combination the
 # selected language cannot represent.  Surfacing these as a clean
-# ``ExtensionError`` (rather than a traceback) lets the build report the
-# offending directive and continue under ``-W``.  This includes
-# ``HeterogeneousCollectionError`` so a record-shaped or mixed-scalar
-# input rendered with a concrete (non-``auto``) strategy that cannot
-# represent it fails loudly rather than with a traceback.
+# ``_DirectiveError`` (rather than a traceback) lets the build report the
+# offending directive's document and line and carry on with the rest of
+# the build.  This includes ``HeterogeneousCollectionError`` so a
+# record-shaped or mixed-scalar input rendered with a concrete
+# (non-``auto``) strategy that cannot represent it fails loudly rather
+# than with a traceback.
 _USER_FACING_LITERALIZER_ERRORS: tuple[type[Exception], ...] = (
     CallArgNotSupportedError,
     CallsNotSupportedByLanguageError,
@@ -489,14 +509,14 @@ _USER_FACING_LITERALIZER_ERRORS: tuple[type[Exception], ...] = (
 
 
 @contextmanager
-def _literalize_errors_as_extension_errors() -> Generator[None]:
+def _literalize_errors_as_directive_errors() -> Generator[None]:
     """Convert user-facing literalizer exceptions into
-    ``ExtensionError``.
+    ``_DirectiveError``.
     """
     try:
         yield
     except _USER_FACING_LITERALIZER_ERRORS as exc:
-        raise ExtensionError(message=str(object=exc)) from exc
+        raise _DirectiveError(message=str(object=exc)) from exc
 
 
 @beartype
@@ -649,11 +669,28 @@ def _common_option_args(options: dict[str, Any]) -> _CommonOptionArgs:
 
 
 @beartype
-class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-method
+class _BaseLiteralizerDirective(SphinxDirective):
     """Shared logic for literalizer directives."""
 
     required_arguments = 1
     has_content = False
+
+    def run(self) -> list[nodes.Node]:
+        """Render the directive, reporting author errors in place.
+
+        A ``_DirectiveError`` becomes a docutils directive error, so it
+        is reported as ``document.rst:<line>: ERROR: <message>`` against
+        the offending directive, participates in ``-W``, and lets one
+        build surface every bad block instead of aborting at the first.
+        """
+        try:
+            return self._run()
+        except _DirectiveError as exc:
+            raise self.error(message=str(object=exc)) from exc
+
+    def _run(self) -> list[nodes.Node]:  # pragma: no cover
+        """Produce the nodes for this directive."""
+        raise NotImplementedError
 
     def _options_with_language_defaults(self) -> dict[str, Any]:
         """Merge configured language defaults with explicit options.
@@ -727,7 +764,7 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
                         f"Language '{language_name}' does not support "
                         f"'{option_name}'."
                     )
-                    raise ExtensionError(message=msg)
+                    raise _DirectiveError(message=msg)
                 param_name = option_name.replace("-", "_")
                 constructor = partial(
                     constructor,
@@ -759,7 +796,7 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
                         f"Language '{language_name}' does not support "
                         f"'{option_name}'."
                     )
-                    raise ExtensionError(message=msg)
+                    raise _DirectiveError(message=msg)
                 constructor = partial(
                     constructor,
                     **{type_option.param_name: value},
@@ -782,7 +819,7 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
                 f"Language '{language_name}' does not support "
                 "':multiline-raw-string-delimiter-base:'."
             )
-            raise ExtensionError(message=msg)
+            raise _DirectiveError(message=msg)
         return partial(
             constructor,
             multiline_raw_string_delimiter_base=delimiter_base,
@@ -839,7 +876,7 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
                     f"Language '{language_name}' does not support "
                     f"':module-name:'."
                 )
-                raise ExtensionError(message=msg)
+                raise _DirectiveError(message=msg)
             module_name = language_cls.module_name_case.convert(
                 name=module_name,
             )
@@ -852,7 +889,7 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
                     f"Language '{language_name}' does not support "
                     f"':record-struct-name-prefix:'."
                 )
-                raise ExtensionError(message=msg)
+                raise _DirectiveError(message=msg)
             constructor = partial(
                 constructor,
                 record_struct_name_prefix=prefix,
@@ -865,7 +902,7 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
                     f"Language '{language_name}' does not support "
                     f"':record-shape-names:'."
                 )
-                raise ExtensionError(message=msg)
+                raise _DirectiveError(message=msg)
             constructor = partial(
                 constructor,
                 record_shape_names=_parse_record_shape_names(
@@ -883,13 +920,13 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
                     f"Language '{language_name}' does not support "
                     "':heterogeneous-value-name:'."
                 )
-                raise ExtensionError(message=msg)
+                raise _DirectiveError(message=msg)
             constructor = partial(
                 constructor,
                 **{parameter_name: heterogeneous_value_name},
             )
 
-        with _literalize_errors_as_extension_errors():
+        with _literalize_errors_as_directive_errors():
             return constructor()
 
     @staticmethod
@@ -915,7 +952,7 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
                 f"Cannot determine input format for '{data_path.name}'. "
                 f"Use the :{option_name}: option."
             )
-            raise ExtensionError(message=msg) from None
+            raise _DirectiveError(message=msg) from None
 
     def _resolve_input_format(
         self,
@@ -982,30 +1019,30 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
 
         if modifiers_value is not None and variable_name is None:
             msg = "':modifiers:' requires ':variable-name:'."
-            raise ExtensionError(message=msg)
+            raise _DirectiveError(message=msg)
         if modifiers_value is not None and existing_variable:
             msg = (
                 "':modifiers:' cannot be combined with ':existing-variable:'."
             )
-            raise ExtensionError(message=msg)
+            raise _DirectiveError(message=msg)
         if modifiers_value is not None and both_variable_forms:
             msg = (
                 "':modifiers:' cannot be combined with "
                 "':both-variable-forms:'."
             )
-            raise ExtensionError(message=msg)
+            raise _DirectiveError(message=msg)
         if both_variable_forms and variable_name is None:
             msg = "':both-variable-forms:' requires ':variable-name:'."
-            raise ExtensionError(message=msg)
+            raise _DirectiveError(message=msg)
         if both_variable_forms and existing_variable:
             msg = (
                 "':both-variable-forms:' cannot be combined with "
                 "':existing-variable:'."
             )
-            raise ExtensionError(message=msg)
+            raise _DirectiveError(message=msg)
         if existing_variable and variable_name is None:
             msg = "':existing-variable:' requires ':variable-name:'."
-            raise ExtensionError(message=msg)
+            raise _DirectiveError(message=msg)
 
         if variable_name is None:
             return None
@@ -1110,7 +1147,7 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
                 heterogeneous_strategy_value=strategy_value,
             )
 
-        with _literalize_errors_as_extension_errors():
+        with _literalize_errors_as_directive_errors():
             for strategy_value in attempts:
                 try:
                     language_spec = _build(strategy_value=strategy_value)
@@ -1134,7 +1171,7 @@ class _BaseLiteralizerDirective(SphinxDirective):  # pylint: disable=abstract-me
             if skip:
                 return None
             # Re-run the last attempt so its error propagates to the
-            # surrounding converter as a clean ``ExtensionError``.
+            # surrounding converter as a clean ``_DirectiveError``.
             language_spec = _build(strategy_value=attempts[-1])
             return render(language_spec), language_spec
 
@@ -1239,7 +1276,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
             ),
         )
 
-    def run(self) -> list[nodes.Node]:
+    def _run(self) -> list[nodes.Node]:
         """Read the data file and produce a literal block."""
         options = self._parse_options()
         env = self.state.document.settings.env
@@ -1486,13 +1523,13 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
                 "Use exactly one of ':target-function:' and "
                 "':constructor-class:'."
             )
-            raise ExtensionError(message=msg)
+            raise _DirectiveError(message=msg)
         if target_function is not None and constructor_class is not None:
             msg = (
                 "':target-function:' cannot be combined with "
                 "':constructor-class:'."
             )
-            raise ExtensionError(message=msg)
+            raise _DirectiveError(message=msg)
         return _LiteralizerCallOptions(
             **_common_option_args(options=options),
             target_function=target_function,
@@ -1524,7 +1561,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             raise AssertionError(msg)
         return language_spec.format_constructor_target(constructor_class)
 
-    def run(self) -> list[nodes.Node]:
+    def _run(self) -> list[nodes.Node]:
         """Read the data file and produce function call expressions."""
         options = self._parse_options()
         env = self.state.document.settings.env
@@ -1623,7 +1660,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
                 f"':parameter-names:' has {len(parameter_names)} entries "
                 f"but the data provides a different number of values: {exc}"
             )
-            raise ExtensionError(message=msg) from exc
+            raise _DirectiveError(message=msg) from exc
 
         if rendered is None:
             return []

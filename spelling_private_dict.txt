@@ -45,6 +45,7 @@ datetime
 datetimes
 dicts
 doctree
+docutils
 enum
 enums
 fallbacks

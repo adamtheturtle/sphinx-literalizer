@@ -13,6 +13,27 @@ import pytest
 from docutils import nodes
 from sphinx.errors import ExtensionError
 from sphinx.testing.util import SphinxTestApp
+from sphinx.util.console import strip_colors
+
+
+def _assert_directive_error(
+    *,
+    app: SphinxTestApp,
+    source_directory: Path,
+    line: int,
+    message: str,
+) -> None:
+    """Assert that building *app* reports one directive error.
+
+    The error is expected against ``index.rst`` at *line* -- the first
+    line of the offending directive -- so an author can find the block
+    that failed without searching the document for it.
+    """
+    app.build()
+    document = source_directory / "index.rst"
+    expected = f"{document}:{line}: ERROR: {message} [docutils]"
+    reported = strip_colors(app.warning.getvalue()).splitlines()
+    assert reported == [expected]
 
 
 def test_source_attribute_is_absolute(
@@ -1350,7 +1371,7 @@ def test_unsupported_modifier_error(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """An unsupported modifier raises a clear ExtensionError."""
+    """An unsupported modifier is reported as a directive error."""
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -1373,11 +1394,12 @@ def test_unsupported_modifier_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"^'public' is not a valid value\.$",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="'public' is not a valid value.",
+    )
 
 
 def test_unsupported_modifier_error_lists_choices(
@@ -1410,14 +1432,15 @@ def test_unsupported_modifier_error_lists_choices(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"^'bogus' is not a valid value\. Choose from: "
-            r"final, private, protected, public, static\.$"
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "'bogus' is not a valid value. Choose from: final, private, "
+            "protected, public, static."
         ),
-    ):
-        app.build()
+    )
 
 
 def test_modifiers_without_variable_name_error(
@@ -1425,9 +1448,7 @@ def test_modifiers_without_variable_name_error(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """Using :modifiers: without :variable-name: raises an
-    ExtensionError.
-    """
+    """Using :modifiers: without :variable-name: is an error."""
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -1449,11 +1470,12 @@ def test_modifiers_without_variable_name_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"^':modifiers:' requires ':variable-name:'\.$",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="':modifiers:' requires ':variable-name:'.",
+    )
 
 
 def test_modifiers_with_existing_variable_error(
@@ -1461,9 +1483,7 @@ def test_modifiers_with_existing_variable_error(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """Combining :modifiers: with :existing-variable: raises an
-    ExtensionError.
-    """
+    """Combining :modifiers: with :existing-variable: is an error."""
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -1487,14 +1507,12 @@ def test_modifiers_with_existing_variable_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"^':modifiers:' cannot be combined with "
-            r"':existing-variable:'\.$"
-        ),
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="':modifiers:' cannot be combined with ':existing-variable:'.",
+    )
 
 
 def test_modifiers_with_both_variable_forms_error(
@@ -1502,9 +1520,7 @@ def test_modifiers_with_both_variable_forms_error(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """Combining :modifiers: with :both-variable-forms: raises an
-    ExtensionError.
-    """
+    """Combining :modifiers: with :both-variable-forms: is an error."""
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -1529,14 +1545,12 @@ def test_modifiers_with_both_variable_forms_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"^':modifiers:' cannot be combined with "
-            r"':both-variable-forms:'\.$"
-        ),
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="':modifiers:' cannot be combined with ':both-variable-forms:'.",
+    )
 
 
 def test_rust_language(
@@ -2520,7 +2534,7 @@ def test_unsupported_sequence_format_error(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """An unsupported sequence-format raises a clear ExtensionError."""
+    """An unsupported sequence-format is reported as a directive error."""
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -2542,11 +2556,12 @@ def test_unsupported_sequence_format_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"Language 'python' does not support sequence-format 'vec'\.",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'python' does not support sequence-format 'vec'.",
+    )
 
 
 def test_unsupported_set_format_error(
@@ -2554,7 +2569,7 @@ def test_unsupported_set_format_error(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """An unsupported set-format raises a clear ExtensionError."""
+    """An unsupported set-format is reported as a directive error."""
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -2578,11 +2593,12 @@ def test_unsupported_set_format_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"Language 'rust' does not support set-format 'frozenset'\.",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'rust' does not support set-format 'frozenset'.",
+    )
 
 
 def test_unsupported_bytes_format_error(
@@ -2590,7 +2606,7 @@ def test_unsupported_bytes_format_error(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """An unsupported bytes-format raises a clear ExtensionError."""
+    """An unsupported bytes-format is reported as a directive error."""
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -2614,11 +2630,12 @@ def test_unsupported_bytes_format_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"Language 'rust' does not support bytes-format 'python'\.",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'rust' does not support bytes-format 'python'.",
+    )
 
 
 def test_comment_format_block(
@@ -2690,7 +2707,7 @@ def test_unsupported_comment_format_error(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """An unsupported comment-format raises a clear ExtensionError."""
+    """An unsupported comment-format is reported as a directive error."""
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -2714,11 +2731,12 @@ def test_unsupported_comment_format_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"Language 'python' does not support comment-format 'block'\.",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'python' does not support comment-format 'block'.",
+    )
 
 
 def test_variable_type_hints_always(
@@ -3204,27 +3222,31 @@ def test_cpp_multiline_raw_string_delimiters(
 
 
 @pytest.mark.parametrize(
-    argnames=("language", "delimiter_base", "match"),
+    argnames=("language", "delimiter_base", "expected_message"),
     argvalues=[
         (
             "python",
             "TAG",
             (
-                r"Language 'python' does not support "
-                r"':multiline-raw-string-delimiter-base:'\."
+                "Language 'python' does not support "
+                "':multiline-raw-string-delimiter-base:'."
             ),
         ),
         (
             "cpp",
             "(",
-            r"Cpp multiline_raw_string_delimiter_base .* is invalid",
+            (
+                "Cpp multiline_raw_string_delimiter_base '(' is invalid: "
+                "these characters are not permitted by C++'s raw-string "
+                "delimiter grammar: ['(']"
+            ),
         ),
     ],
 )
 def test_multiline_raw_string_delimiter_base_error(
     language: str,
     delimiter_base: str,
-    match: str,
+    expected_message: str,
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
@@ -3254,8 +3276,12 @@ def test_multiline_raw_string_delimiter_base_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(expected_exception=ExtensionError, match=match):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=expected_message,
+    )
 
 
 def test_string_format_multiline_preserves_edge_newlines(
@@ -3385,7 +3411,7 @@ def test_unsupported_string_format_multiline_error(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """An unsupported multiline string format raises ExtensionError."""
+    """An unsupported multiline string format is an error."""
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -3409,14 +3435,12 @@ def test_unsupported_string_format_multiline_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"Language 'c' does not support string-format "
-            r"'multiline'\."
-        ),
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'c' does not support string-format 'multiline'.",
+    )
 
 
 def test_trailing_comma_no(
@@ -3654,11 +3678,12 @@ def test_empty_dict_key_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"Language 'python' does not support 'empty-dict-key'\.",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'python' does not support 'empty-dict-key'.",
+    )
 
 
 def test_empty_dict_key_positional(
@@ -3724,14 +3749,15 @@ def test_heterogeneous_strategy_unsupported_value(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"Language 'python' does not support "
-            r"heterogeneous-strategy 'tagged_enum'\."
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "Language 'python' does not support heterogeneous-strategy "
+            "'tagged_enum'."
         ),
-    ):
-        app.build()
+    )
 
 
 def test_heterogeneous_strategy_tagged_enum(
@@ -3907,11 +3933,12 @@ def test_unsupported_default_set_element_type_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"Language 'javascript' does not support 'default-set-element-type'\.",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'javascript' does not support 'default-set-element-type'.",
+    )
 
 
 def test_unsupported_empty_dict_key_error(
@@ -3920,8 +3947,8 @@ def test_unsupported_empty_dict_key_error(
     tmp_path: Path,
 ) -> None:
     """A language that defines the ``EmptyDictKey`` enum but does not
-    accept the ``empty_dict_key`` constructor keyword raises a clean
-    ``ExtensionError`` rather than an uncaught ``TypeError``.
+    accept the ``empty_dict_key`` constructor keyword is reported as a
+    clean directive error rather than an uncaught ``TypeError``.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -3944,11 +3971,12 @@ def test_unsupported_empty_dict_key_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"Language 'cpp' does not support 'empty-dict-key'\.",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'cpp' does not support 'empty-dict-key'.",
+    )
 
 
 def test_unsupported_call_style_error(
@@ -3957,8 +3985,8 @@ def test_unsupported_call_style_error(
     tmp_path: Path,
 ) -> None:
     """A language that defines the ``CallStyles`` enum but does not accept
-    the ``call_style`` constructor keyword raises a clean
-    ``ExtensionError`` rather than an uncaught ``TypeError``.
+    the ``call_style`` constructor keyword is reported as a clean
+    directive error rather than an uncaught ``TypeError``.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -3983,11 +4011,12 @@ def test_unsupported_call_style_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"Language 'forth' does not support 'call-style'\.",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'forth' does not support 'call-style'.",
+    )
 
 
 def test_default_set_element_type(
@@ -4237,7 +4266,9 @@ def test_unsupported_dict_entry_style_error(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """An unsupported dict-entry-style raises a clear ExtensionError."""
+    """An unsupported dict-entry-style is reported as a directive
+    error.
+    """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -4261,11 +4292,12 @@ def test_unsupported_dict_entry_style_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"Language 'python' does not support dict-entry-style 'symbol'\.",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'python' does not support dict-entry-style 'symbol'.",
+    )
 
 
 def test_unsupported_numeric_literal_suffix_error(
@@ -4273,9 +4305,7 @@ def test_unsupported_numeric_literal_suffix_error(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """An unsupported numeric-literal-suffix raises a clear
-    ExtensionError.
-    """
+    """An unsupported numeric-literal-suffix is a directive error."""
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -4299,11 +4329,12 @@ def test_unsupported_numeric_literal_suffix_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"Language 'python' does not support numeric-literal-suffix 'auto'\.",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'python' does not support numeric-literal-suffix 'auto'.",
+    )
 
 
 def test_default_ordered_map_value_type(
@@ -4371,11 +4402,12 @@ def test_unsupported_default_ordered_map_value_type_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"Language 'python' does not support 'default-ordered-map-value-type'\.",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'python' does not support 'default-ordered-map-value-type'.",
+    )
 
 
 def test_default_dict_value_type(
@@ -4545,11 +4577,15 @@ def test_unknown_extension_without_input_format_errors(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"Cannot determine input format for 'data\.dat'\.",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "Cannot determine input format for 'data.dat'. "
+            "Use the :input-format: option."
+        ),
+    )
 
 
 def test_language_with_no_pygments_lexer(
@@ -5410,7 +5446,7 @@ def test_literalizer_call_comment_file_length_mismatch(
     tmp_path: Path,
 ) -> None:
     """A :comment-file: whose line count does not match the number of
-    generated calls is surfaced as a clean ExtensionError.
+    generated calls is surfaced as a clean directive error.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -5439,14 +5475,15 @@ def test_literalizer_call_comment_file_length_mismatch(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"comment_source has 1 entry\(ies\) but 2 call\(s\) were "
-            r"generated"
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "comment_source has 1 entry(ies) but 2 call(s) were "
+            "generated; the lengths must match"
         ),
-    ):
-        app.build()
+    )
 
 
 def test_literalizer_call_racket(
@@ -5847,11 +5884,12 @@ def test_call_style_unsupported_value(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"Language 'python' does not support call-style 'object'\.",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'python' does not support call-style 'object'.",
+    )
 
 
 def test_literalizer_call_without_per_element_uses_call_style(
@@ -5901,8 +5939,8 @@ def test_parameter_count_mismatch_error(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """A row whose value count differs from :parameter-names: raises a
-    clear ExtensionError instead of a raw traceback.
+    """A row whose value count differs from :parameter-names: is a
+    directive error instead of a raw traceback.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -5929,15 +5967,15 @@ def test_parameter_count_mismatch_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"':parameter-names:' has 2 entries but the data provides "
-            r"a different number of values: "
-            r"Expected 2 parameters but got 3 values"
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "':parameter-names:' has 2 entries but the data provides a different "
+            "number of values: Expected 2 parameters but got 3 values"
         ),
-    ):
-        app.build()
+    )
 
 
 def test_module_name_java(
@@ -5984,8 +6022,8 @@ def test_module_name_unsupported_language_error(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """Using :module-name: with a language that lacks a named scope
-    raises a clear ExtensionError.
+    """Using :module-name: with a language that lacks a named scope is a
+    directive error.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -6008,11 +6046,12 @@ def test_module_name_unsupported_language_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"Language 'python' does not support ':module-name:'\.",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'python' does not support ':module-name:'.",
+    )
 
 
 def test_both_variable_forms_csharp(
@@ -6060,9 +6099,7 @@ def test_both_variable_forms_requires_variable_name(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """Using :both-variable-forms: without :variable-name: raises an
-    ExtensionError.
-    """
+    """Using :both-variable-forms: without :variable-name: is an error."""
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -6085,11 +6122,12 @@ def test_both_variable_forms_requires_variable_name(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"^':both-variable-forms:' requires ':variable-name:'\.$",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="':both-variable-forms:' requires ':variable-name:'.",
+    )
 
 
 def test_existing_variable_requires_variable_name(
@@ -6097,8 +6135,8 @@ def test_existing_variable_requires_variable_name(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """Using :existing-variable: without :variable-name: raises an
-    ExtensionError rather than silently emitting a plain literal.
+    """Using :existing-variable: without :variable-name: is an error
+    rather than silently emitting a plain literal.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -6121,11 +6159,12 @@ def test_existing_variable_requires_variable_name(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"^':existing-variable:' requires ':variable-name:'\.$",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="':existing-variable:' requires ':variable-name:'.",
+    )
 
 
 def test_both_variable_forms_incompatible_with_existing_variable(
@@ -6133,8 +6172,8 @@ def test_both_variable_forms_incompatible_with_existing_variable(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """Combining :both-variable-forms: with :existing-variable: raises an
-    ExtensionError.
+    """Combining :both-variable-forms: with :existing-variable: is an
+    error.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -6160,14 +6199,15 @@ def test_both_variable_forms_incompatible_with_existing_variable(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"^':both-variable-forms:' cannot be combined with "
-            r"':existing-variable:'\.$"
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "':both-variable-forms:' cannot be combined with ':existing-"
+            "variable:'."
         ),
-    ):
-        app.build()
+    )
 
 
 def test_literalizer_call_consumable_refs(
@@ -6355,7 +6395,7 @@ def test_literalizer_call_variable_form_per_element_multi_error(
 ) -> None:
     """``:variable-name:`` with ``:per-element:`` over a source that
     produces more than one call surfaces literalizer's
-    ``UnsupportedCallShapeError`` as an ``ExtensionError``.
+    ``UnsupportedCallShapeError`` as a directive error.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -6383,8 +6423,18 @@ def test_literalizer_call_variable_form_per_element_multi_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(expected_exception=ExtensionError):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "Rust cannot represent this call shape: "
+            "variable_form binds a single call result, but this "
+            "input produces 2 calls; supply exactly one call "
+            "(per_element=False, or per_element=True with a "
+            "single-element source)"
+        ),
+    )
     app.cleanup()
 
 
@@ -6523,14 +6573,12 @@ def test_literalizer_call_requires_target_or_constructor(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"^Use exactly one of ':target-function:' and "
-            r"':constructor-class:'\.$"
-        ),
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Use exactly one of ':target-function:' and ':constructor-class:'.",
+    )
     app.cleanup()
 
 
@@ -6565,14 +6613,12 @@ def test_literalizer_call_target_function_and_constructor_class_rejected(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"^':target-function:' cannot be combined with "
-            r"':constructor-class:'\.$"
-        ),
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="':target-function:' cannot be combined with ':constructor-class:'.",
+    )
     app.cleanup()
 
 
@@ -6667,8 +6713,8 @@ def test_unrepresentable_input_error(
     tmp_path: Path,
 ) -> None:
     """A YAML non-string dict key for a language that cannot represent it
-    surfaces literalizer's ``UnrepresentableInputError`` as an
-    ``ExtensionError``.
+    surfaces literalizer's ``UnrepresentableInputError`` as a
+    directive error.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -6690,8 +6736,12 @@ def test_unrepresentable_input_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(expected_exception=ExtensionError):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Go cannot represent dict key of type int",
+    )
     app.cleanup()
 
 
@@ -7238,10 +7288,17 @@ def test_record_null_substitutions_cpp14(
 
 
 @pytest.mark.parametrize(
-    argnames=("substitutions", "error_message"),
+    argnames=("substitutions", "expected_message"),
     argvalues=[
-        ("{not JSON}", r"must be a valid JSON object"),
-        ("[]", r"must be a JSON object"),
+        (
+            "{not JSON}",
+            (
+                "':record-null-substitutions:' must be a valid JSON "
+                "object: Expecting property name enclosed in double "
+                "quotes."
+            ),
+        ),
+        ("[]", "':record-null-substitutions:' must be a JSON object."),
     ],
 )
 def test_record_null_substitutions_invalid_value_error(
@@ -7249,9 +7306,11 @@ def test_record_null_substitutions_invalid_value_error(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
     substitutions: str,
-    error_message: str,
+    expected_message: str,
 ) -> None:
-    """Invalid record null substitutions raise a clear ExtensionError."""
+    """Invalid record null substitutions are reported on the
+    directive.
+    """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -7273,8 +7332,12 @@ def test_record_null_substitutions_invalid_value_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(expected_exception=ExtensionError, match=error_message):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=expected_message,
+    )
 
 
 @pytest.mark.parametrize(
@@ -7371,7 +7434,9 @@ def test_unsupported_language_version_error(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """An unsupported language-version raises a clear ExtensionError."""
+    """An unsupported language-version is reported as a directive
+    error.
+    """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -7393,23 +7458,21 @@ def test_unsupported_language_version_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"Language 'python' does not support "
-            r"language-version 'ada_2022'\."
-        ),
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'python' does not support language-version 'ada_2022'.",
+    )
 
 
-def test_wrap_in_file_without_variable_raises_extension_error(
+def test_wrap_in_file_without_variable_raises_directive_error(
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
     """Languages that cannot wrap a bare value at file scope surface a
-    clean ``ExtensionError`` (rather than a literalizer traceback) when
+    clean directive error (rather than a literalizer traceback) when
     ``:wrap-in-file:`` is set without ``:variable-name:``.
     """
     source_directory = tmp_path / "source"
@@ -7433,14 +7496,15 @@ def test_wrap_in_file_without_variable_raises_extension_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"Java cannot wrap a bare value \(without a variable_form\) "
-            r"at file scope"
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "Java cannot wrap a bare value (without a variable_form) at file "
+            "scope"
         ),
-    ):
-        app.build()
+    )
 
 
 def test_heterogeneous_strategy_record_go(
@@ -7958,14 +8022,12 @@ def test_heterogeneous_value_name_unsupported_language_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"Language 'python' does not support "
-            r"':heterogeneous-value-name:'\."
-        ),
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'python' does not support ':heterogeneous-value-name:'.",
+    )
 
 
 @pytest.mark.parametrize(
@@ -8069,7 +8131,7 @@ def test_record_struct_name_prefix_unsupported_language_error(
     tmp_path: Path,
 ) -> None:
     """:record-struct-name-prefix: with a language that has no record
-    strategy raises a clear ExtensionError.
+    strategy is a directive error.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -8092,14 +8154,15 @@ def test_record_struct_name_prefix_unsupported_language_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"Language 'typescript' does not support "
-            r"':record-struct-name-prefix:'\."
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "Language 'typescript' does not support ':record-struct-name-"
+            "prefix:'."
         ),
-    ):
-        app.build()
+    )
 
 
 def test_record_shape_names_java(
@@ -8274,7 +8337,7 @@ def test_record_shape_names_invalid_name_error(
     tmp_path: Path,
 ) -> None:
     """A :record-shape-names: name that is not a PascalCase identifier
-    is surfaced as a clean ExtensionError, not a traceback.
+    is surfaced as a clean directive error, not a traceback.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -8300,11 +8363,15 @@ def test_record_shape_names_invalid_name_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=r"not a PascalCase Java identifier",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "record_shape_names entry for keys ['x', 'y'] maps to "
+            "'point', which is not a PascalCase Java identifier."
+        ),
+    )
 
 
 def test_record_shape_names_malformed_entry_error(
@@ -8312,9 +8379,7 @@ def test_record_shape_names_malformed_entry_error(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """A :record-shape-names: entry without '=' raises a clear
-    ExtensionError.
-    """
+    """A :record-shape-names: entry without '=' is a directive error."""
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
@@ -8339,14 +8404,15 @@ def test_record_shape_names_malformed_entry_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"':record-shape-names:' entry 'x,y' is missing the '=' "
-            r"between the comma-separated keys and the name\."
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "':record-shape-names:' entry 'x,y' is missing the '=' between the "
+            "comma-separated keys and the name."
         ),
-    ):
-        app.build()
+    )
 
 
 def test_record_shape_names_trailing_separator_ignored(
@@ -8405,8 +8471,8 @@ def test_record_shape_names_empty_name_error(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """A :record-shape-names: entry with keys but an empty name raises
-    a clear ExtensionError.
+    """A :record-shape-names: entry with keys but an empty name is a
+    directive error.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -8432,14 +8498,15 @@ def test_record_shape_names_empty_name_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"':record-shape-names:' entry 'x,y=' must have at least "
-            r"one key and a non-empty name\."
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "':record-shape-names:' entry 'x,y=' must have at least one key and a"
+            " non-empty name."
         ),
-    ):
-        app.build()
+    )
 
 
 def test_record_shape_names_duplicate_key_set_error(
@@ -8448,7 +8515,7 @@ def test_record_shape_names_duplicate_key_set_error(
     tmp_path: Path,
 ) -> None:
     """Two :record-shape-names: entries for the same key set (in any
-    key order) raise a clear ExtensionError instead of silently
+    key order) are a directive error instead of silently
     keeping only the last name.
     """
     source_directory = tmp_path / "source"
@@ -8475,14 +8542,12 @@ def test_record_shape_names_duplicate_key_set_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"':record-shape-names:' has multiple entries for the key "
-            r"set \{x, y\}\."
-        ),
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="':record-shape-names:' has multiple entries for the key set {x, y}.",
+    )
 
 
 def test_record_shape_names_unsupported_language_error(
@@ -8491,7 +8556,7 @@ def test_record_shape_names_unsupported_language_error(
     tmp_path: Path,
 ) -> None:
     """:record-shape-names: with a language that does not support it
-    (e.g. Python) raises a clear ExtensionError.
+    (e.g. Python) is a directive error.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -8517,14 +8582,12 @@ def test_record_shape_names_unsupported_language_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match=(
-            r"Language 'python' does not support "
-            r"':record-shape-names:'\."
-        ),
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="Language 'python' does not support ':record-shape-names:'.",
+    )
 
 
 def test_fortran_language_version_v2003(
@@ -8860,13 +8923,13 @@ def test_heterogeneous_strategy_auto_precedence_config_rust(
     app.cleanup()
 
 
-def test_concrete_heterogeneous_strategy_unrepresentable_extension_error(
+def test_concrete_heterogeneous_strategy_unrepresentable_error(
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
     """A concrete (non-auto) strategy that cannot represent the input
-    surfaces as a clean ExtensionError, not a traceback.
+    surfaces as a clean directive error, not a traceback.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -8891,8 +8954,16 @@ def test_concrete_heterogeneous_strategy_unrepresentable_extension_error(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(expected_exception=ExtensionError):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "Dict has values of mixed type families including a "
+            "container, which this heterogeneous strategy cannot "
+            "represent"
+        ),
+    )
 
 
 def test_skip_if_unrepresentable_emits_no_node_rust(
@@ -8945,8 +9016,8 @@ def test_unrepresentable_without_skip_raises_rust(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """Without :skip-if-unrepresentable: an unrepresentable input still
-    fails the build with a clean ExtensionError.
+    """Without :skip-if-unrepresentable: an unrepresentable input is
+    still reported as a clean directive error.
 
     ``:heterogeneous-strategy: error`` is set explicitly because the
     default is now ``auto``, under which ``[1, "hello"]`` is
@@ -8975,8 +9046,16 @@ def test_unrepresentable_without_skip_raises_rust(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(expected_exception=ExtensionError):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "Collection contains heterogeneous scalar types that "
+            "cannot be represented in the target language "
+            "(found types: int, str)"
+        ),
+    )
 
 
 def test_skip_if_unrepresentable_after_auto_exhausts_precedence_rust(
@@ -9195,8 +9274,8 @@ def test_unrepresentable_input_without_skip_raises_csharp(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """A shape-level rejection without :skip-if-unrepresentable: fails
-    the build with a clean ExtensionError.
+    """A shape-level rejection without :skip-if-unrepresentable: is
+    reported as a clean directive error.
     """
     source_directory = tmp_path / "source"
     source_directory.mkdir()
@@ -9218,8 +9297,12 @@ def test_unrepresentable_input_without_skip_raises_csharp(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(expected_exception=ExtensionError):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="CSharp cannot represent dict key of type int",
+    )
 
 
 def test_skip_if_unrepresentable_literalizer_call_csharp(
@@ -9550,7 +9633,7 @@ def test_json_type_rejected_for_unsupported_language(
     tmp_path: Path,
 ) -> None:
     """A language whose ``JsonTypes`` enum has no matching member
-    (e.g. Python) surfaces a clean ``ExtensionError`` rather than
+    (e.g. Python) surfaces a clean directive error rather than
     crashing on the constructor kwarg.
     """
     source_directory = tmp_path / "source"
@@ -9576,9 +9659,153 @@ def test_json_type_rejected_for_unsupported_language(
         srcdir=source_directory,
         confoverrides={"extensions": ["sphinx_literalizer"]},
     )
-    with pytest.raises(
-        expected_exception=ExtensionError,
-        match="does not support json-type",
-    ):
-        app.build()
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "Language 'python' does not support json-type 'serde_json_value'."
+        ),
+    )
+    app.cleanup()
+
+
+def test_error_reports_directive_line(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A failing directive is reported at its own line in the document.
+
+    The document has a passing directive first so the reported line
+    cannot be right by accident: it identifies the failing block rather
+    than the first ``literalizer`` block in the file.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+
+        Prose between the blocks.
+
+        .. literalizer:: data.json
+           :language: python
+           :sequence-format: vec
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=9,
+        message="Language 'python' does not support sequence-format 'vec'.",
+    )
+    app.cleanup()
+
+
+def test_errors_do_not_stop_the_build(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """One build reports every failing directive rather than the first.
+
+    Each error is a document error, so the build carries on and an
+    author fixing a large tree sees all of the bad blocks in one run.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :sequence-format: vec
+
+        .. literalizer:: data.json
+           :language: rust
+           :set-format: frozenset
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    document = source_directory / "index.rst"
+    reported = strip_colors(app.warning.getvalue()).splitlines()
+    assert reported == [
+        (
+            f"{document}:4: ERROR: Language 'python' does not support "
+            "sequence-format 'vec'. [docutils]"
+        ),
+        (
+            f"{document}:8: ERROR: Language 'rust' does not support "
+            "set-format 'frozenset'. [docutils]"
+        ),
+    ]
+    app.cleanup()
+
+
+def test_errors_fail_the_build_with_warnings_as_errors(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A failing directive still fails the build under ``-W``."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :sequence-format: vec
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+        warningiserror=True,
+    )
+    app.build()
+    assert app.statuscode == 1
+
+    document = source_directory / "index.rst"
+    reported = strip_colors(app.warning.getvalue()).splitlines()
+    assert reported == [
+        (
+            f"{document}:4: ERROR: Language 'python' does not support "
+            "sequence-format 'vec'. [docutils]"
+        )
+    ]
     app.cleanup()
