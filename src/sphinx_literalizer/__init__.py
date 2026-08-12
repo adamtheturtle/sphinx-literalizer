@@ -397,7 +397,7 @@ class _DefaultTypeOption:
 # than relying on the constructor's ``UnsupportedOptionError``) because
 # the ``supports_default_*`` flags are not derivable from constructor
 # field presence: Haxe defines several ``default_*`` fields whose flags
-# are nonetheless ``False`` (adamtheturtle/literalizer#3614).
+# are nonetheless ``False`` (literalizer issue #3614).
 _DEFAULT_TYPE_OPTIONS: dict[str, _DefaultTypeOption] = {
     "default-set-element-type": _DefaultTypeOption(
         param_name="default_set_element_type",
