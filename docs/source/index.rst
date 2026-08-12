@@ -134,8 +134,8 @@ Directive options
    Name for the generated carrier type used by heterogeneous scalar
    collections.  It forwards to the selected language's variant, enum,
    or union name setting.  Available for C++, Rust, Mojo, Nim, and Dhall;
-   using it with another language raises an ``ExtensionError``.  For
-   example, C++14 can use ``:heterogeneous-value-name: TaskValue`` with
+   using it with another language is an error.  For example, C++14 can
+   use ``:heterogeneous-value-name: TaskValue`` with
    ``:heterogeneous-strategy: record`` to generate a self-contained
    ``TaskValue`` carrier declaration.
 
@@ -784,6 +784,19 @@ wrapper type is declared once and covers every call:
    :per-element:
    :heterogeneous-strategy: tagged_enum
    :include-preamble:
+
+
+Errors
+~~~~~~
+
+A directive that cannot render its data -- because of an option the language does not support, an option combination that does not make sense, or data the language cannot represent -- reports the failure against its own location::
+
+   docs/index.rst:5: ERROR: Language 'python' does not support sequence-format 'vec'.
+
+Such an error does not stop the build, so one run reports every failing block rather than only the first.
+Build with ``-W`` to turn these errors into a build failure.
+
+Problems that are not attributable to a directive, such as an invalid value for one of the configuration settings below, still fail the build immediately.
 
 
 Configuration
