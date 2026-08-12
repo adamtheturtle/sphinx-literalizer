@@ -393,6 +393,7 @@ files = [ "." ]
 exclude = [
     "build",
 ]
+exclude_gitignore = true
 follow_untyped_imports = true
 strict = true
 plugins = [ "mypy_strict_kwargs" ]
