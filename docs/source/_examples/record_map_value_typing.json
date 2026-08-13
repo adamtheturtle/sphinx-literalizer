@@ -1,0 +1,10 @@
+[
+  {
+    "name": "row_1",
+    "attributes": {"region": "emea", "tier": "gold"}
+  },
+  {
+    "name": "row_2",
+    "attributes": {"region": "apac", "zone": "z1"}
+  }
+]

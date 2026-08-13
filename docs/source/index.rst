@@ -152,6 +152,20 @@ Directive options
    as ``std::vector<Task>{...}``.  Available for C++, Go, Java, Kotlin,
    Rust, and Scala; using it with any other language raises an error.
 
+``:record-map-value-typing:`` (optional)
+   Value type for a ``:heterogeneous-strategy: record`` field whose dict
+   has no record shape of its own and so renders as a plain map.
+   ``narrow`` (the default) spells the concrete type every widened
+   scalar in this input shares, falling back to the generated carrier
+   type when they span more than one type.  ``wide`` always spells the
+   carrier type -- ``HashMap<&'static str, Value>``,
+   ``map[string]any``, or
+   ``std::map<std::string, LiteralizerRecordValue>`` -- so two data
+   files sharing one record shape declare the field identically and one
+   file's literals compile against the other file's declaration.
+   Available for C++, Go, and Rust; using it with any other language
+   raises an error.  See :doc:`heterogeneous-strategies`.
+
 ``:record-null-substitutions:`` (optional)
    A JSON object mapping record field names to values that replace source
    ``null`` values in those fields. The substitutions are language-neutral

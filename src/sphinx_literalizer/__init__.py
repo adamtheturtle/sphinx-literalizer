@@ -133,6 +133,14 @@ _FORMAT_OPTION_GETTERS: dict[
         lang_cls=cls,
         name="JsonRenderings",
     ),
+    # ``RecordMapValueTypings`` is shared by the languages that define
+    # the option rather than nested in each of their class bodies, so
+    # the attribute to look for is the lowercase alias rather than the
+    # name of the enum itself.
+    "record-map-value-typing": lambda cls: _language_owned_enum_members(
+        lang_cls=cls,
+        name="record_map_value_typings",
+    ),
     "bool-format": lambda cls: cls.BoolFormats,
     "annotation-evaluation": lambda cls: _language_owned_enum_members(
         lang_cls=cls,
@@ -1198,6 +1206,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :heterogeneous-strategy: auto
            :json-type: serde_json_value
            :json-rendering: inline_document
+           :record-map-value-typing: wide
            :bool-format: json_pp_ref
            :default-set-element-type: String
            :default-sequence-element-type: String
