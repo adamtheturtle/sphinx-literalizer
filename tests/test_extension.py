@@ -3146,7 +3146,9 @@ def test_string_format_multiline_native_delimiters(
     ]
     assert actual == [
         '"""\\\nfirst\n\n  indented\nlast"""',
-        '"""\nfirst\n\n  indented\nlast"""',
+        # A Java text block strips incidental leading whitespace, so the
+        # indented line keeps its spaces as ``\s`` escapes.
+        '"""\nfirst\n\n\\s\\sindented\nlast"""',
         'R"(first\n\n  indented\nlast)"',
         "`first\n\n  indented\nlast`",
         "`first\n\n  indented\nlast`",
