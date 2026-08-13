@@ -7605,62 +7605,174 @@ def test_heterogeneous_strategy_record_go(
 
 
 @pytest.mark.parametrize(
-    argnames=("language", "record_declaration", "nested_map_literal"),
+    argnames=("language", "expected_output"),
     argvalues=[
         (
             "csharp",
             (
-                "record Record0(string Name, Dictionary<string, object> "
-                "Input, Dictionary<string, object> Expected);"
+                "using System.Collections.Generic;\n"
+                "record Record0(string Name, "
+                "Dictionary<string, object> Input, "
+                "Dictionary<string, object> Expected);\n"
+                "\n"
+                "new[] {\n"
+                '    new Record0("test_1", '
+                'new Dictionary<string, object> {["type"] = "create", '
+                '["pr_id"] = "pr_1", ["draft"] = true}, '
+                'new Dictionary<string, object> {["pr_id"] = "pr_1", '
+                '["status"] = "draft"}),\n'
+                '    new Record0("test_2", '
+                'new Dictionary<string, object> {["type"] = "publish", '
+                '["pr_id"] = "pr_1"}, '
+                "new Dictionary<string, object> "
+                '{["error"] = "invalid_operation"})\n'
+                "}"
             ),
-            "new Dictionary<string, object>",
         ),
         (
             "cpp",
             (
+                "#include <initializer_list>\n"
+                "#include <string>\n"
+                "#include <map>\n"
+                "#include <vector>\n"
+                "#include <variant>\n"
+                "using LiteralizerRecordValue = "
+                "std::variant<std::string, bool>;\n"
                 "struct Record0 { std::string name; "
                 "std::map<std::string, LiteralizerRecordValue> input; "
-                "std::map<std::string, LiteralizerRecordValue> expected; "
-                "};"
+                "std::map<std::string, LiteralizerRecordValue> expected; };\n"
+                "\n"
+                "std::vector{\n"
+                '    Record0{.name = "test_1", '
+                ".input = std::map<std::string, LiteralizerRecordValue>"
+                '{{"type", LiteralizerRecordValue{"create"}}, '
+                '{"pr_id", LiteralizerRecordValue{"pr_1"}}, '
+                '{"draft", LiteralizerRecordValue{true}}}, '
+                ".expected = std::map<std::string, LiteralizerRecordValue>"
+                '{{"pr_id", LiteralizerRecordValue{"pr_1"}}, '
+                '{"status", LiteralizerRecordValue{"draft"}}}},\n'
+                '    Record0{.name = "test_2", '
+                ".input = std::map<std::string, LiteralizerRecordValue>"
+                '{{"type", LiteralizerRecordValue{"publish"}}, '
+                '{"pr_id", LiteralizerRecordValue{"pr_1"}}}, '
+                ".expected = std::map<std::string, LiteralizerRecordValue>"
+                '{{"error", LiteralizerRecordValue{"invalid_operation"}}}},\n'
+                "}"
             ),
-            "std::map<std::string, LiteralizerRecordValue>",
         ),
-        ("go", "type Record0 struct {", "map[string]any"),
+        (
+            "go",
+            (
+                "package main\n"
+                "type Record0 struct {\n"
+                "\tName string\n"
+                "\tInput map[string]any\n"
+                "\tExpected map[string]any\n"
+                "}\n"
+                "\n"
+                "[]Record0{\n"
+                '\tRecord0{Name: "test_1", '
+                'Input: map[string]any{"type": "create", "pr_id": "pr_1", '
+                '"draft": true}, '
+                'Expected: map[string]any{"pr_id": "pr_1", '
+                '"status": "draft"}},\n'
+                '\tRecord0{Name: "test_2", '
+                'Input: map[string]any{"type": "publish", "pr_id": "pr_1"}, '
+                'Expected: map[string]any{"error": "invalid_operation"}},\n'
+                "}"
+            ),
+        ),
         (
             "java",
             (
-                "record Record0(String name, java.util.Map<String, Object> "
-                "input, java.util.Map<String, Object> expected) {}"
+                "import java.util.Map;\n"
+                "record Record0(String name, "
+                "java.util.Map<String, Object> input, "
+                "java.util.Map<String, Object> expected) {}\n"
+                "\n"
+                "new Record0[]{\n"
+                '    new Record0("test_1", '
+                'Map.ofEntries(Map.entry("type", "create"), '
+                'Map.entry("pr_id", "pr_1"), Map.entry("draft", true)), '
+                'Map.ofEntries(Map.entry("pr_id", "pr_1"), '
+                'Map.entry("status", "draft"))),\n'
+                '    new Record0("test_2", '
+                'Map.ofEntries(Map.entry("type", "publish"), '
+                'Map.entry("pr_id", "pr_1")), '
+                'Map.ofEntries(Map.entry("error", "invalid_operation")))\n'
+                "}"
             ),
-            "Map.ofEntries",
         ),
         (
             "kotlin",
             (
                 "data class Record0(val name: String, "
                 "val input: Map<String, Any?>, "
-                "val expected: Map<String, Any?>)"
+                "val expected: Map<String, Any?>)\n"
+                "\n"
+                "listOf<Record0>(\n"
+                '    Record0(name = "test_1", '
+                'input = mapOf<String, Any?>("type" to "create", '
+                '"pr_id" to "pr_1", "draft" to true), '
+                'expected = mapOf<String, Any?>("pr_id" to "pr_1", '
+                '"status" to "draft")),\n'
+                '    Record0(name = "test_2", '
+                'input = mapOf<String, Any?>("type" to "publish", '
+                '"pr_id" to "pr_1"), '
+                "expected = mapOf<String, Any?>"
+                '("error" to "invalid_operation")),\n'
+                ")"
             ),
-            "mapOf<String, Any?>",
         ),
         (
             "rust",
             (
+                "use std::collections::HashMap;\n"
+                "enum Value {\n"
+                "    Str(&'static str),\n"
+                "    Bool(bool),\n"
+                "}\n"
                 "struct Record0 {\n"
                 "    name: &'static str,\n"
                 "    input: HashMap<&'static str, Value>,\n"
                 "    expected: HashMap<&'static str, Value>,\n"
-                "}"
+                "}\n"
+                "\n"
+                "vec![\n"
+                '    Record0 { name: "test_1", '
+                'input: HashMap::from([("type", Value::Str("create")), '
+                '("pr_id", Value::Str("pr_1")), '
+                '("draft", Value::Bool(true))]), '
+                'expected: HashMap::from([("pr_id", Value::Str("pr_1")), '
+                '("status", Value::Str("draft"))]) },\n'
+                '    Record0 { name: "test_2", '
+                'input: HashMap::from([("type", Value::Str("publish")), '
+                '("pr_id", Value::Str("pr_1"))]), '
+                "expected: HashMap::from("
+                '[("error", Value::Str("invalid_operation"))]) },\n'
+                "]"
             ),
-            "HashMap::from",
         ),
         (
             "scala",
             (
                 "case class Record0(name: String, input: Map[String, Any], "
-                "expected: Map[String, Any])"
+                "expected: Map[String, Any])\n"
+                "\n"
+                "List(\n"
+                '    Record0(name = "test_1", '
+                'input = Map[String, Any]("type" -> "create", '
+                '"pr_id" -> "pr_1", "draft" -> true), '
+                'expected = Map[String, Any]("pr_id" -> "pr_1", '
+                '"status" -> "draft")),\n'
+                '    Record0(name = "test_2", '
+                'input = Map[String, Any]("type" -> "publish", '
+                '"pr_id" -> "pr_1"), '
+                'expected = Map[String, Any]("error" -> "invalid_operation")),'
+                "\n"
+                ")"
             ),
-            "Map[String, Any]",
         ),
     ],
 )
@@ -7669,8 +7781,7 @@ def test_record_nested_map_fallback(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
     language: str,
-    record_declaration: str,
-    nested_map_literal: str,
+    expected_output: str,
 ) -> None:
     """Record rendering keeps one outer shape and falls back to maps
     for incompatible nested sibling shapes in statically typed targets.
@@ -7723,14 +7834,7 @@ def test_record_nested_map_fallback(
     doctree = app.env.get_doctree(docname="index")
     (literal_block,) = doctree.findall(condition=nodes.literal_block)
     output = literal_block.astext()
-    assert record_declaration in output
-    assert output.count("Record0") == 3
-    assert "Record1" not in output
-    assert nested_map_literal in output
-    assert all(
-        value in output
-        for value in ("test_1", "test_2", "draft", "invalid_operation")
-    )
+    assert output == expected_output
     app.cleanup()
 
 
@@ -8252,7 +8356,7 @@ def test_record_shape_names_java(
         "import java.util.Map;\n"
         "record Point(int x, int y) {}\n"
         "\n"
-        "new Object[]{\n"
+        "new Point[]{\n"
         "    new Point(1, 2),\n"
         "    new Point(3, 4)\n"
         "}"
@@ -8502,7 +8606,7 @@ def test_record_shape_names_trailing_separator_ignored(
         "import java.util.Map;\n"
         "record Point(int x, int y) {}\n"
         "\n"
-        "new Object[]{\n"
+        "new Point[]{\n"
         "    new Point(1, 2),\n"
         "    new Point(3, 4)\n"
         "}"
