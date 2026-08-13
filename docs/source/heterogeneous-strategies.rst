@@ -220,6 +220,52 @@ Scala.  For example, Rust remains standard-library-only:
       :include-delimiters:
       :include-preamble:
 
+Stable fallback map typing (Rust)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default that fallback map's value type follows the data: when every
+widened scalar in the input shares one type, that concrete type is
+spelled.
+This is the tightest type the input admits, but it is derived per input
+file, so two files sharing one record shape can declare the field
+differently.
+With :file:`_examples/record_map_value_typing.json`, where the two
+``attributes`` maps have different keys and so are widened:
+
+.. literalinclude:: _examples/record_map_value_typing.json
+   :language: json
+
+the ``attributes`` values are all strings, so the field is a
+``HashMap<&'static str, &'static str>``:
+
+.. rest-example::
+
+   .. literalizer:: _examples/record_map_value_typing.json
+      :language: rust
+      :heterogeneous-strategy: record
+      :record-shape-names: name,attributes=Row
+      :include-preamble:
+
+``:record-map-value-typing: wide`` instead always spells the strategy's
+value carrier, however uniform this file's scalars happen to be:
+
+.. rest-example::
+
+   .. literalizer:: _examples/record_map_value_typing.json
+      :language: rust
+      :heterogeneous-strategy: record
+      :record-shape-names: name,attributes=Row
+      :record-map-value-typing: wide
+      :include-preamble:
+
+Write one directive per data file with the same
+``:record-map-value-typing: wide``, and every directive declares
+``Row``'s ``attributes`` field identically, so one file's literals
+compile against another file's ``struct``.
+The carrier's own member set stays data-derived, so a file whose widened
+values span more types still declares more variants.
+The option is available for C++, Go, and Rust.
+
 ``tuple`` (Rust)
 ~~~~~~~~~~~~~~~~
 

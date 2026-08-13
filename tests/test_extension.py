@@ -4,7 +4,7 @@
 import json
 import shutil
 import subprocess
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from textwrap import dedent
 from unittest.mock import Mock
@@ -7645,18 +7645,18 @@ def test_heterogeneous_strategy_record_go(
                 "\n"
                 "std::vector{\n"
                 '    Record0{.name = "test_1", '
-                ".input = std::map<std::string, LiteralizerRecordValue>"
+                ".input = "
                 '{{"type", LiteralizerRecordValue{"create"}}, '
                 '{"pr_id", LiteralizerRecordValue{"pr_1"}}, '
                 '{"draft", LiteralizerRecordValue{true}}}, '
-                ".expected = std::map<std::string, LiteralizerRecordValue>"
+                ".expected = "
                 '{{"pr_id", LiteralizerRecordValue{"pr_1"}}, '
                 '{"status", LiteralizerRecordValue{"draft"}}}},\n'
                 '    Record0{.name = "test_2", '
-                ".input = std::map<std::string, LiteralizerRecordValue>"
+                ".input = "
                 '{{"type", LiteralizerRecordValue{"publish"}}, '
                 '{"pr_id", LiteralizerRecordValue{"pr_1"}}}, '
-                ".expected = std::map<std::string, LiteralizerRecordValue>"
+                ".expected = "
                 '{{"error", LiteralizerRecordValue{"invalid_operation"}}}},\n'
                 "}"
             ),
@@ -10006,6 +10006,172 @@ def test_json_rendering_requires_json_type(
         message=(
             "Cpp json_rendering selects how json_type values are "
             "rendered and requires json_type to be set."
+        ),
+    )
+    app.cleanup()
+
+
+def _record_map_value_typing_preamble(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    source_directory: Path,
+    second_row_tier: object,
+    option_lines: str,
+) -> str:
+    """Render a ``RECORD`` document whose ``attributes`` field is widened.
+
+    The two rows' ``attributes`` maps have different keys, so the field
+    cannot become a record of its own and falls back to a plain map.
+    *second_row_tier* varies only the widened values' types, so two
+    calls show whether the declared map value type follows the data.
+    """
+    rows: list[Mapping[str, object]] = [
+        {"name": "row_1", "attributes": {"region": "emea", "zone": "z1"}},
+        {"name": "row_2", "attributes": {"tier": second_row_tier}},
+    ]
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj=rows),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+           :heterogeneous-strategy: record
+           :record-shape-names: name,attributes=Row
+           :preamble-only:
+        """
+        )
+        + option_lines,
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    preamble = literal_block.astext()
+    app.cleanup()
+    return preamble
+
+
+def test_record_map_value_typing_narrow_is_the_default(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Without the option, the widened map's value type follows the
+    data, so uniform string values give a ``&'static str`` map.
+    """
+    preamble = _record_map_value_typing_preamble(
+        make_app=make_app,
+        source_directory=tmp_path / "source",
+        second_row_tier="gold",
+        option_lines="",
+    )
+
+    assert preamble == (
+        "use std::collections::HashMap;\n"
+        "struct Row {\n"
+        "    name: &'static str,\n"
+        "    attributes: HashMap<&'static str, &'static str>,\n"
+        "}"
+    )
+
+
+def test_record_map_value_typing_wide(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """``:record-map-value-typing: wide`` declares the widened map with
+    the strategy's value carrier, so the field is declared the same way
+    for data whose widened scalars share one type and data whose do not.
+    """
+    uniform_preamble = _record_map_value_typing_preamble(
+        make_app=make_app,
+        source_directory=tmp_path / "uniform",
+        second_row_tier="gold",
+        option_lines="   :record-map-value-typing: wide\n",
+    )
+    mixed_preamble = _record_map_value_typing_preamble(
+        make_app=make_app,
+        source_directory=tmp_path / "mixed",
+        second_row_tier=1,
+        option_lines="   :record-map-value-typing: wide\n",
+    )
+
+    assert uniform_preamble == (
+        "use std::collections::HashMap;\n"
+        "enum Value {\n"
+        "    Str(&'static str),\n"
+        "}\n"
+        "struct Row {\n"
+        "    name: &'static str,\n"
+        "    attributes: HashMap<&'static str, Value>,\n"
+        "}"
+    )
+    assert mixed_preamble == (
+        "use std::collections::HashMap;\n"
+        "enum Value {\n"
+        "    Str(&'static str),\n"
+        "    I32(i32),\n"
+        "}\n"
+        "struct Row {\n"
+        "    name: &'static str,\n"
+        "    attributes: HashMap<&'static str, Value>,\n"
+        "}"
+    )
+
+
+def test_record_map_value_typing_rejected_for_unsupported_language(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A language without a ``RecordMapValueTypings`` enum (e.g. Python)
+    surfaces a clean directive error rather than crashing on the
+    constructor kwarg.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"a": 1}),
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :record-map-value-typing: wide
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    _assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message=(
+            "Language 'python' does not support record-map-value-typing "
+            "'wide'."
         ),
     )
     app.cleanup()
