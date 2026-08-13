@@ -1,0 +1,4 @@
+Bump ``literalizer`` to 2026.8.13.1.
+C++ record literals no longer repeat the ``std::map<...>`` type before a field's map initializer, and a Java text block now spells an indented line's leading spaces as ``\s`` escapes so the text block's incidental-whitespace stripping does not eat them.
+
+The new ``:record-map-value-typing:`` option (C++, Go, and Rust) pins the value type of a ``:heterogeneous-strategy: record`` field whose dict has no record shape of its own and so renders as a plain map: ``:record-map-value-typing: wide`` always spells the strategy's value carrier -- ``HashMap<&'static str, Value>``, ``map[string]any``, or ``std::map<std::string, LiteralizerRecordValue>`` -- so two directives over different data files declare the field identically instead of deriving it per input file.
