@@ -3,6 +3,20 @@ Changelog
 
 .. towncrier release notes start
 
+2026.08.13
+----------
+
+- Bump ``literalizer`` to 2026.8.12.4.
+  When an error concerns one particular value in the data file, the directive error message now ends with that value's input path -- for example ``(at input path 'tasks[0].items')`` -- so the offending value can be found without searching the whole file.
+
+- Bump ``literalizer`` to 2026.8.12.5.
+  Public literalizer exceptions now carry structured input paths and parser line and column positions, and every language declares explicit round-trip capability metadata.
+
+- A malformed data file now reports the underlying parser's line and column alongside the directive error, for example ``Invalid JSON: Expecting value at line 3 column 1 (at line 3, column 1 of the data file)``.
+
+- Unsupported directive options are now reported through literalizer's typed ``UnsupportedOptionError`` instead of hand-maintained per-option capability tables, so adding a language upstream needs no change here.
+  Some error messages changed spelling: ``Language 'cpp' does not support ':empty-dict-key:'.`` (previously without colons), and an option value a language does not define is now named, for example ``Language 'python' does not support json-rendering 'inline_document'.``.
+
 2026.08.12.2
 ------------
 

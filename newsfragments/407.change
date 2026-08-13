@@ -1,2 +1,0 @@
-Bump ``literalizer`` to 2026.8.12.5.
-Public literalizer exceptions now carry structured input paths and parser line and column positions, and every language declares explicit round-trip capability metadata.
