@@ -3,6 +3,12 @@ Changelog
 
 .. towncrier release notes start
 
+2026.08.13.1
+------------
+
+- Bump ``literalizer`` to 2026.8.13.
+  Record lists in Go, Java, and Kotlin now declare the record element type instead of a top type -- for example ``[]Record0{``, ``new Record0[]{``, and ``listOf<Record0>(`` -- and the Lua signed 64-bit minimum renders as ``math.mininteger`` rather than a decimal literal that overflowed to a float.
+
 2026.08.13
 ----------
 
