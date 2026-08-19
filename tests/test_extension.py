@@ -8124,7 +8124,7 @@ def test_literalizer_call_named_carrier_preamble_only(
     combined_path = tmp_path / "combined.cpp"
     combined_path.write_text(data=combined)
     executable_path = tmp_path / "combined"
-    subprocess.run(
+    subprocess.run(  # noqa: S603
         args=[
             compiler,
             "-std=c++14",
@@ -8136,7 +8136,7 @@ def test_literalizer_call_named_carrier_preamble_only(
         capture_output=True,
         text=True,
     )
-    subprocess.run(
+    subprocess.run(  # noqa: S603
         args=[str(object=executable_path)],
         check=True,
         capture_output=True,
