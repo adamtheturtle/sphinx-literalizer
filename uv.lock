@@ -510,7 +510,7 @@ wheels = [
 
 [[package]]
 name = "doccmd"
-version = "2026.7.19"
+version = "2026.8.16"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
@@ -523,9 +523,9 @@ dependencies = [
     { name = "sybil" },
     { name = "sybil-extras" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6d/6e/1a1c30b66d9dd37d1d12e248943a8723da79b5c7d945bba5c0e469252433/doccmd-2026.7.19.tar.gz", hash = "sha256:1bb47f9ba5a3aaa907a5b52cd42f62d718689eccef68b94740127f7b758ce573", size = 196169, upload-time = "2026-07-19T13:56:40.913Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0d/ef/fe25cf809b3e43c4b60c741f0ee157f292cde1b194f8898c0910260d26fe/doccmd-2026.8.16.tar.gz", hash = "sha256:d05f03a3d93336deb50c7b0597d17a87c7120523bed3832e603e1951a0f174d6", size = 197087, upload-time = "2026-08-16T09:17:35.693Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ff/ef/c97a0d16c9c2f0870811e9b03548f2aa3fc3e1e39fe80b768fa8458d6d8a/doccmd-2026.7.19-py3-none-any.whl", hash = "sha256:32d1bd7dfd87ebe28b7cf7637413012b2909514e7da3400de5dcc1cb18da1235", size = 24701, upload-time = "2026-07-19T13:56:39.117Z" },
+    { url = "https://files.pythonhosted.org/packages/aa/27/2b3f5c0af2bdb77de73384b45b8368f3709b5b178d92dbd375db8e8593f3/doccmd-2026.8.16-py3-none-any.whl", hash = "sha256:40205dae37b112b233b25fb50f09b367b267f648d8a20ff95c1556d11ed53c75", size = 23645, upload-time = "2026-08-16T09:17:34.184Z" },
 ]
 
 [[package]]
@@ -2054,7 +2054,7 @@ requires-dist = [
     { name = "check-wheel-contents", marker = "extra == 'release'", specifier = "==0.6.3" },
     { name = "deptry", marker = "extra == 'dev'", specifier = "==0.25.1" },
     { name = "doc8", marker = "extra == 'dev'", specifier = "==2.0.0" },
-    { name = "doccmd", marker = "extra == 'dev'", specifier = "==2026.7.19" },
+    { name = "doccmd", marker = "extra == 'dev'", specifier = "==2026.8.16" },
     { name = "docutils" },
     { name = "furo", marker = "extra == 'dev'", specifier = "==2025.12.19" },
     { name = "interrogate", marker = "extra == 'dev'", specifier = "==1.7.0" },
