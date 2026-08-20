@@ -1288,6 +1288,9 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
             options=options,
             both_variable_forms=options.both_variable_forms,
         )
+        # literalizer 2026.8.16+ rejects variable forms without delimiters.
+        if variable_form is not None:
+            include_delimiters = True
         wrap_in_file = options.wrap_in_file
         ref_case, ref_key = self._resolve_ref_options(options=options)
         collection_layout = self._resolve_collection_layout(options=options)
