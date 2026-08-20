@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from functools import cache, partial
 from importlib.metadata import version
 from pathlib import Path
-from typing import Any, ClassVar, TypedDict, TypeGuard
+from typing import Any, ClassVar, TypedDict, cast  # noqa: TID251
 
 from beartype import beartype
 from docutils import nodes
@@ -275,11 +275,6 @@ def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
     return result
 
 
-def _is_str_keyed_dict(value: object) -> TypeGuard[dict[str, Any]]:
-    """Return whether *value* is a ``dict`` (treated as str-keyed)."""
-    return isinstance(value, dict)
-
-
 def _parse_record_null_substitutions(value: str) -> dict[str, Any]:
     """Parse the ``:record-null-substitutions:`` JSON object.
 
@@ -295,10 +290,10 @@ def _parse_record_null_substitutions(value: str) -> dict[str, Any]:
             f"{exc.msg}."
         )
         raise _DirectiveError(message=msg) from exc
-    if not _is_str_keyed_dict(value=substitutions):
+    if not isinstance(substitutions, dict):
         msg = "':record-null-substitutions:' must be a JSON object."
         raise _DirectiveError(message=msg)
-    return substitutions
+    return cast("dict[str, Any]", substitutions)  # noqa: KW001
 
 
 def _make_format_validator(
@@ -707,7 +702,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
             self.env.config.literalizer_language_defaults,
         )
         defaults = configured.get(language_name, {})
-        if not _is_str_keyed_dict(value=defaults):
+        if not isinstance(defaults, dict):
             msg = (
                 "'literalizer_language_defaults' entries must be "
                 "dictionaries of directive options."
@@ -715,7 +710,8 @@ class _BaseLiteralizerDirective(SphinxDirective):
             raise ExtensionError(message=msg)
 
         validated_defaults: dict[str, str] = {}
-        for option_name, value in defaults.items():
+        typed_defaults = cast("dict[str, object]", defaults)  # noqa: KW001
+        for option_name, value in typed_defaults.items():
             if option_name not in _FORMAT_OPTION_GETTERS:
                 msg = (
                     "'literalizer_language_defaults' only supports shared "
