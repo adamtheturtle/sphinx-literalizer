@@ -316,8 +316,8 @@ Directive options
 
 ``:variable-name:`` (optional)
    Wrap the output in a variable declaration or assignment using the given
-   name.  Use with ``:include-delimiters:`` to include the collection
-   delimiters.
+   name.  Collection delimiters are included automatically when this option
+   is set (literalizer rejects delimiter-less variable forms).
 
 ``:existing-variable:`` (optional flag)
    When combined with ``:variable-name:``, produce an assignment to an
