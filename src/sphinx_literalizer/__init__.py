@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from functools import cache, partial
 from importlib.metadata import version
 from pathlib import Path
-from typing import Any, ClassVar, TypedDict, cast  # noqa: TID251
+from typing import Any, ClassVar, TypedDict
 
 from beartype import beartype
 from docutils import nodes
@@ -293,7 +293,7 @@ def _parse_record_null_substitutions(value: str) -> dict[str, Any]:
     if not isinstance(substitutions, dict):
         msg = "':record-null-substitutions:' must be a JSON object."
         raise _DirectiveError(message=msg)
-    return cast("dict[str, Any]", substitutions)
+    return dict[str, Any](substitutions)
 
 
 def _make_format_validator(
@@ -710,7 +710,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
             raise ExtensionError(message=msg)
 
         validated_defaults: dict[str, str] = {}
-        typed_defaults = cast("dict[str, object]", defaults)
+        typed_defaults = dict[str, object](defaults)
         for option_name, value in typed_defaults.items():
             if option_name not in _FORMAT_OPTION_GETTERS:
                 msg = (
@@ -1554,7 +1554,8 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         if constructor_class is None:  # pragma: no cover
             msg = "target source options are validated during parsing"
             raise AssertionError(msg)
-        return language_spec.format_constructor_target(constructor_class)
+        format_target = language_spec.format_constructor_target
+        return format_target(constructor_class)
 
     def _run(self) -> list[nodes.Node]:
         """Read the data file and produce function call expressions."""
