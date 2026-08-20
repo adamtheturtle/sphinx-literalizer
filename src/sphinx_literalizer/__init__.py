@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from functools import cache, partial
 from importlib.metadata import version
 from pathlib import Path
-from typing import Any, ClassVar, TypedDict
+from typing import Any, ClassVar, TypedDict, TypeGuard
 
 from beartype import beartype
 from docutils import nodes
@@ -275,6 +275,11 @@ def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
     return result
 
 
+def _is_str_keyed_dict(value: object) -> TypeGuard[dict[str, Any]]:
+    """Return whether *value* is a ``dict`` (treated as str-keyed)."""
+    return isinstance(value, dict)
+
+
 def _parse_record_null_substitutions(value: str) -> dict[str, Any]:
     """Parse the ``:record-null-substitutions:`` JSON object.
 
@@ -290,10 +295,10 @@ def _parse_record_null_substitutions(value: str) -> dict[str, Any]:
             f"{exc.msg}."
         )
         raise _DirectiveError(message=msg) from exc
-    if not isinstance(substitutions, dict):
+    if not _is_str_keyed_dict(value=substitutions):
         msg = "':record-null-substitutions:' must be a JSON object."
         raise _DirectiveError(message=msg)
-    return dict[str, Any](substitutions)
+    return substitutions
 
 
 def _make_format_validator(
@@ -702,7 +707,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
             self.env.config.literalizer_language_defaults,
         )
         defaults = configured.get(language_name, {})
-        if not isinstance(defaults, dict):
+        if not _is_str_keyed_dict(value=defaults):
             msg = (
                 "'literalizer_language_defaults' entries must be "
                 "dictionaries of directive options."
@@ -710,8 +715,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
             raise ExtensionError(message=msg)
 
         validated_defaults: dict[str, str] = {}
-        typed_defaults = dict[str, object](defaults)
-        for option_name, value in typed_defaults.items():
+        for option_name, value in defaults.items():
             if option_name not in _FORMAT_OPTION_GETTERS:
                 msg = (
                     "'literalizer_language_defaults' only supports shared "
