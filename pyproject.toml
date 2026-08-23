@@ -313,7 +313,7 @@ omit-covered-files = true
 ignore = [
     ".git_archival.txt",
     ".gitattributes",
-    ".pre-commit-config.yaml",
+    "prek.toml",
     ".vale.ini",
     ".vscode/*.json",
     "CHANGELOG.rst",
