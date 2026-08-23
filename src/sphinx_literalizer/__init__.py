@@ -391,42 +391,18 @@ _COMMON_OPTIONS: dict[str, Callable[[str], Any]] = {
 }
 
 
-@dataclass(frozen=True, kw_only=True)
-class _DefaultTypeOption:
-    """Directive option metadata for default element/key/value types."""
-
-    param_name: str
-    supports_check: Callable[[LanguageCls], bool]
-
-
-# Default element/key/value type options, lifted to module scope so the
+# Default element/key/value type options, mapped to the literalizer
+# constructor parameter each one sets.  Lifted to module scope so the
 # typed-options parse boundary and ``_apply_default_type_options`` share
-# one source of truth.  These keep an explicit ``supports_check`` (rather
-# than relying on the constructor's ``UnsupportedOptionError``) because
-# the ``supports_default_*`` flags are not derivable from constructor
-# field presence: Haxe defines several ``default_*`` fields whose flags
-# are nonetheless ``False`` (literalizer issue #3614).
-_DEFAULT_TYPE_OPTIONS: dict[str, _DefaultTypeOption] = {
-    "default-set-element-type": _DefaultTypeOption(
-        param_name="default_set_element_type",
-        supports_check=lambda cls: cls.supports_default_set_element_type,
-    ),
-    "default-sequence-element-type": _DefaultTypeOption(
-        param_name="default_sequence_element_type",
-        supports_check=lambda cls: cls.supports_default_sequence_element_type,
-    ),
-    "default-dict-key-type": _DefaultTypeOption(
-        param_name="default_dict_key_type",
-        supports_check=lambda cls: cls.supports_default_dict_key_type,
-    ),
-    "default-dict-value-type": _DefaultTypeOption(
-        param_name="default_dict_value_type",
-        supports_check=lambda cls: cls.supports_default_dict_value_type,
-    ),
-    "default-ordered-map-value-type": _DefaultTypeOption(
-        param_name="default_ordered_map_value_type",
-        supports_check=lambda cls: cls.supports_default_ordered_map_value_type,
-    ),
+# one source of truth.  Support is derived from constructor field
+# presence, like every other option family here: a language declares the
+# field exactly when its ``supports_default_*`` flag is ``True``.
+_DEFAULT_TYPE_OPTIONS: dict[str, str] = {
+    "default-set-element-type": "default_set_element_type",
+    "default-sequence-element-type": "default_sequence_element_type",
+    "default-dict-key-type": "default_dict_key_type",
+    "default-dict-value-type": "default_dict_value_type",
+    "default-ordered-map-value-type": "default_ordered_map_value_type",
 }
 
 
@@ -774,10 +750,10 @@ class _BaseLiteralizerDirective(SphinxDirective):
     ) -> partial[Language]:
         """Apply default element/key/value type options."""
         language_cls = _language_types()[language_name]
-        for option_name, type_option in _DEFAULT_TYPE_OPTIONS.items():
+        for option_name, param_name in _DEFAULT_TYPE_OPTIONS.items():
             value = options.default_type_options.get(option_name)
             if value is not None:
-                if not type_option.supports_check(language_cls):
+                if param_name not in language_cls.__dataclass_fields__:
                     msg = (
                         f"Language '{language_name}' does not support "
                         f"'{option_name}'."
@@ -785,7 +761,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
                     raise _DirectiveError(message=msg)
                 constructor = partial(
                     constructor,
-                    **{type_option.param_name: value},
+                    **{param_name: value},
                 )
         return constructor
 
