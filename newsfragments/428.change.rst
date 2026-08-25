@@ -1,1 +1,0 @@
-Document that ``:variable-name:`` implies collection delimiters, matching literalizer 2026.8.16+.

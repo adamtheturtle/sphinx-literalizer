@@ -3,6 +3,13 @@ Changelog
 
 .. towncrier release notes start
 
+2026.08.25
+----------
+
+- Document that ``:variable-name:`` implies collection delimiters, matching literalizer 2026.8.16+.
+
+- Bump ``literalizer`` to 2026.8.23.
+
 2026.08.14
 ----------
 
