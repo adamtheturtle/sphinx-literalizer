@@ -817,12 +817,15 @@ Errors
 
 A directive that cannot render its data -- because of an option the language does not support, an option combination that does not make sense, or data the language cannot represent -- reports the failure against its own location::
 
-   docs/index.rst:5: ERROR: Language 'python' does not support sequence-format 'vec'.
+   docs/index.rst:5: ERROR: Language 'python' does not support sequence-format 'vec'. (in 'data.json')
 
 Such an error does not stop the build, so one run reports every failing block rather than only the first.
 Build with ``-W`` to turn these errors into a build failure.
 
-When an error concerns one particular value in the data file, the message ends with that value's input path -- for example ``(at input path 'tasks[0].items')`` -- so the offending value can be found without searching the whole file.
+Every such message ends with the data file the directive names, written as the directive writes it.
+That matters when a directive is generated inside another directive's content -- a ``sphinx-jinja2`` block, say -- because the reported line is then the enclosing directive's rather than the generated one's, and the data file is what identifies the block that failed.
+
+When an error concerns one particular value in the data file, the message also carries that value's input path -- for example ``(at input path 'tasks[0].items')`` -- so the offending value can be found without searching the whole file.
 
 Problems that are not attributable to a directive, such as an invalid value for one of the configuration settings below, still fail the build immediately.
 

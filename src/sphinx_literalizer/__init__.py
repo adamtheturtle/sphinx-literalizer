@@ -656,11 +656,21 @@ class _BaseLiteralizerDirective(SphinxDirective):
         is reported as ``document.rst:<line>: ERROR: <message>`` against
         the offending directive, participates in ``-W``, and lets one
         build surface every bad block instead of aborting at the first.
+
+        The message ends with the data file the directive names.  A
+        directive generated inside another directive's content -- a
+        ``sphinx-jinja2`` block, say -- is reported against the
+        *enclosing* directive's line, so the document and line alone
+        identify neither the failing directive nor its input; the data
+        file is what an author has to open to fix the error, and within
+        one generated block it identifies the directive too.
         """
         try:
             return self._run()
         except _DirectiveError as exc:
-            raise self.error(message=str(object=exc)) from exc
+            data_file = self.arguments[0]
+            message = f"{exc} (in '{data_file}')"
+            raise self.error(message=message) from exc
 
     def _run(self) -> list[nodes.Node]:  # pragma: no cover
         """Produce the nodes for this directive."""
@@ -906,7 +916,11 @@ class _BaseLiteralizerDirective(SphinxDirective):
         extension.
 
         *option_name* names the directive option that *explicit* came
-        from, used only for the "cannot determine" error message.
+        from, used only for the "cannot determine" error message.  It is
+        what identifies *which* file could not be resolved: every
+        directive error already ends with the directive's data file, so
+        naming the file here as well would repeat it for the common case
+        of the data file's own format.
         """
         if explicit is not None:
             return _enum_member(cls=InputFormat, value=explicit)
@@ -915,7 +929,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
             return _EXTENSION_TO_INPUT_FORMAT[suffix]
         except KeyError:
             msg = (
-                f"Cannot determine input format for '{data_path.name}'. "
+                "Cannot determine input format from the file extension. "
                 f"Use the :{option_name}: option."
             )
             raise _DirectiveError(message=msg) from None

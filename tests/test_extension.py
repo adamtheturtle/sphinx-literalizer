@@ -28,10 +28,19 @@ def _assert_directive_error(
     The error is expected against ``index.rst`` at *line* -- the first
     line of the offending directive -- so an author can find the block
     that failed without searching the document for it.
+
+    Every directive error also ends with the data file the directive
+    names, so the expectation is completed from the argument written on
+    *line* rather than repeated in *message* at every call site.
     """
     app.build()
     document = source_directory / "index.rst"
-    expected = f"{document}:{line}: ERROR: {message} [docutils]"
+    directive = document.read_text(encoding="utf-8").splitlines()[line - 1]
+    _, data_file = directive.split(sep="::", maxsplit=1)
+    expected = (
+        f"{document}:{line}: ERROR: {message} "
+        f"(in '{data_file.strip()}') [docutils]"
+    )
     reported = strip_colors(app.warning.getvalue()).splitlines()
     assert reported == [expected]
 
@@ -4639,7 +4648,7 @@ def test_unknown_extension_without_input_format_errors(
         source_directory=source_directory,
         line=4,
         message=(
-            "Cannot determine input format for 'data.dat'. "
+            "Cannot determine input format from the file extension. "
             "Use the :input-format: option."
         ),
     )
@@ -10465,11 +10474,70 @@ def test_errors_do_not_stop_the_build(
     assert reported == [
         (
             f"{document}:4: ERROR: Language 'python' does not support "
-            "sequence-format 'vec'. [docutils]"
+            "sequence-format 'vec'. (in 'data.json') [docutils]"
         ),
         (
             f"{document}:8: ERROR: Language 'rust' does not support "
-            "set-format 'frozenset'. [docutils]"
+            "set-format 'frozenset'. (in 'data.json') [docutils]"
+        ),
+    ]
+    app.cleanup()
+
+
+def test_error_names_the_data_file(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Every directive error ends with the data file the directive read.
+
+    A directive generated inside another directive's content -- a
+    ``sphinx-jinja2`` block, say -- is reported against the enclosing
+    directive's line, so identical failures over different data files
+    would otherwise be indistinguishable.  The path is echoed as the
+    directive writes it, which is what an author has to open.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "first.json").write_text(data=json.dumps(obj=[1]))
+    nested_directory = source_directory / "nested"
+    nested_directory.mkdir()
+    (nested_directory / "second.json").write_text(data=json.dumps(obj=[2]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: first.json
+           :language: python
+           :sequence-format: vec
+
+        .. literalizer:: nested/second.json
+           :language: python
+           :sequence-format: vec
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    document = source_directory / "index.rst"
+    reported = strip_colors(app.warning.getvalue()).splitlines()
+    assert reported == [
+        (
+            f"{document}:4: ERROR: Language 'python' does not support "
+            "sequence-format 'vec'. (in 'first.json') [docutils]"
+        ),
+        (
+            f"{document}:8: ERROR: Language 'python' does not support "
+            "sequence-format 'vec'. (in 'nested/second.json') [docutils]"
         ),
     ]
     app.cleanup()
@@ -10511,7 +10579,7 @@ def test_errors_fail_the_build_with_warnings_as_errors(
     assert reported == [
         (
             f"{document}:4: ERROR: Language 'python' does not support "
-            "sequence-format 'vec'. [docutils]"
+            "sequence-format 'vec'. (in 'data.json') [docutils]"
         )
     ]
     app.cleanup()
