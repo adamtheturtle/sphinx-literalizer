@@ -2772,6 +2772,209 @@ def test_comment_format_block(
     assert slash_html != block_html
 
 
+@pytest.mark.parametrize(
+    argnames=("collection_layout", "expected"),
+    argvalues=[
+        (
+            "compact",
+            """\
+(
+    # first case
+    ({"a": 1, "b": 2}, "x"),
+    # second case
+    ({"a": 3}, "y"),
+    # third case
+    ({"a": 4}, "z"),
+)""",
+        ),
+        (
+            "multiline",
+            """\
+(
+    # first case
+    (
+        {
+            "a": 1,
+            "b": 2,
+        },
+        "x",
+    ),
+    # second case
+    (
+        {
+            "a": 3,
+        },
+        "y",
+    ),
+    # third case
+    (
+        {
+            "a": 4,
+        },
+        "z",
+    ),
+)""",
+        ),
+    ],
+)
+def test_element_comments_label_their_own_element(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+    collection_layout: str,
+    expected: str,
+) -> None:
+    """A comment before an element is rendered before that element.
+
+    Comments in the data file are the labels an author writes for each
+    element, so a comment that slides onto another element -- or is
+    dropped -- silently mislabels the rendered block.  Both
+    collection layouts are covered because an element that renders
+    across several lines is where that has gone wrong before.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text(
+        data=dedent(
+            text="""\
+            # first case
+            - - a: 1
+                b: 2
+              - x
+
+            # second case
+            - - a: 3
+              - y
+
+            # third case
+            - - a: 4
+              - z
+        """
+        )
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text=f"""\
+        Test
+        ====
+
+        .. literalizer:: data.yaml
+           :language: python
+           :include-delimiters:
+           :collection-layout: {collection_layout}
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == expected
+    app.cleanup()
+
+
+@pytest.mark.parametrize(
+    argnames=("collection_layout", "expected"),
+    argvalues=[
+        (
+            "compact",
+            """\
+# first case
+check(values={"a": 1, "b": 2}, name="x")
+# second case
+check(values={"a": 3}, name="y")
+# third case
+check(values={"a": 4}, name="z")""",
+        ),
+        (
+            "multiline",
+            """\
+# first case
+check(values={
+    "a": 1,
+    "b": 2,
+}, name="x")
+# second case
+check(values={
+    "a": 3,
+}, name="y")
+# third case
+check(values={
+    "a": 4,
+}, name="z")""",
+        ),
+    ],
+)
+def test_literalizer_call_per_element_element_comments(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+    collection_layout: str,
+    expected: str,
+) -> None:
+    """Each generated call keeps the comment that labels its element.
+
+    ``:per-element:`` is how a data file of test cases becomes one call
+    per case, so a comment landing on the wrong call -- or disappearing
+    after the first -- mislabels the generated calls.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.yaml").write_text(
+        data=dedent(
+            text="""\
+            # first case
+            - - a: 1
+                b: 2
+              - x
+
+            # second case
+            - - a: 3
+              - y
+
+            # third case
+            - - a: 4
+              - z
+        """
+        )
+    )
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text=f"""\
+        Test
+        ====
+
+        .. literalizer-call:: data.yaml
+           :language: python
+           :target-function: check
+           :parameter-names: values,name
+           :per-element:
+           :collection-layout: {collection_layout}
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == expected
+    app.cleanup()
+
+
 def test_unsupported_comment_format_error(
     *,
     make_app: Callable[..., SphinxTestApp],
