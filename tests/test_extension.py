@@ -2818,8 +2818,8 @@ def test_element_comments_label_their_own_element(
     """A comment before an element is rendered before that element.
 
     Comments in the data file are the labels an author writes for each
-    element, so a comment that slides onto the neighbouring element --
-    or is dropped -- silently mislabels the rendered block.  Both
+    element, so a comment that slides onto another element -- or is
+    dropped -- silently mislabels the rendered block.  Both
     collection layouts are covered because an element that renders
     across several lines is where that has gone wrong before.
     """
