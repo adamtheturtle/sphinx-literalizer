@@ -3,6 +3,16 @@ Changelog
 
 .. towncrier release notes start
 
+2026.08.27
+----------
+
+- Directive errors now end with the data file the directive names, for example ``(in 'calls.yaml')``.
+
+- Bump ``literalizer`` to 2026.8.27.
+  Generated strings now escape DEL and the other control bytes that YAML, TOML, SML, and Scheme parsers reject.
+  Empty list values in maps borrow the element type of a non-empty sibling in C++, Go, and Rust.
+  C, C++, and D non-decimal integer formats keep negative values at the signed 32-bit boundary signed instead of wrapping them positive.
+
 2026.08.25
 ----------
 
