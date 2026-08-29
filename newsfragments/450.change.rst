@@ -1,0 +1,3 @@
+Bump ``literalizer`` to 2026.8.29.1.
+The ``:wrap-in-file:`` option now always includes delimiters, which the new release requires for a wrapped file.
+The map-type import is no longer emitted for a document whose maps are all recordized.
