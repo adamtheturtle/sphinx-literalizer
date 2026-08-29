@@ -1200,6 +1200,47 @@ def test_variable_name_implies_include_delimiters(
     assert content_html == expected_html
 
 
+def test_wrap_in_file_implies_include_delimiters(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A wrapped file includes collection delimiters without the flag.
+
+    literalizer 2026.8.29+ rejects a whole file built from a
+    delimiter-less fragment, so the directive enables delimiters
+    whenever ``:wrap-in-file:`` is set.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+           :wrap-in-file:
+    """
+        )
+    )
+
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    app.build()
+    assert app.statuscode == 0
+
+    doctree = app.env.get_doctree(docname="index")
+    (literal_block,) = doctree.findall(condition=nodes.literal_block)
+    assert literal_block.astext() == "(\n    1,\n    2,\n)"
+    app.cleanup()
+
+
 def test_dart_language(
     *,
     make_app: Callable[..., SphinxTestApp],

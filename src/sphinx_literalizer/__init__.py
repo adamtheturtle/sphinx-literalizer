@@ -1282,7 +1282,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         if variable_form is not None:
             include_delimiters = True
         wrap_in_file = options.wrap_in_file
-        # literalizer 2026.8.29.1+ rejects a wrapped file without
+        # literalizer 2026.8.29+ rejects a wrapped file without
         # delimiters, which would present a bare collection fragment as a
         # complete source file.
         if wrap_in_file:
