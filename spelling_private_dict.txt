@@ -71,6 +71,7 @@ multiline
 norg
 overridable
 parser's
+parsers
 php
 positionally
 pragma

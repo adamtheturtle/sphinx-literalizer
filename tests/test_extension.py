@@ -8628,7 +8628,6 @@ def test_record_shape_names_java(
     doctree = app.env.get_doctree(docname="index")
     (literal_block,) = doctree.findall(condition=nodes.literal_block)
     assert literal_block.astext() == (
-        "import java.util.Map;\n"
         "record Point(int x, int y) {}\n"
         "\n"
         "new Point[]{\n"
@@ -8686,7 +8685,6 @@ def test_record_shape_names_cpp14_external_record(
     assert output == (
         "#include <initializer_list>\n"
         "#include <string>\n"
-        "#include <map>\n"
         "#include <vector>\n"
         "\n"
         "std::vector<Task>{\n"
@@ -8878,7 +8876,6 @@ def test_record_shape_names_trailing_separator_ignored(
     doctree = app.env.get_doctree(docname="index")
     (literal_block,) = doctree.findall(condition=nodes.literal_block)
     assert literal_block.astext() == (
-        "import java.util.Map;\n"
         "record Point(int x, int y) {}\n"
         "\n"
         "new Point[]{\n"
