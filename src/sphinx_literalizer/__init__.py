@@ -1282,9 +1282,9 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         if variable_form is not None:
             include_delimiters = True
         wrap_in_file = options.wrap_in_file
-        # literalizer 2026.8.29+ rejects a whole file built from a
-        # delimiter-less fragment, which is the inside of a collection
-        # and never a file on its own.
+        # literalizer 2026.8.29+ rejects a wrapped file without
+        # delimiters, which would present a bare collection fragment as a
+        # complete source file.
         if wrap_in_file:
             include_delimiters = True
         ref_case, ref_key = self._resolve_ref_options(options=options)
