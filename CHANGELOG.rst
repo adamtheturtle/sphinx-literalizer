@@ -3,6 +3,15 @@ Changelog
 
 .. towncrier release notes start
 
+2026.08.29
+----------
+
+- Document that ``:wrap-in-file:`` implies collection delimiters, matching literalizer 2026.8.29+.
+
+- Bump ``literalizer`` to 2026.8.29.1.
+  The ``:wrap-in-file:`` option now always includes delimiters, which the new release requires for a wrapped file.
+  The map-type import is no longer emitted for a document whose maps are all recordized.
+
 2026.08.27
 ----------
 

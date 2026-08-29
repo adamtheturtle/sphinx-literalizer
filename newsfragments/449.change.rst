@@ -1,1 +1,0 @@
-Document that ``:wrap-in-file:`` implies collection delimiters, matching literalizer 2026.8.29+.
