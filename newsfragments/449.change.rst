@@ -1,0 +1,3 @@
+Bump ``literalizer`` to 2026.8.29.
+``:wrap-in-file:`` now includes collection delimiters automatically, as literalizer rejects a whole file built from the delimiter-less inside of a collection.
+Java and C++ record preambles no longer carry a map import that the rendered code does not use.

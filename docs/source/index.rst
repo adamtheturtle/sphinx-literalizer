@@ -185,6 +185,9 @@ Directive options
 ``:wrap-in-file:`` (optional flag)
    Wrap the generated code in a complete file/module when the selected
    language supports that mode.
+   A complete file always includes collection delimiters: a delimiter-less
+   fragment is the inside of a collection, which no language can stand up
+   as a whole file.
 
 ``:date-format:`` (optional)
    How to render YAML dates.  Not all values are valid for every
