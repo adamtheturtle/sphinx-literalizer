@@ -1,0 +1,1 @@
+Require literalizer 2026.8.31, which brings back end fixes to the rendered literals.
