@@ -3,6 +3,11 @@ Changelog
 
 .. towncrier release notes start
 
+2026.08.31
+----------
+
+- Require literalizer 2026.8.31, which brings back end fixes to the rendered literals.
+
 2026.08.29
 ----------
 
