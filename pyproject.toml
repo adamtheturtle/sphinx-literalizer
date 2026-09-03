@@ -179,7 +179,9 @@ lint.external = [
     "KW001",
     "NOD",
 ]
-lint.flake8-tidy-imports.banned-api."typing.cast".msg = "typing.cast is banned: use explicit type narrowing or a typed variable instead."
+lint.flake8-tidy-imports.banned-api."typing.cast".msg = """\
+    typing.cast is banned: use explicit type narrowing or a typed variable instead.\
+    """
 lint.mccabe.max-complexity = 12
 lint.pydocstyle.convention = "google"
 
@@ -402,12 +404,12 @@ strict = true
 plugins = [ "mypy_strict_kwargs" ]
 
 [tool.pyrefly]
-search_path = [ ".", "src" ]
-errors.unused-ignore = "error"
-disable-project-excludes-heuristics = true
 project-excludes = [
     "build",
 ]
+search_path = [ ".", "src" ]
+errors.unused-ignore = "error"
+disable-project-excludes-heuristics = true
 
 [tool.pyright]
 typeCheckingMode = "strict"
