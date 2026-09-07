@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from functools import cache, partial
 from importlib.metadata import version
 from pathlib import Path
-from typing import Any, ClassVar, TypedDict, cast  # noqa: TID251
+from typing import Any, ClassVar, TypedDict, cast, override  # noqa: TID251
 
 from beartype import beartype
 from docutils import nodes
@@ -217,6 +217,16 @@ def _enum_member[E: enum.Enum](cls: type[E], value: str) -> E:
         detail = f" Choose from: {', '.join(choices)}." if choices else ""
         msg = f"'{value}' is not a valid value.{detail}"
         raise _DirectiveError(message=msg) from None
+
+
+@beartype
+def _substitute_placeholder(
+    match: re.Match[str],
+    *,
+    replacements: Mapping[str, str],
+) -> str:
+    """Return the replacement text for a matched call-transform placeholder."""
+    return replacements[match.group()]
 
 
 def _parse_modifiers(
@@ -649,6 +659,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
     required_arguments = 1
     has_content = False
 
+    @override
     def run(self) -> list[nodes.Node]:
         """Render the directive, reporting author errors in place.
 
@@ -1258,6 +1269,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
             ),
         )
 
+    @override
     def _run(self) -> list[nodes.Node]:
         """Read the data file and produce a literal block."""
         options = self._parse_options()
@@ -1458,7 +1470,9 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
                 "$0": context.call,
             }
             return placeholder.sub(
-                repl=lambda match: replacements[match.group()],
+                repl=partial(
+                    _substitute_placeholder, replacements=replacements
+                ),
                 string=template,
             )
 
@@ -1552,6 +1566,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         format_target = language_spec.format_constructor_target
         return format_target(constructor_class)
 
+    @override
     def _run(self) -> list[nodes.Node]:
         """Read the data file and produce function call expressions."""
         options = self._parse_options()
@@ -1574,7 +1589,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         # ``:variable-name:`` -- would be unreachable.  An empty value
         # therefore parses to ``[]``.
         if options.parameter_names.strip():
-            parameter_names = [
+            parameter_names: list[str] = [
                 p.strip() for p in options.parameter_names.split(sep=",")
             ]
         else:
