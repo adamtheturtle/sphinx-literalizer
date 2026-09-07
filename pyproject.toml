@@ -408,8 +408,8 @@ project-excludes = [
     "build",
 ]
 search_path = [ ".", "src" ]
-errors.unused-ignore = "error"
 disable-project-excludes-heuristics = true
+preset = "strict"
 
 [tool.pyright]
 typeCheckingMode = "strict"
