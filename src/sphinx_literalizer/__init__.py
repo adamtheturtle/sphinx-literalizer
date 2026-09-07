@@ -225,7 +225,9 @@ def _substitute_placeholder(
     *,
     replacements: Mapping[str, str],
 ) -> str:
-    """Return the replacement text for a matched call-transform placeholder."""
+    """Return the replacement text for a matched call-transform
+    placeholder.
+    """
     return replacements[match.group()]
 
 
