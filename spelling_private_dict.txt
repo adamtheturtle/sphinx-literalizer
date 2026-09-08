@@ -92,6 +92,7 @@ tcl
 toml
 traceback
 txt
+ty
 unrepresentable
 untyped
 validator

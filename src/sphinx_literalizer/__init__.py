@@ -88,7 +88,7 @@ def _language_owned_enum_members(
     lookup tables derive an option's availability from the language
     class itself rather than a hand-maintained capability table.
     """
-    enum_cls: type[enum.Enum] | None = vars(lang_cls).get(name)
+    enum_cls: type[enum.Enum] | None = vars(lang_cls).get(name)  # ty: ignore[unsound-assignment]
     if enum_cls is None:
         return ()
     return tuple(enum_cls)
@@ -1063,7 +1063,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
                 language_cls=language_cls,
                 value=modifiers_value,
             )
-        )
+        )  # ty: ignore[unsound-assignment]
 
         if existing_variable:
             return ExistingVariable(name=variable_name)
@@ -1096,7 +1096,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
         }
         precedence: list[str] = (
             self.env.config.literalizer_heterogeneous_strategy_precedence
-        )
+        )  # ty: ignore[unsound-assignment]
         return [
             name
             for name in precedence
@@ -1294,7 +1294,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
     def _run(self) -> list[nodes.Node]:
         """Read the data file and produce a literal block."""
         options = self._parse_options()
-        env: BuildEnvironment = self.state.document.settings.env
+        env: BuildEnvironment = self.state.document.settings.env  # ty: ignore[unsound-assignment]
         data_path = (Path(env.srcdir) / self.arguments[0]).resolve()
 
         env.note_dependency(filename=str(object=data_path))
@@ -1511,7 +1511,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         zip_file_value = options.zip_file
         if zip_file_value is None:
             return None, None
-        env: BuildEnvironment = self.state.document.settings.env
+        env: BuildEnvironment = self.state.document.settings.env  # ty: ignore[unsound-assignment]
         zip_path = (Path(env.srcdir) / zip_file_value).resolve()
         env.note_dependency(filename=str(object=zip_path))
         zip_input_format = self._resolve_format(
@@ -1536,7 +1536,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         comment_file_value = options.comment_file
         if comment_file_value is None:
             return None
-        env: BuildEnvironment = self.state.document.settings.env
+        env: BuildEnvironment = self.state.document.settings.env  # ty: ignore[unsound-assignment]
         comment_path = (Path(env.srcdir) / comment_file_value).resolve()
         env.note_dependency(filename=str(object=comment_path))
         return comment_path.read_text(encoding="utf-8").splitlines()
@@ -1594,7 +1594,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
     def _run(self) -> list[nodes.Node]:
         """Read the data file and produce function call expressions."""
         options = self._parse_options()
-        env: BuildEnvironment = self.state.document.settings.env
+        env: BuildEnvironment = self.state.document.settings.env  # ty: ignore[unsound-assignment]
         data_path = (Path(env.srcdir) / self.arguments[0]).resolve()
 
         env.note_dependency(filename=str(object=data_path))
@@ -1640,7 +1640,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
                 for r in consumable_refs_value.split(sep=",")
                 if r.strip() != ""
             )
-        )
+        )  # ty: ignore[unsound-assignment]
 
         zip_source, zip_input_format = self._resolve_zip_source(
             options=options,
