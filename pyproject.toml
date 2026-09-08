@@ -337,6 +337,7 @@ ignore = [
     "newsfragments/**",
     "prek.toml",
     "spelling_private_dict.txt",
+    "styles/snapper/**",
     "tests",
     "tests/**",
     "uv.lock",
