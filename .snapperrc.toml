@@ -4,4 +4,3 @@ ignore = [
   "docs/source/heterogeneous-strategies.rst",
   "docs/source/index.rst",
 ]
-
