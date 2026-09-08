@@ -131,19 +131,16 @@ The ``record`` and ``tuple`` examples use their own input files, shown inline.
 Empty containers in tagged-enum output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Every element of a Rust ``Vec`` must have the same type.  In a mixed
-collection, ``tagged_enum`` therefore wraps every element in the generated
-``Value`` enum.  An empty map especially needs its ``Value::Map`` wrapper:
-it has no entries from which Rust could infer key and value types, while the
-variant fixes its type as ``HashMap<&'static str, Value>``.
+Every element of a Rust ``Vec`` must have the same type.
+In a mixed collection, ``tagged_enum`` therefore wraps every element in the generated ``Value`` enum.
+An empty map especially needs its ``Value::Map`` wrapper: it has no entries from which Rust could infer key and value types, while the variant fixes its type as ``HashMap<&'static str, Value>``.
 
 For example, :file:`_examples/tagged_enum_empty_map.json` contains:
 
 .. literalinclude:: _examples/tagged_enum_empty_map.json
    :language: json
 
-With ``:include-preamble:``, the directive emits the required ``HashMap``
-import and surrounding ``Value`` enum as well as the wrapped literal:
+With ``:include-preamble:``, the directive emits the required ``HashMap`` import and surrounding ``Value`` enum as well as the wrapped literal:
 
 .. rest-example::
 
@@ -175,12 +172,9 @@ The generated pieces fit into a complete program like this:
    }
 
 Keep ``:include-preamble:`` when the rendered block must be self-contained.
-If imports and the ``Value`` declaration already live elsewhere, omit it and
-render only the expression.  When tagged values are not the API you want,
-choose a representation that matches the data: ``record`` for a non-empty
-object with stable fields, ``tuple`` for a fixed-shape sequence, or ``error``
-to reject heterogeneous input.  An empty map has no fields, so it cannot
-itself become a generated record.
+If imports and the ``Value`` declaration already live elsewhere, omit it and render only the expression.
+When tagged values are not the API you want, choose a representation that matches the data: ``record`` for a non-empty object with stable fields, ``tuple`` for a fixed-shape sequence, or ``error`` to reject heterogeneous input.
+An empty map has no fields, so it cannot itself become a generated record.
 
 ``record`` (Go)
 ~~~~~~~~~~~~~~~
@@ -200,17 +194,15 @@ With :file:`_examples/record.json`:
 Nested map fallback (Rust)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``record`` keeps a uniform outer record even when maps nested under the same
-field have incompatible sibling shapes.  The nested level falls back to the
-language's native map representation and value carrier; no ``:json-type:`` or
-additional directive option is required.  This is useful for test-case data
-such as :file:`_examples/record_nested_maps.json`:
+``record`` keeps a uniform outer record even when maps nested under the same field have incompatible sibling shapes.
+The nested level falls back to the language's native map representation and value carrier; no ``:json-type:`` or additional directive option is required.
+This is useful for test-case data such as :file:`_examples/record_nested_maps.json`:
 
 .. literalinclude:: _examples/record_nested_maps.json
    :language: json
 
-The same ``record`` path is available for C#, C++, Go, Java, Kotlin, Rust, and
-Scala.  For example, Rust remains standard-library-only:
+The same ``record`` path is available for C#, C++, Go, Java, Kotlin, Rust, and Scala.
+For example, Rust remains standard-library-only:
 
 .. rest-example::
 
@@ -223,20 +215,14 @@ Scala.  For example, Rust remains standard-library-only:
 Stable fallback map typing (Rust)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default that fallback map's value type follows the data: when every
-widened scalar in the input shares one type, that concrete type is
-spelled.
-This is the tightest type the input admits, but it is derived per input
-file, so two files sharing one record shape can declare the field
-differently.
-With :file:`_examples/record_map_value_typing.json`, where the two
-``attributes`` maps have different keys and so are widened:
+By default that fallback map's value type follows the data: when every widened scalar in the input shares one type, that concrete type is spelled.
+This is the tightest type the input admits, but it is derived per input file, so two files sharing one record shape can declare the field differently.
+With :file:`_examples/record_map_value_typing.json`, where the two ``attributes`` maps have different keys and so are widened:
 
 .. literalinclude:: _examples/record_map_value_typing.json
    :language: json
 
-the ``attributes`` values are all strings, so the field is a
-``HashMap<&'static str, &'static str>``:
+the ``attributes`` values are all strings, so the field is a ``HashMap<&'static str, &'static str>``:
 
 .. rest-example::
 
@@ -246,8 +232,7 @@ the ``attributes`` values are all strings, so the field is a
       :record-shape-names: name,attributes=Row
       :include-preamble:
 
-``:record-map-value-typing: wide`` instead always spells the strategy's
-value carrier, however uniform this file's scalars happen to be:
+``:record-map-value-typing: wide`` instead always spells the strategy's value carrier, however uniform this file's scalars happen to be:
 
 .. rest-example::
 
@@ -258,12 +243,8 @@ value carrier, however uniform this file's scalars happen to be:
       :record-map-value-typing: wide
       :include-preamble:
 
-Write one directive per data file with the same
-``:record-map-value-typing: wide``, and every directive declares
-``Row``'s ``attributes`` field identically, so one file's literals
-compile against another file's ``struct``.
-The carrier's own member set stays data-derived, so a file whose widened
-values span more types still declares more variants.
+Write one directive per data file with the same ``:record-map-value-typing: wide``, and every directive declares ``Row``'s ``attributes`` field identically, so one file's literals compile against another file's ``struct``.
+The carrier's own member set stays data-derived, so a file whose widened values span more types still declares more variants.
 The option is available for C++, Go, and Rust.
 
 ``tuple`` (Rust)
@@ -285,9 +266,8 @@ renders (no preamble -- the tuple is a native literal):
 Candidate-facing C++14
 ~~~~~~~~~~~~~~~~~~~~~~
 
-C++14 has two native, candidate-facing representations for heterogeneous
-input.  Use ``tuple`` for a fixed-shape sequence; it emits
-``std::make_tuple(...)`` without exposing a ``LiteralizerVariant`` wrapper:
+C++14 has two native, candidate-facing representations for heterogeneous input.
+Use ``tuple`` for a fixed-shape sequence; it emits ``std::make_tuple(...)`` without exposing a ``LiteralizerVariant`` wrapper:
 
 .. rest-example::
 
@@ -313,8 +293,7 @@ the same strategy produces a standard ``std::vector<std::tuple<...>>``:
       :heterogeneous-strategy: tuple
       :include-preamble:
 
-For object-shaped input, use ``record`` and give the generated struct a
-domain name with ``:record-struct-name-prefix:``:
+For object-shaped input, use ``record`` and give the generated struct a domain name with ``:record-struct-name-prefix:``:
 
 .. rest-example::
 

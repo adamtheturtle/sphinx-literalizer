@@ -3,9 +3,7 @@
 sphinx-literalizer
 ==================
 
-``sphinx-literalizer`` is a Sphinx extension for `literalizer`_, which converts
-JSON, YAML, TOML, and JSON5 data structures to native language literal syntax
-(Python, TypeScript, Go, etc.).
+``sphinx-literalizer`` is a Sphinx extension for `literalizer`_, which converts JSON, YAML, TOML, and JSON5 data structures to native language literal syntax (Python, TypeScript, Go, etc.).
 
 .. contents::
    :local:
@@ -40,16 +38,13 @@ Then use the ``literalizer`` directive in your ``.rst`` files:
       :language: python
       :wrap:
 
-This reads the data file and renders its contents as a native Python literal
-in a code block. Input format is auto-detected from the file extension
-(``.json``, ``.yaml``/``.yml``, ``.toml``, ``.json5``), or can be set
-explicitly with ``:input-format:``.
+This reads the data file and renders its contents as a native Python literal in a code block.
+Input format is auto-detected from the file extension (``.json``, ``.yaml``/``.yml``, ``.toml``, ``.json5``), or can be set explicitly with ``:input-format:``.
 
 Full documentation
 ------------------
 
-See the `full documentation <https://adamtheturtle.github.io/sphinx-literalizer/>`__
-for more information including how to contribute.
+See the `full documentation <https://adamtheturtle.github.io/sphinx-literalizer/>`__ for more information including how to contribute.
 
 .. _literalizer: https://github.com/adamtheturtle/literalizer
 

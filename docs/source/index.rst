@@ -1,9 +1,7 @@
 |project|
 =========
 
-|project| is a Sphinx extension for `literalizer`_, which converts JSON, YAML,
-TOML, and JSON5 data structures to native language literal syntax (Python,
-TypeScript, Go, etc.).
+|project| is a Sphinx extension for `literalizer`_, which converts JSON, YAML, TOML, and JSON5 data structures to native language literal syntax (Python, TypeScript, Go, etc.).
 
 Installation
 ------------
@@ -34,30 +32,19 @@ Then use the ``literalizer`` directive in your ``.rst`` files:
    .. literalizer:: path/to/data.json
       :language: python
 
-This reads the data file and renders its contents as a native Python literal
-in a code block. Input format is auto-detected from the file extension
-(``.json``, ``.yaml``/``.yml``, ``.toml``, ``.json5``), or can be set
-explicitly with ``:input-format:``.
+This reads the data file and renders its contents as a native Python literal in a code block.
+Input format is auto-detected from the file extension (``.json``, ``.yaml``/``.yml``, ``.toml``, ``.json5``), or can be set explicitly with ``:input-format:``.
 
 Directive options
 ~~~~~~~~~~~~~~~~~
 
 ``:language:`` (required)
    Target language name.
-   Supported values: ``ada``, ``bash``, ``c``, ``clojure``, ``cobol``,
-   ``common-lisp``, ``cpp``, ``crystal``, ``csharp``, ``d``, ``dart``,
-   ``dhall``, ``elixir``, ``elm``, ``erlang``, ``fortran``, ``fsharp``,
-   ``forth``, ``gleam``, ``go``, ``groovy``, ``haskell``, ``hcl``,
-   ``java``, ``javascript``, ``json5``, ``jsonnet``, ``julia``,
-   ``kotlin``, ``lua``, ``matlab``, ``mojo``, ``nim``, ``nix``,
-   ``norg``, ``objective-c``, ``ocaml``, ``occam``, ``odin``, ``perl``,
-   ``php``, ``powershell``, ``purescript``, ``python``, ``r``,
-   ``racket``, ``raku``, ``roc``, ``ruby``, ``rust``, ``scala``,
-   ``scheme``, ``sml``, ``swift``, ``systemverilog``, ``tcl``, ``toml``,
-   ``typescript``, ``v``, ``vb.net``, ``wren``, ``yaml``, ``zig``.
+   Supported values: ``ada``, ``bash``, ``c``, ``clojure``, ``cobol``, ``common-lisp``, ``cpp``, ``crystal``, ``csharp``, ``d``, ``dart``, ``dhall``, ``elixir``, ``elm``, ``erlang``, ``fortran``, ``fsharp``, ``forth``, ``gleam``, ``go``, ``groovy``, ``haskell``, ``hcl``, ``java``, ``javascript``, ``json5``, ``jsonnet``, ``julia``, ``kotlin``, ``lua``, ``matlab``, ``mojo``, ``nim``, ``nix``, ``norg``, ``objective-c``, ``ocaml``, ``occam``, ``odin``, ``perl``, ``php``, ``powershell``, ``purescript``, ``python``, ``r``, ``racket``, ``raku``, ``roc``, ``ruby``, ``rust``, ``scala``, ``scheme``, ``sml``, ``swift``, ``systemverilog``, ``tcl``, ``toml``, ``typescript``, ``v``, ``vb.net``, ``wren``, ``yaml``, ``zig``.
 
 ``:input-format:`` (optional)
-   Input data format. If not specified, auto-detected from the file extension.
+   Input data format.
+   If not specified, auto-detected from the file extension.
    Supported values: ``json``, ``json5``, ``yaml``, ``toml``.
 
 ``:pre-indent-level:`` (optional)
@@ -72,8 +59,7 @@ Directive options
    Type of whitespace for indentation: ``spaces`` (default) or ``tabs``.
 
 ``:include-delimiters:`` (optional flag)
-   Include collection delimiters in the output
-   (``[`` … ``]`` for arrays, ``{`` … ``}`` for dicts).
+   Include collection delimiters in the output (``[`` … ``]`` for arrays, ``{`` … ``}`` for dicts).
 
 ``:collection-layout:`` (optional)
    How to render collections nested inside other collections.
@@ -85,92 +71,62 @@ Directive options
       Render non-empty nested collections with one element per line.
 
 ``:include-preamble:`` (optional flag)
-   Include language preamble lines (imports, package declarations, etc.)
-   before the generated code.  For example, Go code will be preceded by
-   ``package main``, Rust by ``use std::collections::HashMap;``, etc.
-   Has no effect when the language does not require a preamble.
+   Include language preamble lines (imports, package declarations, etc.) before the generated code.
+   For example, Go code will be preceded by ``package main``, Rust by ``use std::collections::HashMap;``, etc. Has no effect when the language does not require a preamble.
 
 ``:preamble-only:`` (optional flag)
-   Emit the generated preamble without the data literal or function-call
-   code.  This lets a composed snippet place declarations and imports at
-   file scope, then use a second ``literalizer`` or ``literalizer-call``
-   directive without ``:include-preamble:`` to place the generated code
-   later (for example, inside C++ ``main``) without duplicating the
-   preamble.
+   Emit the generated preamble without the data literal or function-call code.
+   This lets a composed snippet place declarations and imports at file scope, then use a second ``literalizer`` or ``literalizer-call`` directive without ``:include-preamble:`` to place the generated code later (for example, inside C++ ``main``) without duplicating the preamble.
 
 ``:language-version:`` (optional)
-   Target language version.  Values are language-specific enum member
-   names in lowercase, e.g. ``py39`` for Python, ``jdk_11`` for Java,
-   ``ada_2022`` for Ada, and ``cpp14``, ``cpp17``, or ``cpp20`` for
-   C++ (the default).  Select C++14 or C++17 when generated code must
-   avoid C++20-only field-name syntax.  Some other
-   languages also expose more than one version (e.g. ``v2003`` and
-   ``v2008`` for Fortran); unsupported values raise an error.
+   Target language version.
+   Values are language-specific enum member names in lowercase, e.g. ``py39`` for Python, ``jdk_11`` for Java, ``ada_2022`` for Ada, and ``cpp14``, ``cpp17``, or ``cpp20`` for C++ (the default).
+   Select C++14 or C++17 when generated code must avoid C++20-only field-name syntax.
+   Some other languages also expose more than one version (e.g. ``v2003`` and ``v2008`` for Fortran); unsupported values raise an error.
 
 ``:ref-case:`` (optional)
-   Case conversion for reference markers in the input data.  Supported
-   values: ``camel``, ``kebab``, ``pascal``, ``snake``, ``upper_snake``.
-   When set, a single-key mapping such as ``{"$ref": "user_obj"}``
-   renders as a bare identifier instead of a literal dictionary.
+   Case conversion for reference markers in the input data.
+   Supported values: ``camel``, ``kebab``, ``pascal``, ``snake``, ``upper_snake``.
+   When set, a single-key mapping such as ``{"$ref": "user_obj"}`` renders as a bare identifier instead of a literal dictionary.
 
 ``:ref-key:`` (optional)
-   Marker key used with ``:ref-case:`` to detect references.  Defaults
-   to ``$ref``.  For example, with ``:ref-key: $reference`` the mapping
-   ``{"$reference": "user_obj"}`` is treated as a reference marker.
+   Marker key used with ``:ref-case:`` to detect references.
+   Defaults to ``$ref``.
+   For example, with ``:ref-key: $reference`` the mapping ``{"$reference": "user_obj"}`` is treated as a reference marker.
 
 ``:module-name:`` (optional)
-   Module or wrapper name used by languages whose ``:wrap-in-file:``
-   output introduces a named scope.  The value is converted to the case
-   expected by the selected language.
+   Module or wrapper name used by languages whose ``:wrap-in-file:`` output introduces a named scope.
+   The value is converted to the case expected by the selected language.
 
 ``:record-struct-name-prefix:`` (optional)
-   Name prefix for the structs / records / classes generated by
-   ``:heterogeneous-strategy: record`` (the auto-generated names are
-   this prefix followed by an index, e.g. ``Record0``).  Defaults to
-   ``Record``.  Available for C++, Go, Java, Kotlin, Python, Rust, and
-   Scala; using it with any other language raises an error.
+   Name prefix for the structs / records / classes generated by ``:heterogeneous-strategy: record`` (the auto-generated names are this prefix followed by an index, e.g. ``Record0``).
+   Defaults to ``Record``.
+   Available for C++, Go, Java, Kotlin, Python, Rust, and Scala; using it with any other language raises an error.
 
 ``:heterogeneous-value-name:`` (optional)
-   Name for the generated carrier type used by heterogeneous scalar
-   collections.  It forwards to the selected language's variant, enum,
-   or union name setting.  Available for C++, Rust, Mojo, Nim, and Dhall;
-   using it with another language is an error.  For example, C++14 can
-   use ``:heterogeneous-value-name: TaskValue`` with
-   ``:heterogeneous-strategy: record`` to generate a self-contained
-   ``TaskValue`` carrier declaration.
+   Name for the generated carrier type used by heterogeneous scalar collections.
+   It forwards to the selected language's variant, enum, or union name setting.
+   Available for C++, Rust, Mojo, Nim, and Dhall; using it with another language is an error.
+   For example, C++14 can use ``:heterogeneous-value-name: TaskValue`` with ``:heterogeneous-strategy: record`` to generate a self-contained ``TaskValue`` carrier declaration.
 
 ``:record-shape-names:`` (optional)
-   Custom names for specific record shapes generated by
-   ``:heterogeneous-strategy: record``, given as a semicolon-separated
-   list of ``key1,key2=Name`` entries.  Each entry maps a record's set
-   of keys to the name used instead of the auto-generated one; for
-   example ``x,y=Point; a,b,c=Vec3``.  The name must be a valid
-   PascalCase identifier for the selected language and must not collide
-   with the auto-generated names or with another entry.  For C++, the
-   name refers to an externally declared struct, so literalizer emits no
-   duplicate declaration; C++14 record lists use an explicit type such
-   as ``std::vector<Task>{...}``.  Available for C++, Go, Java, Kotlin,
-   Rust, and Scala; using it with any other language raises an error.
+   Custom names for specific record shapes generated by ``:heterogeneous-strategy: record``, given as a semicolon-separated list of ``key1,key2=Name`` entries.
+   Each entry maps a record's set of keys to the name used instead of the auto-generated one; for example ``x,y=Point; a,b,c=Vec3``.
+   The name must be a valid PascalCase identifier for the selected language and must not collide with the auto-generated names or with another entry.
+   For C++, the name refers to an externally declared struct, so literalizer emits no duplicate declaration; C++14 record lists use an explicit type such as ``std::vector<Task>{...}``.
+   Available for C++, Go, Java, Kotlin, Rust, and Scala; using it with any other language raises an error.
 
 ``:record-map-value-typing:`` (optional)
-   Value type for a ``:heterogeneous-strategy: record`` field whose dict
-   has no record shape of its own and so renders as a plain map.
-   ``narrow`` (the default) spells the concrete type every widened
-   scalar in this input shares, falling back to the generated carrier
-   type when they span more than one type.  ``wide`` always spells the
-   carrier type -- ``HashMap<&'static str, Value>``,
-   ``map[string]any``, or
-   ``std::map<std::string, LiteralizerRecordValue>`` -- so two data
-   files sharing one record shape declare the field identically and one
-   file's literals compile against the other file's declaration.
-   Available for C++, Go, and Rust; using it with any other language
-   raises an error.  See :doc:`heterogeneous-strategies`.
+   Value type for a ``:heterogeneous-strategy: record`` field whose dict has no record shape of its own and so renders as a plain map.
+   ``narrow`` (the default) spells the concrete type every widened scalar in this input shares, falling back to the generated carrier type when they span more than one type.
+   ``wide`` always spells the carrier type -- ``HashMap<&'static str, Value>``, ``map[string]any``, or ``std::map<std::string, LiteralizerRecordValue>`` -- so two data files sharing one record shape declare the field identically and one file's literals compile against the other file's declaration.
+   Available for C++, Go, and Rust; using it with any other language raises an error.
+   See :doc:`heterogeneous-strategies`.
 
 ``:record-null-substitutions:`` (optional)
-   A JSON object mapping record field names to values that replace source
-   ``null`` values in those fields. The substitutions are language-neutral
-   JSON values and participate in normal type inference. For example, use a
-   canonical task fixture with C++14 sentinel values::
+   A JSON object mapping record field names to values that replace source ``null`` values in those fields.
+   The substitutions are language-neutral JSON values and participate in normal type inference.
+   For example, use a canonical task fixture with C++14 sentinel values::
 
       .. literalizer:: _examples/task.json
          :language: cpp
@@ -179,19 +135,16 @@ Directive options
          :record-shape-names: task_id,assignee,status=Task
          :record-null-substitutions: {"task_id": -1, "assignee": ""}
 
-   This replaces null ``task_id`` and ``assignee`` values with ``-1`` and an
-   empty string while leaving null values in other fields unchanged.
+   This replaces null ``task_id`` and ``assignee`` values with ``-1`` and an empty string while leaving null values in other fields unchanged.
 
 ``:wrap-in-file:`` (optional flag)
-   Wrap the generated code in a complete file/module when the selected
-   language supports that mode.
-   A complete file always includes collection delimiters: a delimiter-less
-   fragment is the inside of a collection, which no language can stand up
-   as a whole file.
+   Wrap the generated code in a complete file/module when the selected language supports that mode.
+   A complete file always includes collection delimiters: a delimiter-less fragment is the inside of a collection, which no language can stand up as a whole file.
 
 ``:date-format:`` (optional)
-   How to render YAML dates.  Not all values are valid for every
-   language.  Supported values:
+   How to render YAML dates.
+   Not all values are valid for every language.
+   Supported values:
 
    ``cpp``
       ``std::chrono::year_month_day`` type.
@@ -202,8 +155,8 @@ Directive options
    ``go``
       ``time.Date(...)`` call.
    ``iso``
-      Quoted ISO 8601 string (e.g. ``"2024-01-15"``).  This is the
-      default for most languages.
+      Quoted ISO 8601 string (e.g. ``"2024-01-15"``).
+      This is the default for most languages.
    ``java``
       ``LocalDate.of(...)`` constructor.
    ``js``
@@ -230,8 +183,9 @@ Directive options
       YAML date literal.
 
 ``:datetime-format:`` (optional)
-   How to render YAML datetimes.  Not all values are valid for every
-   language.  Supported values:
+   How to render YAML datetimes.
+   Not all values are valid for every language.
+   Supported values:
 
    ``cpp``
       ``std::chrono`` datetime type.
@@ -244,9 +198,11 @@ Directive options
    ``go``
       ``time.Date(...)`` call.
    ``instant``
-      ``Instant.parse(...)`` (Java).
+      ``Instant.parse(...)``
+      (Java).
    ``iso``
-      Quoted ISO 8601 string.  This is the default for most languages.
+      Quoted ISO 8601 string.
+      This is the default for most languages.
    ``js``
       ``new Date(...)`` constructor (JavaScript/TypeScript).
    ``julia``
@@ -270,39 +226,48 @@ Directive options
    ``yaml``
       YAML datetime literal.
    ``zoned``
-      ``ZonedDateTime.of(...)`` (Java).
+      ``ZonedDateTime.of(...)``
+      (Java).
 
 ``:sequence-format:`` (optional)
-   How to render sequences (arrays/lists).  Not all values are valid for
-   every language.  Supported values:
+   How to render sequences (arrays/lists).
+   Not all values are valid for every language.
+   Supported values:
 
    ``array``
-      Array delimiters.  Available for Crystal (default), Julia (default),
-      Rust, and many other languages.
+      Array delimiters.
+      Available for Crystal (default), Julia (default), Rust, and many other languages.
    ``cell_array``
-      Cell array delimiters.  Available for MATLAB (default).
+      Cell array delimiters.
+      Available for MATLAB (default).
    ``initializer_list``
-      Initializer list.  Available for C++ (default).
+      Initializer list.
+      Available for C++ (default).
    ``list``
-      List delimiters.  Available for Elixir (default), Erlang (default),
-      Python, and many other languages.
+      List delimiters.
+      Available for Elixir (default), Erlang (default), Python, and many other languages.
    ``sequence``
-      Sequence delimiters.  Available for COBOL (default) and YAML
-      (default).
+      Sequence delimiters.
+      Available for COBOL (default) and YAML (default).
    ``slice``
-      Slice delimiters.  Available for Go (default).
+      Slice delimiters.
+      Available for Go (default).
    ``table``
-      Table delimiters.  Available for Lua (default).
+      Table delimiters.
+      Available for Lua (default).
    ``tuple``
-      Tuple delimiters.  Available for Crystal, Elixir, Erlang, Julia,
-      Python (default for Python), and Rust.
+      Tuple delimiters.
+      Available for Crystal, Elixir, Erlang, Julia, Python (default for Python), and Rust.
    ``vec``
-      Vec macro (``vec![...]``).  Available for Rust (default).
+      Vec macro (``vec![...]``).
+      Available for Rust (default).
    ``vector``
-      Vector delimiters.  Available for Clojure (default).
+      Vector delimiters.
+      Available for Clojure (default).
 
 ``:set-format:`` (optional)
-   How to render sets (Python only).  Supported values:
+   How to render sets (Python only).
+   Supported values:
 
    ``set``
       ``{`` … ``}`` set literal (default).
@@ -310,7 +275,8 @@ Directive options
       ``frozenset({`` … ``})`` constructor.
 
 ``:bytes-format:`` (optional)
-   How to render binary data (Python only).  Supported values:
+   How to render binary data (Python only).
+   Supported values:
 
    ``hex``
       Hex-escaped bytes literal, e.g. ``b"\x48\x65"`` (default).
@@ -318,32 +284,26 @@ Directive options
       Python bytes literal, e.g. ``b"Hello"``.
 
 ``:variable-name:`` (optional)
-   Wrap the output in a variable declaration or assignment using the given
-   name.  Collection delimiters are included automatically when this option
-   is set (literalizer rejects delimiter-less variable forms).
+   Wrap the output in a variable declaration or assignment using the given name.
+   Collection delimiters are included automatically when this option is set (literalizer rejects delimiter-less variable forms).
 
 ``:existing-variable:`` (optional flag)
-   When combined with ``:variable-name:``, produce an assignment to an
-   existing variable (e.g. ``x = ...``) instead of a new variable
-   declaration (e.g. ``final x = ...`` in Dart).  Has no effect without
-   ``:variable-name:``.
+   When combined with ``:variable-name:``, produce an assignment to an existing variable (e.g. ``x = ...``) instead of a new variable declaration (e.g. ``final x = ...`` in Dart).
+   Has no effect without ``:variable-name:``.
 
 ``:modifiers:`` (optional)
-   Comma-separated modifier keywords to add to a new variable
-   declaration, e.g. ``public,static,final``.  Requires
-   ``:variable-name:`` and cannot be combined with
-   ``:existing-variable:``.  Supported values depend on the language:
+   Comma-separated modifier keywords to add to a new variable declaration, e.g. ``public,static,final``.
+   Requires ``:variable-name:`` and cannot be combined with ``:existing-variable:``.
+   Supported values depend on the language:
 
    ``C++``
       ``static``, ``const``.
    ``C#``
-      ``public``, ``private``, ``protected``, ``static``, ``const``,
-      ``readonly``.
+      ``public``, ``private``, ``protected``, ``static``, ``const``, ``readonly``.
    ``Java``
       ``public``, ``private``, ``protected``, ``static``, ``final``.
    ``Rust``
-      ``mut`` (a mutable ``let mut`` binding, so the bound value can be
-      mutated through the binding).
+      ``mut`` (a mutable ``let mut`` binding, so the bound value can be mutated through the binding).
 
 ``:variable-type-hints:`` (optional)
    Whether to add type hints to variable declarations.
@@ -356,121 +316,152 @@ Directive options
       Currently available for Python only.
 
 ``:comment-format:`` (optional)
-   How to render comments.  Not all values are valid for every language.
+   How to render comments.
+   Not all values are valid for every language.
    Supported values:
 
    ``apostrophe``
-      ``'`` comments.  Available for Visual Basic.
+      ``'`` comments.
+      Available for Visual Basic.
    ``block``
-      Block comments (``/* ... */`` or equivalent).  Available for C,
-      C#, C++, Common Lisp, D, Dart, F#, Go, Groovy, Haskell, HCL,
-      Java, JavaScript, Julia, Kotlin, Lua, MATLAB, Nim, Objective-C,
-      PHP, PowerShell, Racket, Rust, Scala, Swift, TypeScript.
+      Block comments (``/* ... */`` or equivalent).
+      Available for C, C#, C++, Common Lisp, D, Dart, F#, Go, Groovy, Haskell, HCL, Java, JavaScript, Julia, Kotlin, Lua, MATLAB, Nim, Objective-C, PHP, PowerShell, Racket, Rust, Scala, Swift, TypeScript.
    ``double_dash``
-      ``--`` comments.  Available for Ada, Haskell, Lua, Occam.
+      ``--`` comments.
+      Available for Ada, Haskell, Lua, Occam.
    ``double_slash``
-      ``//`` comments.  Available for C, C#, C++, D, Dart, F#, Go,
-      Groovy, Java, JavaScript, Kotlin, Objective-C, PHP, Rust, Scala,
-      Swift, TypeScript, Zig.
+      ``//`` comments.
+      Available for C, C#, C++, D, Dart, F#, Go, Groovy, Java, JavaScript, Kotlin, Objective-C, PHP, Rust, Scala, Swift, TypeScript, Zig.
    ``exclamation``
-      ``!`` comments.  Available for Fortran.
+      ``!`` comments.
+      Available for Fortran.
    ``hash``
-      ``#`` comments.  Available for Bash, Crystal, Elixir, HCL, Julia,
-      Mojo, Nim, Perl, PowerShell, Python, R, Ruby, TOML, YAML.
+      ``#`` comments.
+      Available for Bash, Crystal, Elixir, HCL, Julia, Mojo, Nim, Perl, PowerShell, Python, R, Ruby, TOML, YAML.
    ``paren_star``
-      ``(* ... *)`` comments.  Available for OCaml.
+      ``(* ... *)`` comments.
+      Available for OCaml.
    ``percent``
-      ``%`` comments.  Available for Erlang, MATLAB, Norg.
+      ``%`` comments.
+      Available for Erlang, MATLAB, Norg.
    ``semicolon``
-      ``;`` comments.  Available for Clojure, Common Lisp, Racket.
+      ``;`` comments.
+      Available for Clojure, Common Lisp, Racket.
    ``star_angle``
-      ``*>`` comments.  Available for COBOL.
+      ``*>`` comments.
+      Available for COBOL.
 
 ``:declaration-style:`` (optional)
-   How to declare variables.  Not all values are valid for every
-   language.  Supported values:
+   How to declare variables.
+   Not all values are valid for every language.
+   Supported values:
 
    ``assign``
-      Plain assignment (``x = ...``).  Available for Crystal, Elixir,
-      Erlang, Haskell, HCL, Julia, MATLAB, Mojo, PHP, PowerShell,
-      Python, R, Ruby, TOML, YAML.
+      Plain assignment (``x = ...``).
+      Available for Crystal, Elixir, Erlang, Haskell, HCL, Julia, MATLAB, Mojo, PHP, PowerShell, Python, R, Ruby, TOML, YAML.
    ``auto``
-      ``auto`` keyword.  Available for C++, D.
+      ``auto`` keyword.
+      Available for C++, D.
    ``block``
-      Block-level declaration.  Available for Norg.
+      Block-level declaration.
+      Available for Norg.
    ``const``
-      ``const`` keyword.  Available for JavaScript, TypeScript, Zig.
+      ``const`` keyword.
+      Available for JavaScript, TypeScript, Zig.
    ``declare``
-      Language-specific declaration keyword.  Available for Ada, Bash.
+      Language-specific declaration keyword.
+      Available for Ada, Bash.
    ``def``
-      ``def`` keyword.  Available for Clojure, Groovy.
+      ``def`` keyword.
+      Available for Clojure, Groovy.
    ``define``
-      ``define`` form.  Available for Racket.
+      ``define`` form.
+      Available for Racket.
    ``defparameter``
-      ``defparameter`` form.  Available for Common Lisp.
+      ``defparameter`` form.
+      Available for Common Lisp.
    ``dim``
-      ``Dim`` keyword.  Available for Visual Basic.
+      ``Dim`` keyword.
+      Available for Visual Basic.
    ``final``
-      ``final`` keyword.  Available for Dart.
+      ``final`` keyword.
+      Available for Dart.
    ``let``
-      ``let`` keyword.  Available for F#, JavaScript, OCaml, Rust,
-      Swift.
+      ``let`` keyword.
+      Available for F#, JavaScript, OCaml, Rust, Swift.
    ``local``
-      ``local`` keyword.  Available for Lua.
+      ``local`` keyword.
+      Available for Lua.
    ``my``
-      ``my`` keyword.  Available for Perl.
+      ``my`` keyword.
+      Available for Perl.
    ``short``
-      Short variable declaration (``:=``).  Available for Go.
+      Short variable declaration (``:=``).
+      Available for Go.
    ``typed``
-      Typed declaration.  Available for C, COBOL, Fortran, Objective-C.
+      Typed declaration.
+      Available for C, COBOL, Fortran, Objective-C.
    ``val``
-      ``val`` keyword.  Available for Kotlin, Occam, Scala.
+      ``val`` keyword.
+      Available for Kotlin, Occam, Scala.
    ``var``
-      ``var`` keyword.  Available for C#, Java, Nim.
+      ``var`` keyword.
+      Available for C#, Java, Nim.
 
 ``:dict-format:`` (optional)
-   How to render dictionaries / maps.  Not all values are valid for
-   every language.  Supported values:
+   How to render dictionaries / maps.
+   Not all values are valid for every language.
+   Supported values:
 
    ``default``
-      Language-default dict syntax.  Available for most languages.
+      Language-default dict syntax.
+      Available for most languages.
    ``dict``
-      ``Dict(...)`` constructor.  Available for Julia.
+      ``Dict(...)`` constructor.
+      Available for Julia.
    ``dictionary``
-      ``Dictionary`` constructor.  Available for C#.
+      ``Dictionary`` constructor.
+      Available for C#.
    ``hash_map``
-      ``HashMap`` constructor.  Available for Rust.
+      ``HashMap`` constructor.
+      Available for Rust.
    ``map``
-      ``Map`` constructor.  Available for C++, JavaScript, Kotlin,
-      Scala.
+      ``Map`` constructor.
+      Available for C++, JavaScript, Kotlin, Scala.
    ``map_of_entries``
-      ``Map.ofEntries(...)`` constructor.  Available for Java.
+      ``Map.ofEntries(...)`` constructor.
+      Available for Java.
    ``object``
-      Object literal syntax.  Available for JavaScript, TypeScript.
+      Object literal syntax.
+      Available for JavaScript, TypeScript.
    ``struct``
-      ``struct`` syntax.  Available for MATLAB.
+      ``struct`` syntax.
+      Available for MATLAB.
 
 ``:integer-format:`` (optional)
-   How to render integer values.  Not all values are valid for every
-   language.  Supported values:
+   How to render integer values.
+   Not all values are valid for every language.
+   Supported values:
 
    ``decimal``
       Decimal integer literal (default for all languages).
    ``hex``
-      Hexadecimal integer literal.  Available for JavaScript.
+      Hexadecimal integer literal.
+      Available for JavaScript.
 
 ``:numeric-separator:`` (optional)
-   Whether to use numeric separators in integer literals.  Supported
-   values:
+   Whether to use numeric separators in integer literals.
+   Supported values:
 
    ``none``
       No separators (default for all languages).
    ``underscore``
-      Underscore separators (e.g. ``1_000_000``).  Available for
-      JavaScript.
+      Underscore separators (e.g. ``1_000_000``).
+      Available for JavaScript.
 
 ``:numeric-style:`` (optional)
-   The numeric literal style.  Supported values:
+   The numeric literal style.
+   Supported values:
 
    ``overloaded``
       Use overloaded numeric type classes (default for Haskell).
@@ -479,23 +470,21 @@ Directive options
       Available for Haskell.
 
 ``:string-format:`` (optional)
-   How to render string values.  Supported values:
+   How to render string values.
+   Supported values:
 
    ``double``
       Double-quoted strings (default for all languages).
    ``single``
-      Single-quoted strings.  Available for JavaScript.
+      Single-quoted strings.
+      Available for JavaScript.
    ``multiline``
-      Native multiline string syntax.  Available for C++, Crystal, D,
-      Dart, Go, Groovy, Java, JavaScript, Kotlin, Lua, Nim, Python,
-      Rust, Scala, Swift, and TypeScript.  The generated form follows the
-      language: for example, Java uses text blocks, C++ and Rust use
-      collision-free raw strings, and JavaScript and TypeScript use template
-      literals.  Leading and trailing newlines, blank lines, and embedded
-      indentation are preserved.  When a native form cannot safely represent
-      a value, ``literalizer`` uses an escaped string literal instead.  Java
-      text blocks require Java 16, so selecting ``multiline`` targets
-      ``jdk_16`` even when ``:language-version: jdk_11`` is also specified.
+      Native multiline string syntax.
+      Available for C++, Crystal, D, Dart, Go, Groovy, Java, JavaScript, Kotlin, Lua, Nim, Python, Rust, Scala, Swift, and TypeScript.
+      The generated form follows the language: for example, Java uses text blocks, C++ and Rust use collision-free raw strings, and JavaScript and TypeScript use template literals.
+      Leading and trailing newlines, blank lines, and embedded indentation are preserved.
+      When a native form cannot safely represent a value, ``literalizer`` uses an escaped string literal instead.
+      Java text blocks require Java 16, so selecting ``multiline`` targets ``jdk_16`` even when ``:language-version: jdk_11`` is also specified.
 
 For example, a small YAML dictionary can keep its message on multiple lines:
 
@@ -506,111 +495,82 @@ For example, a small YAML dictionary can keep its message on multiple lines:
 
 ``:multiline-raw-string-delimiter-base:`` (optional)
    Fallback delimiter base for C++ ``:string-format: multiline`` raw strings.
-   Literalizer first uses an empty delimiter when it does not collide with the
-   value.  On a collision, it tries this base and then numbered variants that
-   fit C++'s 16-character delimiter limit.  The default is ``x``.  The value
-   must be a non-empty sequence of valid C++ raw-string delimiter characters;
-   using this option with another language raises an error.
+   Literalizer first uses an empty delimiter when it does not collide with the value.
+   On a collision, it tries this base and then numbered variants that fit C++'s 16-character delimiter limit.
+   The default is ``x``.
+   The value must be a non-empty sequence of valid C++ raw-string delimiter characters; using this option with another language raises an error.
 
 ``:trailing-comma:`` (optional)
-   Whether to include a trailing comma after the last element in
-   collections.  Supported values:
+   Whether to include a trailing comma after the last element in collections.
+   Supported values:
 
    ``yes``
-      Include trailing comma.  Available for C, C++, Crystal, D, Dart,
-      Elixir, Go, Groovy, HCL, JavaScript, Julia, Kotlin, Lua, Mojo,
-      Objective-C, Perl, PHP, Python, Ruby, Rust, Scala, Swift,
-      TypeScript, Zig.
+      Include trailing comma.
+      Available for C, C++, Crystal, D, Dart, Elixir, Go, Groovy, HCL, JavaScript, Julia, Kotlin, Lua, Mojo, Objective-C, Perl, PHP, Python, Ruby, Rust, Scala, Swift, TypeScript, Zig.
    ``no``
-      Omit trailing comma.  Available for Ada, Bash, C#, Clojure,
-      COBOL, Common Lisp, Erlang, F#, Fortran, Haskell, Java,
-      JavaScript, MATLAB, Nim, Norg, OCaml, Occam, PowerShell, R,
-      Racket, TOML, Visual Basic, YAML.
+      Omit trailing comma.
+      Available for Ada, Bash, C#, Clojure, COBOL, Common Lisp, Erlang, F#, Fortran, Haskell, Java, JavaScript, MATLAB, Nim, Norg, OCaml, Occam, PowerShell, R, Racket, TOML, Visual Basic, YAML.
 
 ``:empty-dict-key:`` (optional)
    How to handle empty string keys in dictionaries.
    Supported values:
 
    ``positional``
-      Use positional arguments for empty keys.  Available for R.
+      Use positional arguments for empty keys.
+      Available for R.
    ``error``
-      Raise an error on empty keys (default).  Available for R.
+      Raise an error on empty keys (default).
+      Available for R.
 
 ``:heterogeneous-strategy:`` (optional, defaults to ``auto``)
-   How to render scalar collections whose elements have more than one
-   language-level type.  Defaults to ``auto``; set it explicitly only
-   to pin a specific representation (see the caveat under ``auto``).
+   How to render scalar collections whose elements have more than one language-level type.
+   Defaults to ``auto``; set it explicitly only to pin a specific representation (see the caveat under ``auto``).
    Supported values:
 
    ``auto`` (default)
-      Render the input with its natural representation first, and only
-      if that fails because the data is heterogeneous, retry with each
-      strategy the target language supports in the order given by the
-      ``literalizer_heterogeneous_strategy_precedence`` configuration
-      value.
-      Homogeneous and genuinely map-shaped data keep their native form,
-      so a single ``auto`` works across a mix of inputs without picking
-      a strategy per project or per file.
-      Because ``auto`` chooses a representation implicitly -- ``record``
-      vs ``tuple`` vs ``tagged_enum`` changes the shape of the
-      generated API -- set ``:heterogeneous-strategy:`` explicitly when
-      a specific representation is wanted for clarity.
+      Render the input with its natural representation first, and only if that fails because the data is heterogeneous, retry with each strategy the target language supports in the order given by the ``literalizer_heterogeneous_strategy_precedence`` configuration value.
+      Homogeneous and genuinely map-shaped data keep their native form, so a single ``auto`` works across a mix of inputs without picking a strategy per project or per file.
+      Because ``auto`` chooses a representation implicitly -- ``record`` vs ``tuple`` vs ``tagged_enum`` changes the shape of the generated API -- set ``:heterogeneous-strategy:`` explicitly when a specific representation is wanted for clarity.
    ``error``
-      Raise an error when a collection mixes scalar types.  This was the
-      default before |project| defaulted ``:heterogeneous-strategy:`` to
-      ``auto``; set it explicitly to keep a mixed-scalar collection a
-      hard build failure.
+      Raise an error when a collection mixes scalar types.
+      This was the default before |project| defaulted ``:heterogeneous-strategy:`` to ``auto``; set it explicitly to keep a mixed-scalar collection a hard build failure.
    ``tagged_enum``
-      Emit a minimal tagged ``enum`` in the preamble and wrap each
-      heterogeneous value at the call site (e.g. ``Value::I32(1)``).
+      Emit a minimal tagged ``enum`` in the preamble and wrap each heterogeneous value at the call site (e.g. ``Value::I32(1)``).
       Available for Rust.
    ``record``
-      Emit a generated struct / record / dataclass declaration in the
-      preamble for each record-shaped mapping plus a matching literal
-      (e.g. ``Record0{Name: "a", Items: []int{1}}``).  The generated
-      names can be customised with ``:record-struct-name-prefix:``;
-      ``:record-shape-names:`` is also available where supported.
+      Emit a generated struct / record / dataclass declaration in the preamble for each record-shaped mapping plus a matching literal (e.g. ``Record0{Name: "a", Items: []int{1}}``).
+      The generated names can be customised with ``:record-struct-name-prefix:``; ``:record-shape-names:`` is also available where supported.
       Available for C++, Go, Java, Kotlin, Python, Rust, and Scala.
    ``tuple``
-      Render a fixed-length heterogeneous scalar array as the
-      language's native tuple literal instead of raising (e.g.
-      ``std::make_tuple(...)``).  Available for C++ and Rust.
+      Render a fixed-length heterogeneous scalar array as the language's native tuple literal instead of raising (e.g. ``std::make_tuple(...)``).
+      Available for C++ and Rust.
 
    See :doc:`heterogeneous-strategies` for the full set of strategies (including ``tuple``, ``object_variant``, ``union_type``, ``interface``, and ``variant``), worked examples, and the per-language support matrix.
 
 ``:skip-if-unrepresentable:`` (optional, flag)
-   Emit no node at all -- instead of failing the build -- when the
-   input cannot be represented in the target language, including after
-   ``:heterogeneous-strategy: auto`` exhausts its precedence.  This lets
-   a loop that renders the same data in several languages skip the
-   languages a given input does not fit, without moving data-shape
-   knowledge into the surrounding prose or template.
+   Emit no node at all -- instead of failing the build -- when the input cannot be represented in the target language, including after ``:heterogeneous-strategy: auto`` exhausts its precedence.
+   This lets a loop that renders the same data in several languages skip the languages a given input does not fit, without moving data-shape knowledge into the surrounding prose or template.
 
 ``:call-style:`` (optional)
-   How ``literalizer-call`` renders function calls.  Each language
-   offers its own set of call styles; using a value a language does not
-   support raises an error.  Supported values:
+   How ``literalizer-call`` renders function calls.
+   Each language offers its own set of call styles; using a value a language does not support raises an error.
+   Supported values:
 
    ``positional``
-      Pass arguments by position (e.g. ``myFunc({...})``).  Available
-      for C, C#, C++, Crystal, D, F#, Go, Groovy, HCL, Haskell, Java,
-      JavaScript, Julia, Kotlin, Lua, Perl, PHP, Python, R, Ruby, Rust,
-      Scala, TypeScript.
+      Pass arguments by position (e.g. ``myFunc({...})``).
+      Available for C, C#, C++, Crystal, D, F#, Go, Groovy, HCL, Haskell, Java, JavaScript, Julia, Kotlin, Lua, Perl, PHP, Python, R, Ruby, Rust, Scala, TypeScript.
    ``keyword``
       Pass arguments by keyword (e.g. ``my_func(flag=True)``).
-      Available for Crystal, Groovy, Jsonnet, Julia, Kotlin, PHP,
-      Python, R, Ruby, Scala, Swift.
+      Available for Crystal, Groovy, Jsonnet, Julia, Kotlin, PHP, Python, R, Ruby, Scala, Swift.
    ``named``
-      Pass arguments by named colon syntax (e.g.
-      ``MyFunc(flag: true)``).  Available for C#.
+      Pass arguments by named colon syntax (e.g. ``MyFunc(flag: true)``).
+      Available for C#.
    ``object``
-      Pass arguments as a single object literal (e.g.
-      ``myFunc({ obj: {...} })``).  Available for JavaScript,
-      TypeScript.
+      Pass arguments as a single object literal (e.g. ``myFunc({ obj: {...} })``).
+      Available for JavaScript, TypeScript.
    ``prefix_keyword``
-      Pass arguments as prefixed keyword pairs in an S-expression
-      (e.g. ``(process :flag t)``).  Available for Common Lisp,
-      Racket.
+      Pass arguments as prefixed keyword pairs in an S-expression (e.g. ``(process :flag t)``).
+      Available for Common Lisp, Racket.
    ``postfix``
       Push arguments before naming the function (e.g. ``1 2 ADD``).
       Available for Forth.
@@ -623,8 +583,7 @@ Given a file :file:`_examples/literal.json` containing:
 .. literalinclude:: _examples/literal.json
    :language: json
 
-the ``literalizer`` directive renders both its directive source and the
-generated code block:
+the ``literalizer`` directive renders both its directive source and the generated code block:
 
 .. rest-example::
 
@@ -636,10 +595,8 @@ generated code block:
 ``literalizer-call`` directive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``literalizer-call`` directive converts data files into function call
-expressions.  Each top-level list element becomes a separate call (when
-``:per-element:`` is set), with its values mapped positionally to the
-given parameter names.
+The ``literalizer-call`` directive converts data files into function call expressions.
+Each top-level list element becomes a separate call (when ``:per-element:`` is set), with its values mapped positionally to the given parameter names.
 
 Given a file :file:`_examples/calls.json` containing:
 
@@ -656,8 +613,7 @@ the directive renders as:
       :parameter-names: flag,count,name
       :per-element:
 
-For positional-call languages like Go, :file:`_examples/calls_go.json`
-containing:
+For positional-call languages like Go, :file:`_examples/calls_go.json` containing:
 
 .. literalinclude:: _examples/calls_go.json
    :language: json
@@ -694,85 +650,54 @@ the directive renders the language-idiomatic no-argument construction:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``:target-function:`` (required unless ``:constructor-class:`` is set)
-   The function expression to call (e.g. ``my_func`` or
-   ``throttler.should_send_notification``).
+   The function expression to call (e.g. ``my_func`` or ``throttler.should_send_notification``).
 
 ``:constructor-class:`` (required unless ``:target-function:`` is set)
-   A class/type name whose no-argument constructor should be called using
-   the selected language's idiom.  For example, ``Playlist`` renders as
-   ``Playlist()``, ``new Playlist()``, ``NewPlaylist()``,
-   ``Playlist.new()``, or ``Playlist::new()`` depending on the language.
+   A class/type name whose no-argument constructor should be called using the selected language's idiom.
+   For example, ``Playlist`` renders as ``Playlist()``, ``new Playlist()``, ``NewPlaylist()``, ``Playlist.new()``, or ``Playlist::new()`` depending on the language.
    This option cannot be combined with ``:target-function:``.
 
 ``:parameter-names:`` (optional)
-   Comma-separated parameter names, positionally mapped to each
-   element in each row.  For positional-call languages (like Go) these
-   are unused in the output but still determine how many values to
-   expect per row.
-   An empty (or omitted) value means the call takes *no* arguments,
-   which -- combined with ``:per-element:`` over a single-element
-   source and ``:variable-name:`` -- renders a no-argument constructor
-   bound to a variable (see the example below).
+   Comma-separated parameter names, positionally mapped to each element in each row.
+   For positional-call languages (like Go) these are unused in the output but still determine how many values to expect per row.
+   An empty (or omitted) value means the call takes *no* arguments, which -- combined with ``:per-element:`` over a single-element source and ``:variable-name:`` -- renders a no-argument constructor bound to a variable (see the example below).
 
 ``:per-element:`` (optional flag)
-   When set, each top-level list element becomes a separate function
-   call.  Without this flag, the whole literalized value is passed as a
-   single argument.
+   When set, each top-level list element becomes a separate function call.
+   Without this flag, the whole literalized value is passed as a single argument.
 
 ``:omit-code:`` (optional flag)
-   Omit the generated call expressions.  Combine this with
-   ``:include-preamble:`` to render only imports or other preamble lines,
-   which is useful when a later ``literalizer-call`` block needs preamble
-   lines at the top of a combined snippet.
+   Omit the generated call expressions.
+   Combine this with ``:include-preamble:`` to render only imports or other preamble lines, which is useful when a later ``literalizer-call`` block needs preamble lines at the top of a combined snippet.
 
 ``:call-transform:`` (optional)
-   A template applied to each generated call.  These placeholders are
-   substituted: ``$call`` (and the ``$0`` alias) for the rendered call
-   expression, ``$index`` for the zero-based call position, and
-   ``$zipped`` for the matching ``:zip-file:`` element rendered as a
-   native literal (empty when no ``:zip-file:`` is given).  For example,
-   ``:call-transform: result_$index = $call``.
+   A template applied to each generated call.
+   These placeholders are substituted: ``$call`` (and the ``$0`` alias) for the rendered call expression, ``$index`` for the zero-based call position, and ``$zipped`` for the matching ``:zip-file:`` element rendered as a native literal (empty when no ``:zip-file:`` is given).
+   For example, ``:call-transform: result_$index = $call``.
 
 ``:zip-file:`` (optional)
-   A data file whose top-level elements pair positionally with the
-   generated calls.  Each paired element is rendered as a native literal
-   and made available to ``:call-transform:`` as ``$zipped``, which is
-   handy for generating assertions from a parallel file of expected
-   results (e.g. ``:call-transform: assert $call == $zipped``).  The
-   file is parsed with the same parser as the main source.
+   A data file whose top-level elements pair positionally with the generated calls.
+   Each paired element is rendered as a native literal and made available to ``:call-transform:`` as ``$zipped``, which is handy for generating assertions from a parallel file of expected results (e.g. ``:call-transform: assert $call == $zipped``).
+   The file is parsed with the same parser as the main source.
 
 ``:zip-input-format:`` (optional)
-   The input format (``json``, ``json5``, ``yaml``, or ``toml``) of the
-   ``:zip-file:``.  Defaults to the format inferred from the
-   ``:zip-file:`` extension.
+   The input format (``json``, ``json5``, ``yaml``, or ``toml``) of the ``:zip-file:``.
+   Defaults to the format inferred from the ``:zip-file:`` extension.
 
 ``:comment-file:`` (optional)
-   A text file with one line per generated call.  Each non-blank line
-   is emitted as a trailing source comment after the matching call,
-   using the target language's comment syntax, and a blank line emits
-   no comment for that call.  The number of lines must equal the
-   number of generated calls.  Unlike ``:call-transform:``, the
-   comment is placed after the statement terminator, so a comment can
-   be attached without commenting out the terminator.
+   A text file with one line per generated call.
+   Each non-blank line is emitted as a trailing source comment after the matching call, using the target language's comment syntax, and a blank line emits no comment for that call.
+   The number of lines must equal the number of generated calls.
+   Unlike ``:call-transform:``, the comment is placed after the statement terminator, so a comment can be attached without commenting out the terminator.
 
-The ``literalizer-call`` directive also supports these shared options
-from the ``literalizer`` directive: ``:language:``, ``:input-format:``,
-``:pre-indent-level:``, ``:indent:``, ``:indent-char:``,
-``:include-preamble:``, ``:language-version:``, ``:ref-case:``,
-``:ref-key:``, ``:module-name:``, ``:record-struct-name-prefix:``,
-``:record-shape-names:``, ``:wrap-in-file:``,
-``:collection-layout:``, ``:heterogeneous-strategy:``,
-``:skip-if-unrepresentable:``, and all format options (e.g.
-``:string-format:``, ``:trailing-comma:``, etc.).
+The ``literalizer-call`` directive also supports these shared options from the ``literalizer`` directive: ``:language:``, ``:input-format:``, ``:pre-indent-level:``, ``:indent:``, ``:indent-char:``, ``:include-preamble:``, ``:language-version:``, ``:ref-case:``, ``:ref-key:``, ``:module-name:``, ``:record-struct-name-prefix:``, ``:record-shape-names:``, ``:wrap-in-file:``, ``:collection-layout:``, ``:heterogeneous-strategy:``, ``:skip-if-unrepresentable:``, and all format options (e.g. ``:string-format:``, ``:trailing-comma:``, etc.).
 
 JSON-value call arguments
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Use ``:json-type:`` with ``literalizer-call`` when a function accepts a
-language's runtime JSON-value type.  This keeps each argument as a JSON
-value rather than requiring one homogeneous native collection type, so a
-call can accept nested or heterogeneous JSON data directly.  For example,
-Rust's ``serde_json_value`` renders each argument with ``serde_json::json!``:
+Use ``:json-type:`` with ``literalizer-call`` when a function accepts a language's runtime JSON-value type.
+This keeps each argument as a JSON value rather than requiring one homogeneous native collection type, so a call can accept nested or heterogeneous JSON data directly.
+For example, Rust's ``serde_json_value`` renders each argument with ``serde_json::json!``:
 
 .. literalizer-call:: _examples/calls_json.json
    :language: rust
@@ -781,9 +706,8 @@ Rust's ``serde_json_value`` renders each argument with ``serde_json::json!``:
    :per-element:
    :json-type: serde_json_value
 
-This option is available only for languages and JSON-value variants that
-``literalizer`` supports.  Use ``:include-preamble:`` when the generated
-snippet also needs its imports.
+This option is available only for languages and JSON-value variants that ``literalizer`` supports.
+Use ``:include-preamble:`` when the generated snippet also needs its imports.
 
 ``:json-rendering:`` (optional, C++ only) chooses how ``:json-type:`` values are rendered.
 The default renders structural ``nlohmann::json`` factory expressions.
@@ -801,10 +725,8 @@ It requires ``:json-type:``, and rejects non-finite floats and integers outside 
 Heterogeneous call arguments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``:heterogeneous-strategy:`` also applies to arguments generated by
-``:per-element:``.  In particular, ``literalizer`` 2026.7.20 collects the
-types from every generated argument when it builds the preamble, so a shared
-wrapper type is declared once and covers every call:
+``:heterogeneous-strategy:`` also applies to arguments generated by ``:per-element:``.
+In particular, ``literalizer`` 2026.7.20 collects the types from every generated argument when it builds the preamble, so a shared wrapper type is declared once and covers every call:
 
 .. literalizer-call:: _examples/calls_heterogeneous.json
    :language: rust
@@ -837,14 +759,9 @@ Configuration
 ~~~~~~~~~~~~~
 
 ``literalizer_heterogeneous_strategy_precedence``
-   The order in which ``:heterogeneous-strategy: auto`` tries
-   representational strategies after the natural representation fails.
-   It defaults to ``["record", "tuple", "tagged_enum",
-   "object_variant", "variant", "union_type", "interface"]`` and is
-   restricted, per directive, to the strategies the target language
-   exposes (``error`` is never a fallback).  Set it in :file:`conf.py`
-   to change which representation ``auto`` prefers, for example to
-   prefer a tagged union over a record::
+   The order in which ``:heterogeneous-strategy: auto`` tries representational strategies after the natural representation fails.
+   It defaults to ``["record", "tuple", "tagged_enum", "object_variant", "variant", "union_type", "interface"]`` and is restricted, per directive, to the strategies the target language exposes (``error`` is never a fallback).
+   Set it in :file:`conf.py` to change which representation ``auto`` prefers, for example to prefer a tagged union over a record::
 
       literalizer_heterogeneous_strategy_precedence = [
           "tagged_enum",
@@ -853,10 +770,9 @@ Configuration
       ]
 
 ``literalizer_language_defaults``
-   Shared format-option defaults for both directives, grouped by the
-   directive's ``:language:`` value. Explicit directive options take
-   precedence. For example, make all C++ directives use C++14 unless a
-   directive selects another version::
+   Shared format-option defaults for both directives, grouped by the directive's ``:language:`` value.
+   Explicit directive options take precedence.
+   For example, make all C++ directives use C++14 unless a directive selects another version::
 
       literalizer_language_defaults = {
           "cpp": {
@@ -864,10 +780,8 @@ Configuration
           },
       }
 
-   This setting accepts the shared language and format options, including
-   ``language-version``, ``string-format``, and ``trailing-comma``. It
-   does not set directive-specific options such as ``target-function`` or
-   ``include-delimiters``.
+   This setting accepts the shared language and format options, including ``language-version``, ``string-format``, and ``trailing-comma``.
+   It does not set directive-specific options such as ``target-function`` or ``include-delimiters``.
 
 
 Reference
