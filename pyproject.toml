@@ -68,6 +68,7 @@ dev = [
     "ruff==0.16.6",
     "shellcheck-py==0.11.0.1",
     "shfmt-py==4.1.0",
+    "snapper-fmt==0.11.0",
     "sphinx==9.1.0",
     "sphinx-copybutton==0.5.2",
     "sphinx-lint==1.0.2",
@@ -317,6 +318,7 @@ omit-covered-files = true
 ignore = [
     ".git_archival.txt",
     ".gitattributes",
+    ".snapperrc.toml",
     ".vale.ini",
     ".vscode/*.json",
     "CHANGELOG.rst",
@@ -333,6 +335,7 @@ ignore = [
     "newsfragments/**",
     "prek.toml",
     "spelling_private_dict.txt",
+    "styles/snapper/**",
     "tests",
     "tests/**",
     "uv.lock",
