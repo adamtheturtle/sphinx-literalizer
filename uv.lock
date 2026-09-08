@@ -2032,6 +2032,7 @@ dev = [
     { name = "ruff" },
     { name = "shellcheck-py" },
     { name = "shfmt-py" },
+    { name = "snapper-fmt" },
     { name = "sphinx" },
     { name = "sphinx-copybutton" },
     { name = "sphinx-lint" },
@@ -2052,9 +2053,6 @@ dev = [
 release = [
     { name = "check-wheel-contents" },
     { name = "towncrier" },
-]
-snapper = [
-    { name = "snapper-fmt" },
 ]
 
 [package.metadata]
@@ -2092,6 +2090,7 @@ dev = [
     { name = "ruff", specifier = "==0.16.6" },
     { name = "shellcheck-py", specifier = "==0.11.0.1" },
     { name = "shfmt-py", specifier = "==4.1.0" },
+    { name = "snapper-fmt", specifier = "==0.11.0" },
     { name = "sphinx", specifier = "==9.1.0" },
     { name = "sphinx-copybutton", specifier = "==0.5.2" },
     { name = "sphinx-lint", specifier = "==1.0.2" },
@@ -2113,7 +2112,6 @@ release = [
     { name = "check-wheel-contents", specifier = "==0.6.3" },
     { name = "towncrier", specifier = "==26.9.0" },
 ]
-snapper = [{ name = "snapper-fmt", specifier = "==0.11.0" }]
 
 [[package]]
 name = "sphinx-prompt"
