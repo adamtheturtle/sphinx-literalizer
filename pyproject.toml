@@ -109,6 +109,7 @@ line-length = 79
 lint.select = [
     "ALL",
 ]
+lint.extend-select = [ "ANN", "PGH003", "PYI" ]
 lint.ignore = [
     "COM812",
     "CPY001",
@@ -116,6 +117,7 @@ lint.ignore = [
     "D212",
     "ISC001",
 ]
+lint.explicit-preview-rules = true
 lint.per-file-ignores."doccmd_*.py" = [
     # Allow standalone expressions (e.g. showing a list value in docs).
     "B018",
@@ -183,6 +185,7 @@ lint.flake8-tidy-imports.banned-api."typing.cast".msg = """\
     """
 lint.mccabe.max-complexity = 12
 lint.pydocstyle.convention = "google"
+lint.preview = true
 
 [tool.pylint]
 DEPRECATED_BUILTINS.bad-functions = [
@@ -413,8 +416,21 @@ enableTypeIgnoreComments = false
 reportUnnecessaryTypeIgnoreComment = true
 
 [tool.ty]
+rules.blanket-ignore-comment = "error"
+rules.division-by-zero = "warn"
+rules.dynamic-function-decorator-return = "error"
+rules.missing-type-argument = "error"
+rules.possibly-missing-attribute = "warn"
+rules.possibly-missing-import = "warn"
+rules.possibly-unresolved-reference = "warn"
+rules.unsound-assignment = "error"
+rules.unsound-return-statement = "error"
+rules.unsound-yield = "error"
+rules.unsupported-dynamic-base = "warn"
 terminal.error-on-warning = true
 analysis.respect-type-ignore-comments = false
+analysis.strict-equality-semantics = true
+analysis.strict-generic-narrowing = true
 
 [tool.pytest]
 ini_options.addopts = "-n auto"
