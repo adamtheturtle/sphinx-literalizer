@@ -405,6 +405,7 @@ project-excludes = [
 ]
 search_path = [ ".", "src" ]
 disable-project-excludes-heuristics = true
+enabled-ignores = [ "pyrefly" ]
 preset = "all"
 
 [tool.pyright]
