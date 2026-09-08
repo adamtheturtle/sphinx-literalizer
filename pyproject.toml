@@ -409,7 +409,7 @@ project-excludes = [
 ]
 search_path = [ ".", "src" ]
 disable-project-excludes-heuristics = true
-preset = "strict"
+preset = "all"
 
 [tool.pyright]
 typeCheckingMode = "strict"
