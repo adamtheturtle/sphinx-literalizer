@@ -60,8 +60,8 @@ def test_source_attribute_is_absolute(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -97,10 +97,10 @@ def test_literalizer_call_pre_indent_level(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[True, 42]]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -142,11 +142,11 @@ def test_boolean_array_python(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[True, False, True]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -167,7 +167,7 @@ def test_boolean_array_python(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -201,11 +201,11 @@ def test_array_of_arrays_typescript(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[["a", 1.0]]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -226,7 +226,7 @@ def test_array_of_arrays_typescript(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -258,9 +258,9 @@ def test_pre_indent_level_spaces(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -282,8 +282,8 @@ def test_pre_indent_level_spaces(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    (source_directory / "expected.py").write_text(data="    1,\n")
-    source_file.write_text(
+    _ = (source_directory / "expected.py").write_text(data="    1,\n")
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -314,9 +314,9 @@ def test_pre_indent_level_tabs(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -340,8 +340,8 @@ def test_pre_indent_level_tabs(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    (source_directory / "expected.go").write_text(data="\t\t1,\n")
-    source_file.write_text(
+    _ = (source_directory / "expected.go").write_text(data="\t\t1,\n")
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -375,11 +375,11 @@ def test_indent_default_uses_library_default(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1}),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -401,10 +401,10 @@ def test_indent_default_uses_library_default(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    (source_directory / "expected.go").write_text(
+    _ = (source_directory / "expected.go").write_text(
         data='map[string]int{\n\t"a": 1,\n}\n',
     )
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -435,11 +435,11 @@ def test_indent_only_uses_spaces(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1}),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -462,10 +462,10 @@ def test_indent_only_uses_spaces(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    (source_directory / "expected.go").write_text(
+    _ = (source_directory / "expected.go").write_text(
         data='map[string]int{\n  "a": 1,\n}\n',
     )
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -496,11 +496,11 @@ def test_indent_char_only_uses_default_count(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1}),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -523,10 +523,10 @@ def test_indent_char_only_uses_default_count(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    (source_directory / "expected.go").write_text(
+    _ = (source_directory / "expected.go").write_text(
         data='map[string]int{\n\t\t\t\t"a": 1,\n}\n',
     )
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -557,9 +557,11 @@ def test_include_delimiters_adds_brackets(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -581,7 +583,7 @@ def test_include_delimiters_adds_brackets(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -614,7 +616,7 @@ def test_yaml_file_python(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(
+    _ = (source_directory / "data.yaml").write_text(
         data=dedent(
             text="""\
             - true
@@ -624,7 +626,7 @@ def test_yaml_file_python(
         )
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -645,7 +647,7 @@ def test_yaml_file_python(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -677,7 +679,7 @@ def test_date_format_python(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(
+    _ = (source_directory / "data.yaml").write_text(
         data=dedent(
             text="""\
             - 2024-01-15
@@ -685,7 +687,7 @@ def test_date_format_python(
         )
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -707,7 +709,7 @@ def test_date_format_python(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -739,7 +741,7 @@ def test_date_format_iso_default(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(
+    _ = (source_directory / "data.yaml").write_text(
         data=dedent(
             text="""\
             - 2024-01-15
@@ -747,7 +749,7 @@ def test_date_format_iso_default(
         )
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -768,7 +770,7 @@ def test_date_format_iso_default(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -798,7 +800,7 @@ def test_date_format_iso_explicit(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(
+    _ = (source_directory / "data.yaml").write_text(
         data=dedent(
             text="""\
             - 2024-01-15
@@ -806,7 +808,7 @@ def test_date_format_iso_explicit(
         )
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -828,7 +830,7 @@ def test_date_format_iso_explicit(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -860,7 +862,7 @@ def test_date_format_epoch(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(
+    _ = (source_directory / "data.yaml").write_text(
         data=dedent(
             text="""\
             - 2024-01-15T10:30:00+00:00
@@ -868,7 +870,7 @@ def test_date_format_epoch(
         )
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -890,7 +892,7 @@ def test_date_format_epoch(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -920,7 +922,7 @@ def test_date_format_java_instant(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(
+    _ = (source_directory / "data.yaml").write_text(
         data=dedent(
             text="""\
             - 2024-01-15
@@ -928,7 +930,7 @@ def test_date_format_java_instant(
         )
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -950,7 +952,7 @@ def test_date_format_java_instant(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -980,9 +982,11 @@ def test_swift_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1003,7 +1007,7 @@ def test_swift_language(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1034,9 +1038,11 @@ def test_php_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1057,7 +1063,7 @@ def test_php_language(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1090,9 +1096,11 @@ def test_variable_name_python(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1115,7 +1123,7 @@ def test_variable_name_python(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1152,9 +1160,11 @@ def test_variable_name_implies_include_delimiters(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1176,7 +1186,7 @@ def test_variable_name_implies_include_delimiters(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1214,8 +1224,10 @@ def test_wrap_in_file_implies_include_delimiters(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -1250,9 +1262,11 @@ def test_dart_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1273,7 +1287,7 @@ def test_dart_language(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1304,9 +1318,11 @@ def test_julia_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1327,7 +1343,7 @@ def test_julia_language(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1360,9 +1376,11 @@ def test_existing_variable_dart(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1386,7 +1404,7 @@ def test_existing_variable_dart(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1423,9 +1441,11 @@ def test_modifiers_java(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1449,7 +1469,7 @@ def test_modifiers_java(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    (source_directory / "expected.java").write_text(
+    _ = (source_directory / "expected.java").write_text(
         data=(
             "public static final int[] myList = new int[]{\n"
             "    1,\n"
@@ -1457,7 +1477,7 @@ def test_modifiers_java(
             "};\n"
         )
     )
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1486,8 +1506,8 @@ def test_unsupported_modifier_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -1524,8 +1544,8 @@ def test_unsupported_modifier_error_lists_choices(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -1563,8 +1583,8 @@ def test_modifiers_without_variable_name_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -1598,8 +1618,8 @@ def test_modifiers_with_existing_variable_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -1635,8 +1655,8 @@ def test_modifiers_with_both_variable_forms_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -1673,9 +1693,11 @@ def test_rust_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1696,7 +1718,7 @@ def test_rust_language(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1727,9 +1749,11 @@ def test_elixir_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1750,7 +1774,7 @@ def test_elixir_language(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1781,7 +1805,7 @@ def test_date_format_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(
+    _ = (source_directory / "data.yaml").write_text(
         data=dedent(
             text="""\
             - 2024-01-15
@@ -1789,7 +1813,7 @@ def test_date_format_rust(
         )
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1811,7 +1835,7 @@ def test_date_format_rust(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1843,9 +1867,11 @@ def test_no_include_delimiters_by_default(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1866,7 +1892,7 @@ def test_no_include_delimiters_by_default(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1897,9 +1923,11 @@ def test_mojo_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1920,7 +1948,7 @@ def test_mojo_language(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1951,9 +1979,11 @@ def test_yaml_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -1974,8 +2004,8 @@ def test_yaml_language(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    (source_directory / "expected.yaml").write_text(data="1,\n2\n")
-    source_file.write_text(
+    _ = (source_directory / "expected.yaml").write_text(data="1,\n2\n")
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2006,9 +2036,11 @@ def test_sequence_format_list_python(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2031,7 +2063,7 @@ def test_sequence_format_list_python(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2066,9 +2098,11 @@ def test_sequence_format_tuple_python(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2091,7 +2125,7 @@ def test_sequence_format_tuple_python(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2124,7 +2158,7 @@ def test_set_format_frozenset_python(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(
+    _ = (source_directory / "data.yaml").write_text(
         data=dedent(
             text="""\
             !!set
@@ -2134,7 +2168,7 @@ def test_set_format_frozenset_python(
         )
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2158,7 +2192,7 @@ def test_set_format_frozenset_python(
     app.cleanup()
 
     # Without frozenset option (default set) should differ
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2192,7 +2226,7 @@ def test_bytes_format_python(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(
+    _ = (source_directory / "data.yaml").write_text(
         data=dedent(
             text="""\
             !!binary |
@@ -2201,7 +2235,7 @@ def test_bytes_format_python(
         )
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2223,7 +2257,7 @@ def test_bytes_format_python(
     hex_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2256,9 +2290,11 @@ def test_fortran_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2279,10 +2315,10 @@ def test_fortran_language(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    (source_directory / "expected.f90").write_text(
+    _ = (source_directory / "expected.f90").write_text(
         data="fint(1_int64),\nfint(2_int64)\n"
     )
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2311,9 +2347,11 @@ def test_norg_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2334,8 +2372,8 @@ def test_norg_language(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    (source_directory / "expected.norg").write_text(data="1,\n2\n")
-    source_file.write_text(
+    _ = (source_directory / "expected.norg").write_text(data="1,\n2\n")
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2364,9 +2402,11 @@ def test_sequence_format_tuple_elixir(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2389,7 +2429,7 @@ def test_sequence_format_tuple_elixir(
     tuple_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2423,9 +2463,11 @@ def test_sequence_format_tuple_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2448,7 +2490,7 @@ def test_sequence_format_tuple_rust(
     tuple_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2482,9 +2524,11 @@ def test_objective_c_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2505,7 +2549,7 @@ def test_objective_c_language(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2536,9 +2580,11 @@ def test_sequence_format_array_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2561,7 +2607,7 @@ def test_sequence_format_array_rust(
     array_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2595,9 +2641,11 @@ def test_r_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2618,7 +2666,7 @@ def test_r_language(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2649,8 +2697,8 @@ def test_unsupported_sequence_format_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -2684,10 +2732,10 @@ def test_unsupported_set_format_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": [1]}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -2721,10 +2769,10 @@ def test_unsupported_bytes_format_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": [1]}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -2758,7 +2806,7 @@ def test_comment_format_block(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(
+    _ = (source_directory / "data.yaml").write_text(
         data=dedent(
             text="""\
             # a comment
@@ -2767,7 +2815,7 @@ def test_comment_format_block(
         )
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2789,7 +2837,7 @@ def test_comment_format_block(
     slash_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -2876,7 +2924,7 @@ def test_element_comments_label_their_own_element(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(
+    _ = (source_directory / "data.yaml").write_text(
         data=dedent(
             text="""\
             # first case
@@ -2894,7 +2942,7 @@ def test_element_comments_label_their_own_element(
         """
         )
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text=f"""\
         Test
@@ -2969,7 +3017,7 @@ def test_literalizer_call_per_element_element_comments(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(
+    _ = (source_directory / "data.yaml").write_text(
         data=dedent(
             text="""\
             # first case
@@ -2987,7 +3035,7 @@ def test_literalizer_call_per_element_element_comments(
         """
         )
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text=f"""\
         Test
@@ -3025,10 +3073,10 @@ def test_unsupported_comment_format_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -3062,10 +3110,10 @@ def test_variable_type_hints_always(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"key": "value"}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -3099,8 +3147,8 @@ def test_python_union_format(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(data="- hello\n- 42\n")
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.yaml").write_text(data="- hello\n- 42\n")
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -3146,11 +3194,11 @@ def test_declaration_style_let(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[1, 2]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -3187,10 +3235,10 @@ def test_declaration_style_lazy_static_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1, "b": 2}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -3233,11 +3281,11 @@ def test_dict_format_map(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1}),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -3271,11 +3319,11 @@ def test_integer_format_hex(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[255]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -3308,11 +3356,11 @@ def test_numeric_separator_underscore(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[1000000]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -3343,11 +3391,11 @@ def test_numeric_style_explicit(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[42]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -3378,11 +3426,11 @@ def test_string_format_single(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=["hello"]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -3415,7 +3463,7 @@ def test_string_format_multiline_native_delimiters(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj="first\n\n  indented\nlast"),
     )
     languages = (
@@ -3442,7 +3490,7 @@ def test_string_format_multiline_native_delimiters(
         "   :string-format: multiline"
         for language in languages
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=f"Test\n====\n\n{directives}\n",
     )
 
@@ -3490,10 +3538,10 @@ def test_cpp_multiline_raw_string_delimiters(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj='first\n)"\nlast'),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -3565,10 +3613,10 @@ def test_multiline_raw_string_delimiter_base_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj="first\nsecond"),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text=f"""\
         Test
@@ -3603,10 +3651,10 @@ def test_string_format_multiline_preserves_edge_newlines(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj="\nfirst\n\n  indented\nlast\n"),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -3643,10 +3691,10 @@ def test_string_format_multiline_literalizer_call_yaml(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(
+    _ = (source_directory / "data.yaml").write_text(
         data="- |+\n  first\n\n    indented\n  last\n",
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -3686,10 +3734,10 @@ def test_string_format_multiline_java_promotes_jdk_11(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj="first\nsecond"),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -3725,10 +3773,10 @@ def test_unsupported_string_format_multiline_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj="first\nsecond"),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -3762,12 +3810,12 @@ def test_trailing_comma_no(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[1]),
     )
     source_file = source_directory / "index.rst"
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -3789,7 +3837,7 @@ def test_trailing_comma_no(
     yes_html = (yes_app.outdir / "index.html").read_text()
     yes_app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -3823,10 +3871,10 @@ def test_go_line_ending_defaults_to_none(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"key": "value"}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -3864,10 +3912,10 @@ def test_collection_layout_literalizer_multiline(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[1, 2], [3, 4]]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -3914,10 +3962,10 @@ def test_collection_layout_literalizer_call_multiline(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[[[1, 2], [3, 4]]]]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -3968,10 +4016,10 @@ def test_empty_dict_key_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4005,10 +4053,10 @@ def test_empty_dict_key_positional(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4041,8 +4089,8 @@ def test_heterogeneous_strategy_unsupported_value(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4081,10 +4129,10 @@ def test_heterogeneous_strategy_tagged_enum(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[1, "hello"]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4135,10 +4183,10 @@ def test_heterogeneous_strategy_object_variant_nim(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[1, "hello"]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4180,10 +4228,10 @@ def test_heterogeneous_strategy_union_type_dhall(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[1, "hello"]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4225,8 +4273,8 @@ def test_unsupported_default_set_element_type_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4263,8 +4311,8 @@ def test_unsupported_empty_dict_key_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj={}))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj={}))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4301,8 +4349,8 @@ def test_unsupported_call_style_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[[1]]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[[1]]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4338,8 +4386,8 @@ def test_default_set_element_type(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4370,8 +4418,8 @@ def test_default_sequence_element_type(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4402,10 +4450,10 @@ def test_default_dict_key_type(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4436,11 +4484,11 @@ def test_dict_entry_style_symbol(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"key": "value"}),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -4471,11 +4519,11 @@ def test_float_format_scientific(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[1234.5]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -4508,11 +4556,11 @@ def test_float_format_fixed(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[1234.5]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -4545,11 +4593,11 @@ def test_numeric_literal_suffix_auto(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[42]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -4582,10 +4630,10 @@ def test_unsupported_dict_entry_style_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4619,10 +4667,10 @@ def test_unsupported_numeric_literal_suffix_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[42]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4656,10 +4704,10 @@ def test_default_ordered_map_value_type(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4692,10 +4740,10 @@ def test_unsupported_default_ordered_map_value_type_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4729,10 +4777,10 @@ def test_default_dict_value_type(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4763,8 +4811,8 @@ def test_toml_input_format(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.toml").write_text(data='key = "value"\n')
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.toml").write_text(data='key = "value"\n')
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4799,8 +4847,8 @@ def test_json5_input_format(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json5").write_text(data='{key: "value"}')
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json5").write_text(data='{key: "value"}')
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4836,8 +4884,8 @@ def test_explicit_input_format_overrides_extension(
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
     # Write YAML content with a .txt extension
-    (source_directory / "data.txt").write_text(data="- 1\n- 2\n")
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.txt").write_text(data="- 1\n- 2\n")
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4870,8 +4918,8 @@ def test_unknown_extension_without_input_format_errors(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.dat").write_text(data="[1]")
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.dat").write_text(data="[1]")
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4907,10 +4955,10 @@ def test_language_with_no_pygments_lexer(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[1, 2]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4945,10 +4993,10 @@ def test_include_preamble_go(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"key": "value"}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -4992,9 +5040,9 @@ def test_include_preamble_no_effect_ruby(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -5016,7 +5064,7 @@ def test_include_preamble_no_effect_ruby(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -5048,10 +5096,10 @@ def test_no_include_preamble_by_default(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"key": "value"}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -5094,11 +5142,11 @@ def test_literalizer_call_basic_python(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[True, 42, "hello"], [False, 99, "world"]]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -5122,7 +5170,7 @@ def test_literalizer_call_basic_python(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -5157,10 +5205,10 @@ def test_literalizer_call_heterogeneous_per_element_preamble(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[[1, "two"]], [[False, []]]]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -5211,11 +5259,11 @@ def test_literalizer_call_go(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[True, 42], [False, 99]]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -5259,11 +5307,11 @@ def test_literalizer_call_without_per_element(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[1, 2, 3]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -5303,11 +5351,11 @@ def test_literalizer_call_include_preamble(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[True, 42]]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -5350,10 +5398,10 @@ def test_literalizer_call_omit_code(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(
+    _ = (source_directory / "data.yaml").write_text(
         data="- 2024-01-15T10:30:00Z\n",
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -5396,10 +5444,10 @@ def test_literalizer_call_source_is_absolute(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[1]]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -5440,11 +5488,11 @@ def test_literalizer_call_call_transform(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[True, 42, "hello"], [False, 99, "world"]]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -5469,7 +5517,7 @@ def test_literalizer_call_call_transform(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -5502,11 +5550,11 @@ def test_literalizer_call_call_transform_index(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[True, 42, "hello"], [False, 99, "world"]]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -5531,7 +5579,7 @@ def test_literalizer_call_call_transform_index(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -5568,12 +5616,12 @@ def test_literalizer_call_call_transform_no_reexpansion(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[[1]]))
-    (source_directory / "zip.json").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[[1]]))
+    _ = (source_directory / "zip.json").write_text(
         data=json.dumps(obj=["$call"]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -5599,7 +5647,7 @@ def test_literalizer_call_call_transform_no_reexpansion(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -5631,14 +5679,14 @@ def test_literalizer_call_zip_file(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[True, 42, "hello"], [False, 99, "world"]]),
     )
-    (source_directory / "expected.json").write_text(
+    _ = (source_directory / "expected.json").write_text(
         data=json.dumps(obj=["first", "second"]),
     )
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -5664,7 +5712,7 @@ def test_literalizer_call_zip_file(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -5698,12 +5746,12 @@ def test_literalizer_call_comment_file(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[True, 42, "hello"], [False, 99, "world"]]),
     )
-    (source_directory / "comments.txt").write_text(data="first case\n\n")
+    _ = (source_directory / "comments.txt").write_text(data="first case\n\n")
     source_file = source_directory / "index.rst"
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -5728,7 +5776,7 @@ def test_literalizer_call_comment_file(
     content_html = (app.outdir / "index.html").read_text()
     app.cleanup()
 
-    source_file.write_text(
+    _ = source_file.write_text(
         data=dedent(
             text="""\
         Test
@@ -5761,11 +5809,11 @@ def test_literalizer_call_comment_file_length_mismatch(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[True, 42, "hello"], [False, 99, "world"]]),
     )
-    (source_directory / "comments.txt").write_text(data="only one\n")
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "comments.txt").write_text(data="only one\n")
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -5807,10 +5855,10 @@ def test_literalizer_call_racket(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[True, 42], [False, 99]]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -5851,10 +5899,10 @@ def test_literalizer_call_common_lisp(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[True, 42], [False, 99]]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -5895,10 +5943,10 @@ def test_literalizer_call_clojure(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[True, 42], [False, 99]]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -5939,10 +5987,10 @@ def test_literalizer_call_objective_c(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[True, 42], [False, 99]]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -5982,10 +6030,10 @@ def test_literalizer_call_perl(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[True, 42], [False, 99]]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6027,7 +6075,7 @@ def test_literalizer_call_ref_case_camel(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(
             obj=[
                 [{"$ref": "user_obj"}, 42],
@@ -6035,7 +6083,7 @@ def test_literalizer_call_ref_case_camel(
             ],
         ),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6080,7 +6128,7 @@ def test_literalizer_call_ref_marker(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(
             obj=[
                 [{"$ref": "user_obj"}, 42],
@@ -6088,7 +6136,7 @@ def test_literalizer_call_ref_marker(
             ],
         ),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6129,10 +6177,10 @@ def test_call_style_positional_typescript(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"flag": True, "count": 42}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6173,10 +6221,10 @@ def test_call_style_unsupported_value(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"flag": True}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6214,10 +6262,10 @@ def test_literalizer_call_without_per_element_uses_call_style(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[1, 2, 3]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6256,10 +6304,10 @@ def test_parameter_count_mismatch_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[1, 2, 3]]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6298,8 +6346,10 @@ def test_module_name_java(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6339,8 +6389,10 @@ def test_module_name_unsupported_language_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6374,8 +6426,10 @@ def test_both_variable_forms_csharp(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj={"x": 1}))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"x": 1})
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6414,8 +6468,10 @@ def test_both_variable_forms_requires_variable_name(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj={"x": 1}))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"x": 1})
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6452,8 +6508,10 @@ def test_existing_variable_requires_variable_name(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj={"x": 1}))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"x": 1})
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6489,8 +6547,10 @@ def test_both_variable_forms_incompatible_with_existing_variable(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj={"x": 1}))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj={"x": 1})
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6532,10 +6592,10 @@ def test_literalizer_call_consumable_refs(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[{"$ref": "my_vec"}, 42]]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6576,10 +6636,10 @@ def test_literalizer_call_variable_name_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"count": 42}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6620,10 +6680,10 @@ def test_literalizer_call_existing_variable_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"count": 42}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6665,10 +6725,10 @@ def test_literalizer_call_variable_form_per_element_single_element(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"count": 42}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6711,10 +6771,10 @@ def test_literalizer_call_variable_form_per_element_multi_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"count": 1}, {"count": 2}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6773,8 +6833,8 @@ def test_literalizer_call_zero_arg_constructor_variable_name(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(data="- []\n")
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.yaml").write_text(data="- []\n")
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text=f"""\
         Test
@@ -6827,8 +6887,8 @@ def test_literalizer_call_constructor_class_variable_name(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(data="- []\n")
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.yaml").write_text(data="- []\n")
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text=f"""\
         Test
@@ -6866,8 +6926,8 @@ def test_literalizer_call_requires_target_or_constructor(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[[]]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[[]]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6904,8 +6964,8 @@ def test_literalizer_call_target_function_and_constructor_class_rejected(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[[]]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[[]]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6945,8 +7005,8 @@ def test_literalizer_call_rust_mut_variable_name(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(data="- []\n")
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.yaml").write_text(data="- []\n")
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -6988,8 +7048,8 @@ def test_literalizer_call_parameter_names_omitted(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[[]]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[[]]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7030,8 +7090,8 @@ def test_unrepresentable_input_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(data="1: a\n")
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.yaml").write_text(data="1: a\n")
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7073,8 +7133,8 @@ def test_literalizer_error_base_covers_new_exceptions(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(data="value: .nan\n")
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.yaml").write_text(data="value: .nan\n")
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7114,8 +7174,10 @@ def test_tcl_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7151,8 +7213,10 @@ def test_nix_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7189,8 +7253,10 @@ def test_sml_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7225,8 +7291,10 @@ def test_v_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7261,8 +7329,10 @@ def test_wren_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7297,8 +7367,10 @@ def test_forth_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7337,8 +7409,10 @@ def test_module_name_auto_cased(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7378,8 +7452,10 @@ def test_roc_language_key(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7416,10 +7492,10 @@ def test_ref_key_literalizer(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"$reference": "user_obj"}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7457,10 +7533,10 @@ def test_ref_key_literalizer_call(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[{"$reference": "user_obj"}, 42]]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7501,8 +7577,10 @@ def test_language_version(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7539,13 +7617,13 @@ def test_language_defaults_apply_to_both_directives(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"name": "Ada", "active": True}]),
     )
-    (source_directory / "calls.json").write_text(
+    _ = (source_directory / "calls.json").write_text(
         data=json.dumps(obj=[{"name": "Ada", "active": True}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7607,7 +7685,7 @@ def test_record_null_substitutions_cpp14(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "task.json").write_text(
+    _ = (source_directory / "task.json").write_text(
         data=json.dumps(
             obj=[
                 {
@@ -7618,7 +7696,7 @@ def test_record_null_substitutions_cpp14(
             ]
         ),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7674,8 +7752,8 @@ def test_record_null_substitutions_invalid_value_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text=f"""\
         Test
@@ -7725,8 +7803,8 @@ def test_language_defaults_invalid_value_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7758,10 +7836,10 @@ def test_cpp17_language_version(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"name": "Ada", "active": True}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7800,8 +7878,8 @@ def test_unsupported_language_version_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7838,8 +7916,8 @@ def test_wrap_in_file_without_variable_raises_directive_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -7878,10 +7956,10 @@ def test_heterogeneous_strategy_record_go(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"flag": True, "count": 1}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -8105,7 +8183,7 @@ def test_record_nested_map_fallback(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(
             obj=[
                 {
@@ -8125,7 +8203,7 @@ def test_record_nested_map_fallback(
             ],
         ),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text=f"""\
         Test
@@ -8165,10 +8243,10 @@ def test_record_struct_name_prefix_python(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"x": 1, "y": 2}, {"x": 3, "y": 4}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -8236,8 +8314,8 @@ def test_cpp14_candidate_facing_heterogeneous_strategies(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=data))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=data))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text=f"""\\
         Test
@@ -8279,12 +8357,12 @@ def test_cpp14_named_carrier_preamble_only(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(
             obj=[{"name": "build", "args": [1, "fast", None]}],
         ),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -8336,7 +8414,9 @@ def test_cpp14_named_carrier_preamble_only(
 
 def _find_cpp_compiler() -> str:
     """Return an available C++ compiler."""
-    compiler = shutil.which(cmd="clang++") or shutil.which(cmd="g++")
+    compiler = shutil.which(cmd="clang++")
+    if compiler is None:
+        compiler = shutil.which(cmd="g++")
     if compiler is None:
         msg = "A C++ compiler is required for this test."
         raise RuntimeError(msg)
@@ -8354,7 +8434,7 @@ def test_cpp_compiler_is_required(monkeypatch: pytest.MonkeyPatch) -> None:
         expected_exception=RuntimeError,
         match="A C\\+\\+ compiler is required",
     ):
-        _find_cpp_compiler()
+        _ = _find_cpp_compiler()
 
 
 def test_literalizer_call_named_carrier_preamble_only(
@@ -8368,10 +8448,10 @@ def test_literalizer_call_named_carrier_preamble_only(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[["build", [1, "fast", None]]]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -8436,9 +8516,9 @@ def test_literalizer_call_named_carrier_preamble_only(
     )
     assert combined.count("struct TaskValue {") == 1
     combined_path = tmp_path / "combined.cpp"
-    combined_path.write_text(data=combined)
+    _ = combined_path.write_text(data=combined)
     executable_path = tmp_path / "combined"
-    subprocess.run(  # noqa: S603
+    _ = subprocess.run(  # noqa: S603
         args=[
             compiler,
             "-std=c++14",
@@ -8450,7 +8530,7 @@ def test_literalizer_call_named_carrier_preamble_only(
         capture_output=True,
         text=True,
     )
-    subprocess.run(  # noqa: S603
+    _ = subprocess.run(  # noqa: S603
         args=[str(object=executable_path)],
         check=True,
         capture_output=True,
@@ -8468,8 +8548,8 @@ def test_heterogeneous_value_name_unsupported_language_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data="[1, 2]")
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data="[1, 2]")
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -8516,8 +8596,8 @@ def test_heterogeneous_value_name_supported_languages(  # noqa: PLR0913
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=data))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=data))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text=f"""\
         Test
@@ -8554,10 +8634,10 @@ def test_cpp14_nested_tuple_strategy_uses_standard_tuple_types(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[1, "Mainframe1"]]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\\
         Test
@@ -8600,8 +8680,10 @@ def test_record_struct_name_prefix_unsupported_language_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -8640,10 +8722,10 @@ def test_record_shape_names_java(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"x": 1, "y": 2}, {"x": 3, "y": 4}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -8688,7 +8770,7 @@ def test_record_shape_names_cpp14_external_record(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(
             obj=[
                 {"title": "Write docs", "done": False},
@@ -8696,7 +8778,7 @@ def test_record_shape_names_cpp14_external_record(
             ],
         ),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\\
         Test
@@ -8747,7 +8829,7 @@ def test_record_shape_names_cpp14_error_external_map_alias(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "expenses.json").write_text(
+    _ = (source_directory / "expenses.json").write_text(
         data=json.dumps(
             obj=[
                 {
@@ -8758,7 +8840,7 @@ def test_record_shape_names_cpp14_error_external_map_alias(
             ],
         ),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -8804,10 +8886,10 @@ def test_record_shape_names_invalid_name_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"x": 1, "y": 2}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -8845,10 +8927,10 @@ def test_record_shape_names_malformed_entry_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"x": 1, "y": 2}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -8888,10 +8970,10 @@ def test_record_shape_names_trailing_separator_ignored(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"x": 1, "y": 2}, {"x": 3, "y": 4}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -8938,10 +9020,10 @@ def test_record_shape_names_empty_name_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"x": 1, "y": 2}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -8982,10 +9064,10 @@ def test_record_shape_names_duplicate_key_set_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"x": 1, "y": 2}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9022,10 +9104,10 @@ def test_record_shape_names_unsupported_language_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"x": 1, "y": 2}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9063,8 +9145,10 @@ def test_fortran_language_version_v2003(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1, 2]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, 2])
+    )
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9193,10 +9277,10 @@ def test_heterogeneous_strategy_tuple_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[1, True, "x"]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9234,10 +9318,10 @@ def test_heterogeneous_strategy_auto_keeps_homogeneous_output_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"a": 1}, {"a": 2}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9276,10 +9360,10 @@ def test_heterogeneous_strategy_auto_keeps_map_shape_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"k1": 1, "k2": 2}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9316,10 +9400,10 @@ def test_heterogeneous_strategy_auto_falls_back_to_record_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"id": 1, "desc": "x", "blocks": [1, 2]}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9358,10 +9442,10 @@ def test_heterogeneous_strategy_auto_default_precedence_prefers_tuple_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[1, "hello"]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9398,10 +9482,10 @@ def test_heterogeneous_strategy_auto_precedence_config_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[1, "hello"]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9452,10 +9536,10 @@ def test_concrete_heterogeneous_strategy_unrepresentable_error(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"id": 1, "desc": "x", "blocks": [1, 2]}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9500,10 +9584,10 @@ def test_skip_if_unrepresentable_emits_no_node_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[1, "hello"]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9525,7 +9609,7 @@ def test_skip_if_unrepresentable_emits_no_node_rust(
     assert app.statuscode == 0
 
     doctree = app.env.get_doctree(docname="index")
-    assert not list(doctree.findall(condition=nodes.literal_block))
+    assert len(list(doctree.findall(condition=nodes.literal_block))) == 0
     app.cleanup()
 
 
@@ -9544,10 +9628,10 @@ def test_unrepresentable_without_skip_raises_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[1, "hello"]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9587,10 +9671,10 @@ def test_skip_if_unrepresentable_after_auto_exhausts_precedence_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"a": 1, "b": [1, "x"]}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9618,7 +9702,7 @@ def test_skip_if_unrepresentable_after_auto_exhausts_precedence_rust(
     assert app.statuscode == 0
 
     doctree = app.env.get_doctree(docname="index")
-    assert not list(doctree.findall(condition=nodes.literal_block))
+    assert len(list(doctree.findall(condition=nodes.literal_block))) == 0
     app.cleanup()
 
 
@@ -9633,10 +9717,10 @@ def test_heterogeneous_strategy_auto_literalizer_call_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[[1, 2], [3, 4]]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9678,10 +9762,10 @@ def test_unset_heterogeneous_strategy_defaults_to_auto_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"id": 1, "desc": "x", "blocks": [1, 2]}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9720,10 +9804,10 @@ def test_unset_heterogeneous_strategy_keeps_homogeneous_output_rust(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"a": 1}, {"a": 2}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9761,8 +9845,8 @@ def test_skip_if_unrepresentable_unrepresentable_input_csharp(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(data="1: a\n2: b\n")
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.yaml").write_text(data="1: a\n2: b\n")
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9783,7 +9867,7 @@ def test_skip_if_unrepresentable_unrepresentable_input_csharp(
     assert app.statuscode == 0
 
     doctree = app.env.get_doctree(docname="index")
-    assert not list(doctree.findall(condition=nodes.literal_block))
+    assert len(list(doctree.findall(condition=nodes.literal_block))) == 0
     app.cleanup()
 
 
@@ -9798,8 +9882,8 @@ def test_unrepresentable_input_without_skip_raises_csharp(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(data="1: a\n2: b\n")
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.yaml").write_text(data="1: a\n2: b\n")
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9834,8 +9918,8 @@ def test_skip_if_unrepresentable_literalizer_call_csharp(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.yaml").write_text(data="- {1: a, 2: b}\n")
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.yaml").write_text(data="- {1: a, 2: b}\n")
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9859,7 +9943,7 @@ def test_skip_if_unrepresentable_literalizer_call_csharp(
     assert app.statuscode == 0
 
     doctree = app.env.get_doctree(docname="index")
-    assert not list(doctree.findall(condition=nodes.literal_block))
+    assert len(list(doctree.findall(condition=nodes.literal_block))) == 0
     app.cleanup()
 
 
@@ -9875,10 +9959,10 @@ def test_literalizer_call_variable_name_tcl(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"count": 42}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9920,10 +10004,10 @@ def test_literalizer_call_existing_variable_d(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"count": 42}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -9970,10 +10054,10 @@ def test_literalizer_call_wrap_in_file(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[1, 2]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -10020,10 +10104,10 @@ def test_record_struct_name_prefix_swift(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[{"x": 1, "y": 2}, {"x": 3, "y": 4}]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -10071,10 +10155,10 @@ def test_json_type_rust_serde_json_value(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1, "b": "two"}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -10115,10 +10199,10 @@ def test_bool_format_perl_json_pp_ref(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=[True, False]),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -10157,10 +10241,10 @@ def test_json_type_rejected_for_unsupported_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -10200,10 +10284,10 @@ def test_json_rendering_cpp_inline_document(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1, "b": "two"}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -10249,10 +10333,10 @@ def test_json_rendering_rejected_for_unsupported_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -10292,10 +10376,10 @@ def test_json_rendering_requires_json_type(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -10344,10 +10428,10 @@ def _record_map_value_typing_preamble(
     ]
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj=rows),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -10458,10 +10542,10 @@ def test_record_map_value_typing_rejected_for_unsupported_language(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(obj={"a": 1}),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -10504,12 +10588,12 @@ def test_error_reports_input_path(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data=json.dumps(
             obj={"tasks": [{"name": "a", "items": [1, "two"]}]},
         ),
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -10555,10 +10639,10 @@ def test_parse_error_reports_position(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(
+    _ = (source_directory / "data.json").write_text(
         data='{\n  "a": [1, 2,\n}',
     )
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -10600,8 +10684,8 @@ def test_parse_error_without_position(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data='{"a": 1, "a": 2}')
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data='{"a": 1, "a": 2}')
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -10640,8 +10724,8 @@ def test_error_reports_directive_line(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -10685,8 +10769,8 @@ def test_errors_do_not_stop_the_build(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -10741,11 +10825,11 @@ def test_error_names_the_data_file(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "first.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "first.json").write_text(data=json.dumps(obj=[1]))
     nested_directory = source_directory / "nested"
     nested_directory.mkdir()
-    (nested_directory / "second.json").write_text(data=json.dumps(obj=[2]))
-    (source_directory / "index.rst").write_text(
+    _ = (nested_directory / "second.json").write_text(data=json.dumps(obj=[2]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test
@@ -10793,8 +10877,8 @@ def test_errors_fail_the_build_with_warnings_as_errors(
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
-    (source_directory / "index.rst").write_text(
+    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=[1]))
+    _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text="""\
         Test

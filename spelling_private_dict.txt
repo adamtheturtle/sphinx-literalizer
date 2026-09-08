@@ -77,6 +77,7 @@ positionally
 pragma
 pre
 prepends
+pyrefly
 pyright
 rawsource
 recordized
@@ -92,6 +93,7 @@ toml
 traceback
 txt
 unrepresentable
+untyped
 validator
 whitespace
 yaml

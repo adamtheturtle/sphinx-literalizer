@@ -45,6 +45,7 @@ from literalizer.exceptions import (
 )
 from literalizer.languages import ALL_LANGUAGES
 from sphinx.application import Sphinx
+from sphinx.environment import BuildEnvironment  # noqa: TC002
 from sphinx.errors import ExtensionError
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
@@ -214,7 +215,9 @@ def _enum_member[E: enum.Enum](cls: type[E], value: str) -> E:
         return cls[value.upper()]
     except KeyError:
         choices = sorted(member.name.lower() for member in cls)
-        detail = f" Choose from: {', '.join(choices)}." if choices else ""
+        detail = (
+            f" Choose from: {', '.join(choices)}." if len(choices) > 0 else ""
+        )
         msg = f"'{value}' is not a valid value.{detail}"
         raise _DirectiveError(message=msg) from None
 
@@ -239,7 +242,7 @@ def _parse_modifiers(
     result: set[enum.Enum] = set()
     for raw in value.split(sep=","):
         name = raw.strip()
-        if not name:
+        if name == "":
             continue
         result.add(_enum_member(cls=language_cls.Modifiers, value=name))
     return frozenset(result)
@@ -257,7 +260,7 @@ def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
     result: dict[frozenset[str], str] = {}
     for raw_entry in value.split(sep=";"):
         entry = raw_entry.strip()
-        if not entry:
+        if entry == "":
             continue
         if "=" not in entry:
             msg = (
@@ -267,10 +270,12 @@ def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
             raise _DirectiveError(message=msg)
         keys_part, name = entry.rsplit(sep="=", maxsplit=1)
         keys = frozenset(
-            key.strip() for key in keys_part.split(sep=",") if key.strip()
+            key.strip()
+            for key in keys_part.split(sep=",")
+            if key.strip() != ""
         )
         name = name.strip()
-        if not keys or not name:
+        if len(keys) == 0 or name == "":
             msg = (
                 f"':record-shape-names:' entry {entry!r} must have at "
                 f"least one key and a non-empty name."
@@ -287,7 +292,9 @@ def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
     return result
 
 
-def _parse_record_null_substitutions(value: str) -> dict[str, Any]:
+def _parse_record_null_substitutions(
+    value: str,
+) -> dict[str, Any]:  # pyrefly: ignore[explicit-any]
     """Parse the ``:record-null-substitutions:`` JSON object.
 
     Values replace ``null`` only when it appears in a record field of the
@@ -355,7 +362,7 @@ def _heterogeneous_strategy_validator(x: str) -> str:
     )
 
 
-_COMMON_OPTIONS: dict[str, Callable[[str], Any]] = {
+_COMMON_OPTIONS: dict[str, Callable[[str], Any]] = {  # pyrefly: ignore[explicit-any]
     "language": lambda x: directives.choice(
         argument=x,
         values=tuple(_language_types()),
@@ -450,7 +457,7 @@ def _format_input_path(*, path: tuple[str | int, ...]) -> str:
     for element in path:
         if isinstance(element, int):
             rendered += f"[{element}]"
-        elif rendered:
+        elif rendered != "":
             rendered += f".{element}"
         else:
             rendered = element
@@ -499,7 +506,7 @@ def _literalize_errors_as_directive_errors() -> Generator[None]:
         message = str(object=exc)
         # ``path`` locates the offending value within the input data
         # (``None`` or empty when the error concerns the whole input).
-        if exc.path:
+        if exc.path is not None and len(exc.path) > 0:
             locator = _format_input_path(path=exc.path)
             message = f"{message} (at input path '{locator}')"
         raise _DirectiveError(message=message) from exc
@@ -556,7 +563,7 @@ class _LiteralizerOptions(_CommonOptions):
 
     include_delimiters: bool
     both_variable_forms: bool
-    record_null_substitutions: Mapping[str, Any] | None
+    record_null_substitutions: Mapping[str, Any] | None  # pyrefly: ignore[explicit-any]
 
 
 @beartype
@@ -610,7 +617,9 @@ class _CommonOptionArgs(TypedDict):
 
 
 @beartype
-def _common_option_args(options: dict[str, Any]) -> _CommonOptionArgs:
+def _common_option_args(
+    options: dict[str, Any],  # pyrefly: ignore[explicit-any]
+) -> _CommonOptionArgs:
     """Extract the shared options from a directive's raw ``options``.
 
     This is the sole place ``self.options``'s ``Any`` values are read;
@@ -689,7 +698,9 @@ class _BaseLiteralizerDirective(SphinxDirective):
         """Produce the nodes for this directive."""
         raise NotImplementedError
 
-    def _options_with_language_defaults(self) -> dict[str, Any]:
+    def _options_with_language_defaults(
+        self,
+    ) -> dict[str, Any]:  # pyrefly: ignore[explicit-any]
         """Merge configured language defaults with explicit options.
 
         The literalizer_language_defaults setting contains only shared
@@ -974,7 +985,12 @@ class _BaseLiteralizerDirective(SphinxDirective):
             text,
             source=str(object=data_path),
         )
-        node["language"] = language_cls.pygments_name or "text"
+        pygments_name = language_cls.pygments_name
+        node["language"] = (
+            pygments_name
+            if pygments_name is not None and pygments_name != ""
+            else "text"
+        )
         self.add_name(node=node)
         return [node]
 
@@ -1245,7 +1261,10 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
     input does not fit without leaking data-shape concerns into prose.
     """
 
-    option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
+    option_spec: ClassVar[
+        dict[str, Callable[[str], Any]]  # pyrefly: ignore[explicit-any]
+        | None
+    ] = {
         **_COMMON_OPTIONS,
         "include-delimiters": directives.flag,
         "variable-name": directives.unchanged,
@@ -1275,10 +1294,10 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
     def _run(self) -> list[nodes.Node]:
         """Read the data file and produce a literal block."""
         options = self._parse_options()
-        env = self.state.document.settings.env
+        env: BuildEnvironment = self.state.document.settings.env
         data_path = (Path(env.srcdir) / self.arguments[0]).resolve()
 
-        env.note_dependency(str(object=data_path))
+        env.note_dependency(filename=str(object=data_path))
 
         language_name = options.language
         language_cls = _language_types()[language_name]
@@ -1336,7 +1355,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
             return []
         result, _ = rendered
         parts: list[str] = []
-        if (include_preamble or preamble_only) and result.preamble:
+        if (include_preamble or preamble_only) and len(result.preamble) > 0:
             parts.append("\n".join(result.preamble))
         if not preamble_only:
             parts.append(result.code)
@@ -1422,7 +1441,10 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
     target language's idiom.
     """
 
-    option_spec: ClassVar[dict[str, Callable[[str], Any]] | None] = {
+    option_spec: ClassVar[
+        dict[str, Callable[[str], Any]]  # pyrefly: ignore[explicit-any]
+        | None
+    ] = {
         **_COMMON_OPTIONS,
         "target-function": directives.unchanged_required,
         "constructor-class": directives.unchanged_required,
@@ -1489,9 +1511,9 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         zip_file_value = options.zip_file
         if zip_file_value is None:
             return None, None
-        env = self.state.document.settings.env
+        env: BuildEnvironment = self.state.document.settings.env
         zip_path = (Path(env.srcdir) / zip_file_value).resolve()
-        env.note_dependency(str(object=zip_path))
+        env.note_dependency(filename=str(object=zip_path))
         zip_input_format = self._resolve_format(
             data_path=zip_path,
             explicit=options.zip_input_format,
@@ -1514,9 +1536,9 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         comment_file_value = options.comment_file
         if comment_file_value is None:
             return None
-        env = self.state.document.settings.env
+        env: BuildEnvironment = self.state.document.settings.env
         comment_path = (Path(env.srcdir) / comment_file_value).resolve()
-        env.note_dependency(str(object=comment_path))
+        env.note_dependency(filename=str(object=comment_path))
         return comment_path.read_text(encoding="utf-8").splitlines()
 
     def _parse_options(self) -> _LiteralizerCallOptions:
@@ -1572,10 +1594,10 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
     def _run(self) -> list[nodes.Node]:
         """Read the data file and produce function call expressions."""
         options = self._parse_options()
-        env = self.state.document.settings.env
+        env: BuildEnvironment = self.state.document.settings.env
         data_path = (Path(env.srcdir) / self.arguments[0]).resolve()
 
-        env.note_dependency(str(object=data_path))
+        env.note_dependency(filename=str(object=data_path))
 
         language_name = options.language
         language_cls = _language_types()[language_name]
@@ -1590,7 +1612,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         # zero-argument call -- e.g. a no-argument constructor bound to
         # ``:variable-name:`` -- would be unreachable.  An empty value
         # therefore parses to ``[]``.
-        if options.parameter_names.strip():
+        if options.parameter_names.strip() != "":
             parameter_names: list[str] = [
                 p.strip() for p in options.parameter_names.split(sep=",")
             ]
@@ -1616,7 +1638,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             else frozenset(
                 r.strip()
                 for r in consumable_refs_value.split(sep=",")
-                if r.strip()
+                if r.strip() != ""
             )
         )
 
@@ -1678,11 +1700,12 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         if pre_indent_level > 0:
             indent = language_spec.indent * pre_indent_level
             code = "\n".join(
-                indent + line if line else line for line in code.splitlines()
+                indent + line if line != "" else line
+                for line in code.splitlines()
             )
 
         parts: list[str] = []
-        if (include_preamble or preamble_only) and result.preamble:
+        if (include_preamble or preamble_only) and len(result.preamble) > 0:
             parts.append("\n".join(result.preamble))
         if not omit_code and not preamble_only:
             parts.append(code)
