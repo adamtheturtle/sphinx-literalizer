@@ -1,0 +1,1 @@
+Validate JSON and Sphinx configuration boundaries explicitly instead of relying on casts and ignored type errors.

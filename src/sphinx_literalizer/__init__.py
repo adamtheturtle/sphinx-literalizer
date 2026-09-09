@@ -13,9 +13,10 @@ from dataclasses import dataclass
 from functools import cache, partial
 from importlib.metadata import version
 from pathlib import Path
-from typing import Any, ClassVar, TypedDict, cast, override  # noqa: TID251
+from typing import Any, ClassVar, TypedDict, TypeGuard, override
 
 from beartype import beartype
+from beartype.door import TypeHint
 from docutils import nodes
 from docutils.parsers.rst import directives
 from literalizer import (
@@ -45,7 +46,6 @@ from literalizer.exceptions import (
 )
 from literalizer.languages import ALL_LANGUAGES
 from sphinx.application import Sphinx
-from sphinx.environment import BuildEnvironment  # noqa: TC002
 from sphinx.errors import ExtensionError
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
@@ -68,6 +68,16 @@ class _DirectiveError(Exception):
     def __init__(self, *, message: str) -> None:
         """Report *message* as the directive's error text."""
         super().__init__(message)
+
+
+def _is_string_object_dict(value: object, /) -> TypeGuard[dict[str, object]]:
+    """Return whether a value is a dictionary with string keys."""
+    return TypeHint(hint=dict[str, object]).is_bearable(obj=value)
+
+
+def _is_string_list(value: object, /) -> TypeGuard[list[str]]:
+    """Return whether a value is a list of strings."""
+    return TypeHint(hint=list[str]).is_bearable(obj=value)
 
 
 def _language_name(lang_cls: LanguageCls) -> str:
@@ -249,6 +259,15 @@ def _parse_modifiers(
     return frozenset(result)
 
 
+def _optional_modifiers(
+    *, language_cls: LanguageCls, value: str | None
+) -> frozenset[enum.Enum]:
+    """Parse modifiers, or return an empty set when none were supplied."""
+    if value is None:
+        return frozenset[enum.Enum]()
+    return _parse_modifiers(language_cls=language_cls, value=value)
+
+
 def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
     """Parse the ``:record-shape-names:`` inline mapping.
 
@@ -295,7 +314,7 @@ def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
 
 def _parse_record_null_substitutions(
     value: str,
-) -> dict[str, Any]:  # pyrefly: ignore[explicit-any]
+) -> dict[str, object]:
     """Parse the ``:record-null-substitutions:`` JSON object.
 
     Values replace ``null`` only when it appears in a record field of the
@@ -310,10 +329,10 @@ def _parse_record_null_substitutions(
             f"{exc.msg}."
         )
         raise _DirectiveError(message=msg) from exc
-    if not isinstance(substitutions, dict):
+    if not _is_string_object_dict(substitutions):
         msg = "':record-null-substitutions:' must be a JSON object."
         raise _DirectiveError(message=msg)
-    return cast("dict[str, Any]", substitutions)  # noqa: KW001
+    return substitutions
 
 
 def _make_format_validator(
@@ -713,7 +732,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
             self.env.config.literalizer_language_defaults,
         )
         defaults = configured.get(language_name, {})
-        if not isinstance(defaults, dict):
+        if not _is_string_object_dict(defaults):
             msg = (
                 "'literalizer_language_defaults' entries must be "
                 "dictionaries of directive options."
@@ -721,8 +740,7 @@ class _BaseLiteralizerDirective(SphinxDirective):
             raise ExtensionError(message=msg)
 
         validated_defaults: dict[str, str] = {}
-        typed_defaults = cast("dict[str, object]", defaults)  # noqa: KW001
-        for option_name, value in typed_defaults.items():
+        for option_name, value in defaults.items():
             if option_name not in _FORMAT_OPTION_GETTERS:
                 msg = (
                     "'literalizer_language_defaults' only supports shared "
@@ -1057,14 +1075,10 @@ class _BaseLiteralizerDirective(SphinxDirective):
         if variable_name is None:
             return None
 
-        modifiers: frozenset[enum.Enum] = (
-            frozenset()
-            if modifiers_value is None
-            else _parse_modifiers(
-                language_cls=language_cls,
-                value=modifiers_value,
-            )
-        )  # ty: ignore[unsound-assignment]
+        modifiers = _optional_modifiers(
+            language_cls=language_cls,
+            value=modifiers_value,
+        )
 
         if existing_variable:
             return ExistingVariable(name=variable_name)
@@ -1095,9 +1109,16 @@ class _BaseLiteralizerDirective(SphinxDirective):
             member.name.lower()
             for member in language_cls.HeterogeneousStrategies
         }
-        precedence: list[str] = (
-            self.env.config.literalizer_heterogeneous_strategy_precedence
-        )  # ty: ignore[unsound-assignment]
+        precedence_value: object = self.env.config[
+            "literalizer_heterogeneous_strategy_precedence"
+        ]
+        if not _is_string_list(precedence_value):
+            message = (
+                "'literalizer_heterogeneous_strategy_precedence' must be "
+                "a list of strings."
+            )
+            raise ExtensionError(message=message)
+        precedence = precedence_value
         return [
             name
             for name in precedence
@@ -1295,7 +1316,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
     def _run(self) -> list[nodes.Node]:
         """Read the data file and produce a literal block."""
         options = self._parse_options()
-        env: BuildEnvironment = self.state.document.settings.env  # ty: ignore[unsound-assignment]
+        env = self.env
         data_path = (Path(env.srcdir) / self.arguments[0]).resolve()
 
         env.note_dependency(filename=str(object=data_path))
@@ -1512,7 +1533,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         zip_file_value = options.zip_file
         if zip_file_value is None:
             return None, None
-        env: BuildEnvironment = self.state.document.settings.env  # ty: ignore[unsound-assignment]
+        env = self.env
         zip_path = (Path(env.srcdir) / zip_file_value).resolve()
         env.note_dependency(filename=str(object=zip_path))
         zip_input_format = self._resolve_format(
@@ -1537,7 +1558,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         comment_file_value = options.comment_file
         if comment_file_value is None:
             return None
-        env: BuildEnvironment = self.state.document.settings.env  # ty: ignore[unsound-assignment]
+        env = self.env
         comment_path = (Path(env.srcdir) / comment_file_value).resolve()
         env.note_dependency(filename=str(object=comment_path))
         return comment_path.read_text(encoding="utf-8").splitlines()
@@ -1595,7 +1616,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
     def _run(self) -> list[nodes.Node]:
         """Read the data file and produce function call expressions."""
         options = self._parse_options()
-        env: BuildEnvironment = self.state.document.settings.env  # ty: ignore[unsound-assignment]
+        env = self.env
         data_path = (Path(env.srcdir) / self.arguments[0]).resolve()
 
         env.note_dependency(filename=str(object=data_path))
@@ -1633,15 +1654,14 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         )
 
         consumable_refs_value = options.consumable_refs
-        consumable_refs: frozenset[str] = (
-            frozenset()
-            if consumable_refs_value is None
-            else frozenset(
+        if consumable_refs_value is None:
+            consumable_refs = frozenset[str]()
+        else:
+            consumable_refs = frozenset(
                 r.strip()
                 for r in consumable_refs_value.split(sep=",")
                 if r.strip() != ""
             )
-        )  # ty: ignore[unsound-assignment]
 
         zip_source, zip_input_format = self._resolve_zip_source(
             options=options,
