@@ -88,10 +88,11 @@ def _language_owned_enum_members(
     lookup tables derive an option's availability from the language
     class itself rather than a hand-maintained capability table.
     """
-    enum_cls: type[enum.Enum] | None = vars(lang_cls).get(name)  # ty: ignore[unsound-assignment]
-    if enum_cls is None:
+    enum_cls = vars(lang_cls).get(name)
+    if not isinstance(enum_cls, enum.EnumType):
         return ()
-    return tuple(enum_cls)
+    members: tuple[object, ...] = tuple(enum_cls)
+    return tuple(member for member in members if isinstance(member, enum.Enum))
 
 
 @cache
