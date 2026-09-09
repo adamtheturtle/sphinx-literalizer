@@ -9525,6 +9525,50 @@ def test_heterogeneous_strategy_auto_precedence_config_rust(
     app.cleanup()
 
 
+def test_heterogeneous_strategy_precedence_requires_string_list(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Invalid strategy precedence is rejected by a public Sphinx
+    build.
+    """
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=[1, "hello"]),
+    )
+    _ = (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: rust
+           :heterogeneous-strategy: auto
+    """
+        )
+    )
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={
+            "extensions": ["sphinx_literalizer"],
+            "literalizer_heterogeneous_strategy_precedence": 42,
+        },
+    )
+
+    with pytest.raises(
+        expected_exception=ExtensionError,
+        match=(
+            "'literalizer_heterogeneous_strategy_precedence' must be "
+            "a list of strings"
+        ),
+    ):
+        app.build()
+
+
 def test_concrete_heterogeneous_strategy_unrepresentable_error(
     *,
     make_app: Callable[..., SphinxTestApp],
