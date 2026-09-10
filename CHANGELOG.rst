@@ -35,8 +35,7 @@ No significant changes.
 
 - Bump ``literalizer`` to 2026.8.27.
   Generated strings now escape DEL and the other control bytes that YAML, TOML, SML, and Scheme parsers reject.
-  Empty list values in maps borrow the element type of a non-empty sibling in C++, Go, and Rust.
-  C, C++, and D non-decimal integer formats keep negative values at the signed 32-bit boundary signed instead of wrapping them positive.
+  Empty list values in maps borrow the element type of a non-empty sibling in C++, Go, and Rust. C, C++, and D non-decimal integer formats keep negative values at the signed 32-bit boundary signed instead of wrapping them positive.
 
 2026.08.25
 ----------
@@ -240,8 +239,7 @@ Next
 ------------
 
 
-- The error raised for an unrecognized ``:modifiers:`` value is now ``'<value>' is not a valid value.
-  Choose from: ...`` (listing the modifiers the target language supports), replacing the previous ``Language '<name>' does not support modifier '<value>'.`` message.
+- The error raised for an unrecognized ``:modifiers:`` value is now ``'<value>' is not a valid value. Choose from: ...`` (listing the modifiers the target language supports), replacing the previous ``Language '<name>' does not support modifier '<value>'.`` message.
   A single shared helper now converts these string options to their internal values and raises a clean ``ExtensionError`` instead of relying on each option's input validator to constrain the value.
 - Bumped ``literalizer`` to ``2026.5.17.1``.
 - ``:wrap-in-file:`` is now honored by the ``literalizer-call`` directive.

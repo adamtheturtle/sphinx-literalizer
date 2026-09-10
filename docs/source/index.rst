@@ -628,9 +628,8 @@ renders as:
       :parameter-names: flag,count
       :per-element:
 
-A no-argument constructor bound to a variable is expressed with an
-empty ``:parameter-names:`` (or omitted ``:parameter-names:``),
-``:per-element:``, and a single-element source.  Given
+A no-argument constructor bound to a variable is expressed with an empty ``:parameter-names:`` (or omitted ``:parameter-names:``), ``:per-element:``, and a single-element source.
+Given
 :file:`_examples/no_args.yaml` containing:
 
 .. literalinclude:: _examples/no_args.yaml
