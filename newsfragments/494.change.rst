@@ -1,0 +1,1 @@
+Infer language-owned enum members without an intermediate ``object`` type.

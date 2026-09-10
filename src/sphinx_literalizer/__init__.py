@@ -109,10 +109,9 @@ def _language_owned_enum_members(
     class itself rather than a hand-maintained capability table.
     """
     enum_cls = vars(lang_cls).get(name)
-    if not isinstance(enum_cls, enum.EnumType):
+    if not isinstance(enum_cls, type) or not issubclass(enum_cls, enum.Enum):
         return ()
-    members: tuple[object, ...] = tuple(enum_cls)
-    return tuple(member for member in members if isinstance(member, enum.Enum))
+    return tuple(enum_cls)
 
 
 @cache
