@@ -50,6 +50,8 @@ from sphinx.errors import ExtensionError
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
 
+type _OptionValidator = Callable[[str], object]
+
 
 class _DirectiveError(Exception):
     """A failure attributable to a single directive in a document.
@@ -391,7 +393,7 @@ def _heterogeneous_strategy_validator(x: str) -> str:
     )
 
 
-_COMMON_OPTIONS: dict[str, Callable[[str], Any]] = {  # pyrefly: ignore[explicit-any]
+_COMMON_OPTIONS: dict[str, _OptionValidator] = {
     "language": lambda x: directives.choice(
         argument=x,
         values=tuple(_language_types()),
@@ -762,9 +764,9 @@ class _BaseLiteralizerDirective(SphinxDirective):
                     f"strings; '{option_name}' is not."
                 )
                 raise ExtensionError(message=msg)
-            validated_defaults[option_name] = _COMMON_OPTIONS[option_name](
-                value
-            )
+            validated_defaults[option_name] = _make_format_validator(
+                option_name=option_name
+            )(value)
         return {**validated_defaults, **self.options}
 
     @staticmethod
@@ -1292,10 +1294,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
     input does not fit without leaking data-shape concerns into prose.
     """
 
-    option_spec: ClassVar[
-        dict[str, Callable[[str], Any]]  # pyrefly: ignore[explicit-any]
-        | None
-    ] = {
+    option_spec: ClassVar[dict[str, _OptionValidator] | None] = {
         **_COMMON_OPTIONS,
         "include-delimiters": directives.flag,
         "variable-name": directives.unchanged,
@@ -1472,10 +1471,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
     target language's idiom.
     """
 
-    option_spec: ClassVar[
-        dict[str, Callable[[str], Any]]  # pyrefly: ignore[explicit-any]
-        | None
-    ] = {
+    option_spec: ClassVar[dict[str, _OptionValidator] | None] = {
         **_COMMON_OPTIONS,
         "target-function": directives.unchanged_required,
         "constructor-class": directives.unchanged_required,
