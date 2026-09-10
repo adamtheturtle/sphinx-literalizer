@@ -277,7 +277,8 @@ Use ``tuple`` for a fixed-shape sequence; it emits ``std::make_tuple(...)`` with
       :heterogeneous-strategy: tuple
       :include-preamble:
 
-This also composes through a homogeneous outer sequence.  With
+This also composes through a homogeneous outer sequence.
+With
 :file:`_examples/nested_tuple.yaml`:
 
 .. literalinclude:: _examples/nested_tuple.yaml
