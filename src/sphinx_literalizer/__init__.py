@@ -75,6 +75,16 @@ def _is_string_object_dict(value: object, /) -> TypeGuard[dict[str, object]]:
     return TypeHint(hint=dict[str, object]).is_bearable(obj=value)
 
 
+type _JSONValue = (
+    bool | int | float | str | list[_JSONValue] | dict[str, _JSONValue] | None
+)
+
+
+def _is_json_object(value: object, /) -> TypeGuard[dict[str, _JSONValue]]:
+    """Return whether a value is a JSON object."""
+    return TypeHint(hint=dict[str, _JSONValue]).is_bearable(obj=value)
+
+
 def _is_string_list(value: object, /) -> TypeGuard[list[str]]:
     """Return whether a value is a list of strings."""
     return TypeHint(hint=list[str]).is_bearable(obj=value)
@@ -314,7 +324,7 @@ def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
 
 def _parse_record_null_substitutions(
     value: str,
-) -> dict[str, object]:
+) -> dict[str, _JSONValue]:
     """Parse the ``:record-null-substitutions:`` JSON object.
 
     Values replace ``null`` only when it appears in a record field of the
@@ -329,7 +339,7 @@ def _parse_record_null_substitutions(
             f"{exc.msg}."
         )
         raise _DirectiveError(message=msg) from exc
-    if not _is_string_object_dict(substitutions):
+    if not _is_json_object(substitutions):
         msg = "':record-null-substitutions:' must be a JSON object."
         raise _DirectiveError(message=msg)
     return substitutions
@@ -583,7 +593,7 @@ class _LiteralizerOptions(_CommonOptions):
 
     include_delimiters: bool
     both_variable_forms: bool
-    record_null_substitutions: Mapping[str, Any] | None  # pyrefly: ignore[explicit-any]
+    record_null_substitutions: Mapping[str, _JSONValue] | None
 
 
 @beartype
