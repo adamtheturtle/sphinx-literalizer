@@ -278,8 +278,7 @@ Use ``tuple`` for a fixed-shape sequence; it emits ``std::make_tuple(...)`` with
       :include-preamble:
 
 This also composes through a homogeneous outer sequence.
-With
-:file:`_examples/nested_tuple.yaml`:
+With :file:`_examples/nested_tuple.yaml`:
 
 .. literalinclude:: _examples/nested_tuple.yaml
    :language: yaml
