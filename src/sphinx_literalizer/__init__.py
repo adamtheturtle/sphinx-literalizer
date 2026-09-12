@@ -53,6 +53,7 @@ from sphinx.util.typing import ExtensionMetadata
 type _OptionValidator = Callable[[str], object]
 
 
+@beartype
 class _DirectiveError(Exception):
     """A failure attributable to a single directive in a document.
 
@@ -72,6 +73,7 @@ class _DirectiveError(Exception):
         super().__init__(message)
 
 
+@beartype
 def _is_string_object_dict(value: object, /) -> TypeGuard[dict[str, object]]:
     """Return whether a value is a dictionary with string keys."""
     return TypeHint(hint=dict[str, object]).is_bearable(obj=value)
@@ -82,16 +84,19 @@ type _JSONValue = (
 )
 
 
+@beartype
 def _is_json_object(value: object, /) -> TypeGuard[dict[str, _JSONValue]]:
     """Return whether a value is a JSON object."""
     return TypeHint(hint=dict[str, _JSONValue]).is_bearable(obj=value)
 
 
+@beartype
 def _is_string_list(value: object, /) -> TypeGuard[list[str]]:
     """Return whether a value is a list of strings."""
     return TypeHint(hint=list[str]).is_bearable(obj=value)
 
 
+@beartype
 def _language_name(lang_cls: LanguageCls) -> str:
     """Return the directive language key for a language class."""
     pygments_name = lang_cls.pygments_name
@@ -100,6 +105,7 @@ def _language_name(lang_cls: LanguageCls) -> str:
     return pygments_name
 
 
+@beartype
 def _language_owned_enum_members(
     *, lang_cls: LanguageCls, name: str
 ) -> tuple[enum.Enum, ...]:
@@ -116,6 +122,7 @@ def _language_owned_enum_members(
     return tuple(enum_cls)
 
 
+@beartype
 @cache
 def _language_types() -> dict[str, LanguageCls]:
     """Map directive language keys to their language classes."""
@@ -184,6 +191,7 @@ _COLLECTION_LAYOUT_VALUES: tuple[str, ...] = tuple(
 )
 
 
+@beartype
 @cache
 def _all_formats() -> dict[str, dict[tuple[str, str], enum.Enum]]:
     """Build format lookup dicts for all format options."""
@@ -197,6 +205,7 @@ def _all_formats() -> dict[str, dict[tuple[str, str], enum.Enum]]:
     }
 
 
+@beartype
 @cache
 def _all_format_values() -> dict[str, tuple[str, ...]]:
     """Build sorted unique value tuples for all format options."""
@@ -256,6 +265,7 @@ def _substitute_placeholder(
     return replacements[match.group()]
 
 
+@beartype
 def _parse_modifiers(
     language_cls: LanguageCls,
     value: str,
@@ -270,6 +280,7 @@ def _parse_modifiers(
     return frozenset(result)
 
 
+@beartype
 def _optional_modifiers(
     *, language_cls: LanguageCls, value: str | None
 ) -> frozenset[enum.Enum]:
@@ -279,6 +290,7 @@ def _optional_modifiers(
     return _parse_modifiers(language_cls=language_cls, value=value)
 
 
+@beartype
 def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
     """Parse the ``:record-shape-names:`` inline mapping.
 
@@ -323,6 +335,7 @@ def _parse_record_shape_names(value: str) -> dict[frozenset[str], str]:
     return result
 
 
+@beartype
 def _parse_record_null_substitutions(
     value: str,
 ) -> dict[str, _JSONValue]:
@@ -346,6 +359,7 @@ def _parse_record_null_substitutions(
     return substitutions
 
 
+@beartype
 def _make_format_validator(
     option_name: str,
 ) -> Callable[[str], str]:
@@ -382,6 +396,7 @@ _DEFAULT_HETEROGENEOUS_STRATEGY_PRECEDENCE: tuple[str, ...] = (
 )
 
 
+@beartype
 def _heterogeneous_strategy_validator(x: str) -> str:
     """Validate ``:heterogeneous-strategy:``, also accepting ``auto``."""
     return directives.choice(
@@ -477,6 +492,7 @@ _EXTENSION_TO_INPUT_FORMAT: dict[str, InputFormat] = {
 }
 
 
+@beartype
 def _format_input_path(*, path: tuple[str | int, ...]) -> str:
     """Render a literalizer input path as a compact locator string.
 
@@ -495,6 +511,7 @@ def _format_input_path(*, path: tuple[str | int, ...]) -> str:
     return rendered
 
 
+@beartype
 @contextmanager
 def _literalize_errors_as_directive_errors() -> Generator[None]:
     """Convert user-facing literalizer exceptions into
