@@ -379,6 +379,7 @@ ignore_names = [
     "required_arguments",
     "rst_prolog",
     "run",
+    "setup",                             # Sphinx discovers the extension entry point by name.
     "source_suffix",
     "spelling_word_list_filename",
     "templates_path",
