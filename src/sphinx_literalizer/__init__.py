@@ -620,8 +620,8 @@ class _LiteralizerOptions(_CommonOptions):
 class _LiteralizerCallOptions(_CommonOptions):
     """Typed options for the ``literalizer-call`` directive."""
 
-    target_function: str | None
-    constructor_class: str | None
+    target_name: str
+    constructor_call: bool
     parameter_names: str
     per_element: bool
     call_transform: str | None
@@ -1591,22 +1591,26 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         options = self._options_with_language_defaults()
         target_function = self.options.get("target-function")
         constructor_class = self.options.get("constructor-class")
-        if target_function is None and constructor_class is None:
-            msg = (
-                "Use exactly one of ':target-function:' and "
-                "':constructor-class:'."
-            )
-            raise _DirectiveError(message=msg)
-        if target_function is not None and constructor_class is not None:
-            msg = (
-                "':target-function:' cannot be combined with "
-                "':constructor-class:'."
-            )
-            raise _DirectiveError(message=msg)
+        if constructor_class is not None:
+            if target_function is not None:
+                msg = (
+                    "':target-function:' cannot be combined with "
+                    "':constructor-class:'."
+                )
+                raise _DirectiveError(message=msg)
+            target_name = constructor_class
+        else:
+            if target_function is None:
+                msg = (
+                    "Use exactly one of ':target-function:' and "
+                    "':constructor-class:'."
+                )
+                raise _DirectiveError(message=msg)
+            target_name = target_function
         return _LiteralizerCallOptions(
             **_common_option_args(options=options),
-            target_function=target_function,
-            constructor_class=constructor_class,
+            target_name=target_name,
+            constructor_call=constructor_class is not None,
             parameter_names=self.options.get("parameter-names", ""),
             per_element="per-element" in self.options,
             call_transform=self.options.get("call-transform"),
@@ -1616,24 +1620,6 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             consumable_refs=self.options.get("consumable-refs"),
             omit_code="omit-code" in self.options,
         )
-
-    @staticmethod
-    def _resolve_target_function(
-        *,
-        language_spec: Language,
-        options: _LiteralizerCallOptions,
-    ) -> str:
-        """Resolve the explicit or constructor-derived call target."""
-        target_function = options.target_function
-        if target_function is not None:
-            return target_function
-
-        constructor_class = options.constructor_class
-        if constructor_class is None:  # pragma: no cover
-            msg = "target source options are validated during parsing"
-            raise AssertionError(msg)
-        format_target = language_spec.format_constructor_target
-        return format_target(constructor_class)
 
     @override
     def _run(self) -> list[nodes.Node]:
@@ -1699,15 +1685,16 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
         def _do(language_spec: Language) -> LiteralizeResult:
             """Render the calls for *source* with the built language."""
-            target_function = self._resolve_target_function(
-                language_spec=language_spec,
-                options=options,
-            )
+            format_constructor = language_spec.format_constructor_target
             return literalize_call(
                 source=source,
                 input_format=input_format,
                 language=language_spec,
-                target_function=target_function,
+                target_function=(
+                    format_constructor(options.target_name)
+                    if options.constructor_call
+                    else options.target_name
+                ),
                 parameter_names=parameter_names,
                 call_transform=call_transform,
                 zip_source=zip_source,
