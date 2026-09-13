@@ -7,6 +7,7 @@ read data files and render them as native language code blocks.
 import enum
 import json
 import re
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Generator, Iterable, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -712,7 +713,7 @@ def _common_option_args(
 
 
 @beartype
-class _BaseLiteralizerDirective(SphinxDirective):
+class _BaseLiteralizerDirective(SphinxDirective, ABC):
     """Shared logic for literalizer directives."""
 
     required_arguments = 1
@@ -742,9 +743,9 @@ class _BaseLiteralizerDirective(SphinxDirective):
             message = f"{exc} (in '{data_file}')"
             raise self.error(message=message) from exc
 
-    def _run(self) -> list[nodes.Node]:  # pragma: no cover
+    @abstractmethod
+    def _run(self) -> list[nodes.Node]:
         """Produce the nodes for this directive."""
-        raise NotImplementedError
 
     def _options_with_language_defaults(
         self,
