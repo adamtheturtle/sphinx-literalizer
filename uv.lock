@@ -2003,6 +2003,7 @@ dependencies = [
     { name = "docutils" },
     { name = "literalizer" },
     { name = "sphinx" },
+    { name = "typing-extensions" },
 ]
 
 [package.dev-dependencies]
@@ -2061,6 +2062,7 @@ requires-dist = [
     { name = "docutils" },
     { name = "literalizer", specifier = "==2026.9.4" },
     { name = "sphinx", specifier = ">=7.0" },
+    { name = "typing-extensions" },
 ]
 
 [package.metadata.requires-dev]

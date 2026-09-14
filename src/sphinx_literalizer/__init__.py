@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from functools import cache, partial
 from importlib.metadata import version
 from pathlib import Path
-from typing import Any, ClassVar, TypedDict, TypeGuard, override
+from typing import Any, ClassVar, TypeGuard, override
 
 from beartype import beartype
 from beartype.door import TypeHint
@@ -50,6 +50,7 @@ from sphinx.application import Sphinx
 from sphinx.errors import ExtensionError
 from sphinx.util.docutils import SphinxDirective
 from sphinx.util.typing import ExtensionMetadata
+from typing_extensions import TypedDict
 
 type _OptionValidator = Callable[[str], object]
 
@@ -632,7 +633,7 @@ class _LiteralizerCallOptions(_CommonOptions):
     omit_code: bool
 
 
-class _CommonOptionArgs(TypedDict):
+class _CommonOptionArgs(TypedDict, closed=True):
     """Keyword arguments for the :class:`_CommonOptions` base.
 
     Mirrors the :class:`_CommonOptions` fields so the per-directive
