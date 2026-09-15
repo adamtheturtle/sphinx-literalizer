@@ -5,6 +5,7 @@ import json
 import shutil
 import subprocess
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from pathlib import Path
 from textwrap import dedent
 from unittest.mock import Mock
@@ -8574,29 +8575,58 @@ def test_heterogeneous_value_name_unsupported_language_error(
     )
 
 
+@dataclass(frozen=True, kw_only=True)
+class _HeterogeneousValueNameCase:
+    """A language-specific heterogeneous-value-name expectation."""
+
+    language: str
+    strategy: str
+    data: list[object]
+    expected: str
+
+
 @pytest.mark.parametrize(
-    argnames=("language", "strategy", "data", "expected"),
+    argnames="case",
     argvalues=[
-        ("rust", "tagged_enum", [1, "x", None], "enum TaskValue {"),
-        ("mojo", "variant", [1, "x"], "comptime TaskValue = Variant["),
-        ("nim", "object_variant", [1, "x", None], "TaskValueKind = enum"),
-        ("dhall", "union_type", [1, "x", None], "let TaskValue = <"),
+        _HeterogeneousValueNameCase(
+            language="rust",
+            strategy="tagged_enum",
+            data=[1, "x", None],
+            expected="enum TaskValue {",
+        ),
+        _HeterogeneousValueNameCase(
+            language="mojo",
+            strategy="variant",
+            data=[1, "x"],
+            expected="comptime TaskValue = Variant[",
+        ),
+        _HeterogeneousValueNameCase(
+            language="nim",
+            strategy="object_variant",
+            data=[1, "x", None],
+            expected="TaskValueKind = enum",
+        ),
+        _HeterogeneousValueNameCase(
+            language="dhall",
+            strategy="union_type",
+            data=[1, "x", None],
+            expected="let TaskValue = <",
+        ),
     ],
 )
-def test_heterogeneous_value_name_supported_languages(  # noqa: PLR0913
+def test_heterogeneous_value_name_supported_languages(
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
-    language: str,
-    strategy: str,
-    data: list[object],
-    expected: str,
+    case: _HeterogeneousValueNameCase,
 ) -> None:
     """The general name option reaches each language-specific setting."""
     source_directory = tmp_path / "source"
     source_directory.mkdir()
     (source_directory / "conf.py").touch()
-    _ = (source_directory / "data.json").write_text(data=json.dumps(obj=data))
+    _ = (source_directory / "data.json").write_text(
+        data=json.dumps(obj=case.data)
+    )
     _ = (source_directory / "index.rst").write_text(
         data=dedent(
             text=f"""\
@@ -8604,8 +8634,8 @@ def test_heterogeneous_value_name_supported_languages(  # noqa: PLR0913
         ====
 
         .. literalizer:: data.json
-           :language: {language}
-           :heterogeneous-strategy: {strategy}
+           :language: {case.language}
+           :heterogeneous-strategy: {case.strategy}
            :heterogeneous-value-name: TaskValue
            :include-delimiters:
            :include-preamble:
@@ -8621,7 +8651,7 @@ def test_heterogeneous_value_name_supported_languages(  # noqa: PLR0913
     assert app.statuscode == 0
     doctree = app.env.get_doctree(docname="index")
     (literal_block,) = doctree.findall(condition=nodes.literal_block)
-    assert expected in literal_block.astext()
+    assert case.expected in literal_block.astext()
     app.cleanup()
 
 
