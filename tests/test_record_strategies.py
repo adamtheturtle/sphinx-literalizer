@@ -589,6 +589,8 @@ def test_literalizer_call_named_carrier_preamble_only(
     combined_path = tmp_path / "combined.cpp"
     _ = combined_path.write_text(data=combined)
     executable_path = tmp_path / "combined"
+    # The compiler is selected by the test fixture and receives a fixed argument
+    # without invoking a shell.
     _ = subprocess.run(  # noqa: S603
         args=[
             compiler,
@@ -601,6 +603,7 @@ def test_literalizer_call_named_carrier_preamble_only(
         capture_output=True,
         text=True,
     )
+    # This executes the binary just built in the test's temporary directory.
     _ = subprocess.run(  # noqa: S603
         args=[str(object=executable_path)],
         check=True,
