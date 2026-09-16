@@ -10,11 +10,14 @@ from beartype import beartype
 from sphinx.application import Sphinx
 from sphinx.util.typing import ExtensionMetadata
 
-from ._directives import (
-    LiteralizerCallDirective as LiteralizerCallDirective,
-)
-from ._directives import LiteralizerDirective as LiteralizerDirective
+from ._directives import LiteralizerCallDirective, LiteralizerDirective
 from ._support import _DEFAULT_HETEROGENEOUS_STRATEGY_PRECEDENCE
+
+__all__ = (
+    "LiteralizerCallDirective",
+    "LiteralizerDirective",
+    "setup",
+)
 
 
 @beartype
