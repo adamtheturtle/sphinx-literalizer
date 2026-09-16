@@ -668,6 +668,8 @@ class _CommonOptionArgs(TypedDict, closed=True):
 
 @beartype
 def _common_option_args(
+    # Docutils exposes directive options as heterogeneous values; this function
+    # immediately validates the entries it consumes.
     options: dict[str, Any],  # pyrefly: ignore[explicit-any]
 ) -> _CommonOptionArgs:
     """Extract the shared options from a directive's raw ``options``.
@@ -748,6 +750,8 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
     def _run(self) -> list[nodes.Node]:
         """Produce the nodes for this directive."""
 
+    # Docutils' option API requires a heterogeneous mapping; the merged values
+    # are passed directly to the runtime-validating parser above.
     def _options_with_language_defaults(
         self,
     ) -> dict[str, Any]:  # pyrefly: ignore[explicit-any]
