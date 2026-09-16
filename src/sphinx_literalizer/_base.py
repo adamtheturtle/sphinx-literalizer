@@ -88,6 +88,9 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
     def _run(self) -> list[nodes.Node]:
         """Produce the nodes for this directive."""
 
+    # types-docutils cannot express a directive's specific option types; see
+    # https://github.com/python/typeshed/issues/16400. The merged values are
+    # passed directly to the runtime-validating parser above.
     def _options_with_language_defaults(
         self,
     ) -> dict[str, Any]:  # pyrefly: ignore[explicit-any]

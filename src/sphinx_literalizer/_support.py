@@ -670,6 +670,9 @@ class _CommonOptionArgs(TypedDict, closed=True):
 
 @beartype
 def _common_option_args(
+    # types-docutils cannot express a directive's specific option types; see
+    # https://github.com/python/typeshed/issues/16400. This function
+    # immediately validates the entries it consumes.
     options: dict[str, Any],  # pyrefly: ignore[explicit-any]
 ) -> _CommonOptionArgs:
     """Extract the shared options from a directive's raw ``options``.
