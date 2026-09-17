@@ -7,7 +7,7 @@ from collections.abc import Callable, Generator, Iterable, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import cache
-from typing import Required, TypeGuard
+from typing import Any, TypeGuard
 
 from beartype import beartype
 from beartype.door import TypeHint
@@ -24,7 +24,6 @@ from literalizer.exceptions import (
     ParseError,
 )
 from literalizer.languages import ALL_LANGUAGES
-from sphinx.errors import ExtensionError
 from typing_extensions import TypedDict
 
 __all__ = (
@@ -40,13 +39,9 @@ __all__ = (
     "_LiteralizerCallOptions",
     "_LiteralizerOptions",
     "_OptionValidator",
-    "_RawCommonOptions",
-    "_RawLiteralizerCallOptions",
-    "_RawLiteralizerOptions",
     "_all_formats",
     "_common_option_args",
     "_enum_member",
-    "_is_raw_common_options",
     "_is_string_list",
     "_is_string_object_dict",
     "_language_types",
@@ -56,120 +51,10 @@ __all__ = (
     "_optional_modifiers",
     "_parse_record_null_substitutions",
     "_parse_record_shape_names",
-    "_raw_string_option",
     "_substitute_placeholder",
-    "_validated_raw_common_options",
 )
 
 type _OptionValidator = Callable[[str], object]
-
-
-_FormatDefaults = TypedDict(
-    "_FormatDefaults",
-    {
-        "date-format": str,
-        "datetime-format": str,
-        "sequence-format": str,
-        "set-format": str,
-        "bytes-format": str,
-        "comment-format": str,
-        "variable-type-hints": str,
-        "declaration-style": str,
-        "dict-entry-style": str,
-        "dict-format": str,
-        "float-format": str,
-        "integer-format": str,
-        "numeric-literal-suffix": str,
-        "numeric-separator": str,
-        "numeric-style": str,
-        "string-format": str,
-        "trailing-comma": str,
-        "language-version": str,
-        "empty-dict-key": str,
-        "heterogeneous-strategy": str,
-        "call-style": str,
-        "json-type": str,
-        "json-rendering": str,
-        "record-map-value-typing": str,
-        "bool-format": str,
-        "annotation-evaluation": str,
-        "union-format": str,
-    },
-    total=False,
-)
-
-_CommonRawFields = TypedDict(
-    "_CommonRawFields",
-    {
-        "language": Required[str],
-        "input-format": str,
-        "pre-indent-level": int,
-        "indent": int,
-        "indent-char": str,
-        "include-preamble": None,
-        "preamble-only": None,
-        "default-set-element-type": str,
-        "default-sequence-element-type": str,
-        "default-dict-key-type": str,
-        "default-dict-value-type": str,
-        "default-ordered-map-value-type": str,
-        "module-name": str,
-        "multiline-raw-string-delimiter-base": str,
-        "record-struct-name-prefix": str,
-        "record-shape-names": str,
-        "heterogeneous-value-name": str,
-        "skip-if-unrepresentable": None,
-        "wrap-in-file": None,
-        "ref-case": str,
-        "ref-key": str,
-        "collection-layout": str,
-        "variable-name": str,
-        "existing-variable": None,
-        "modifiers": str,
-    },
-    total=False,
-)
-
-
-class _RawCommonOptions(_FormatDefaults, _CommonRawFields):  # pylint: disable=duplicate-bases
-    """Option values after Docutils applies ``option_spec`` converters."""
-
-
-_LiteralizerRawFields = TypedDict(
-    "_LiteralizerRawFields",
-    {
-        "include-delimiters": None,
-        "both-variable-forms": None,
-        "record-null-substitutions": str,
-    },
-    total=False,
-)
-
-
-class _RawLiteralizerOptions(_RawCommonOptions, _LiteralizerRawFields):  # pylint: disable=duplicate-bases
-    """Converted values accepted by ``literalizer``."""
-
-
-_LiteralizerCallRawFields = TypedDict(
-    "_LiteralizerCallRawFields",
-    {
-        "target-function": str,
-        "constructor-class": str,
-        "parameter-names": str,
-        "per-element": None,
-        "call-transform": str,
-        "zip-file": str,
-        "zip-input-format": str,
-        "comment-file": str,
-        "consumable-refs": str,
-        "omit-code": None,
-    },
-    total=False,
-)
-
-
-class _RawLiteralizerCallOptions(_RawCommonOptions, _LiteralizerCallRawFields):  # pylint: disable=duplicate-bases
-    """Converted values accepted by ``literalizer-call``."""
 
 
 @beartype
@@ -300,15 +185,6 @@ _FORMAT_OPTION_GETTERS: dict[
         name="UnionFormats",
     ),
 }
-
-
-def _raw_string_option(options: Mapping[str, object], name: str) -> str:
-    """Read a converted string option whose name is chosen dynamically."""
-    value = options[name]
-    if not isinstance(value, str):
-        msg = f"Directive option '{name}' must be a string."
-        raise TypeError(msg)
-    return value
 
 
 _IDENTIFIER_CASE_VALUES: tuple[str, ...] = tuple(
@@ -599,65 +475,6 @@ _DEFAULT_TYPE_OPTIONS: dict[str, str] = {
 }
 
 
-_RAW_STRING_OPTION_NAMES = frozenset(
-    {
-        "language",
-        "input-format",
-        "indent-char",
-        "module-name",
-        "multiline-raw-string-delimiter-base",
-        "record-struct-name-prefix",
-        "record-shape-names",
-        "heterogeneous-value-name",
-        "ref-case",
-        "ref-key",
-        "collection-layout",
-        "variable-name",
-        "modifiers",
-        *_FORMAT_OPTION_GETTERS,
-        *_DEFAULT_TYPE_OPTIONS,
-    }
-)
-_RAW_INTEGER_OPTION_NAMES = frozenset({"pre-indent-level", "indent"})
-_RAW_FLAG_OPTION_NAMES = frozenset(
-    {
-        "include-preamble",
-        "preamble-only",
-        "skip-if-unrepresentable",
-        "wrap-in-file",
-        "existing-variable",
-    }
-)
-
-
-def _is_raw_common_options(value: object, /) -> TypeGuard[_RawCommonOptions]:
-    """Validate the shared converted fields before narrowing their
-    type.
-    """
-    if not _is_string_object_dict(value) or not isinstance(
-        value.get("language"), str
-    ):
-        return False
-    for name, option in value.items():
-        if name in _RAW_STRING_OPTION_NAMES and not isinstance(option, str):
-            return False
-        if name in _RAW_INTEGER_OPTION_NAMES and not isinstance(option, int):
-            return False
-        if name in _RAW_FLAG_OPTION_NAMES and option is not None:
-            return False
-    return True
-
-
-def _validated_raw_common_options(value: object) -> _RawCommonOptions:
-    """Check the merged mapping before treating it as converted
-    options.
-    """
-    if not _is_raw_common_options(value):
-        msg = "Invalid merged directive options."
-        raise ExtensionError(message=msg)
-    return value
-
-
 # Literalizer exposes the same generated heterogeneous carrier concept
 # under language-idiomatic constructor parameter names
 # (``..._variant_name`` / ``..._union_name`` / ``..._enum_name``); the
@@ -853,12 +670,16 @@ class _CommonOptionArgs(TypedDict, closed=True):
 
 @beartype
 def _common_option_args(
-    options: _RawCommonOptions,
+    # types-docutils cannot express a directive's specific option types; see
+    # https://github.com/python/typeshed/issues/16400. This function
+    # immediately validates the entries it consumes.
+    options: dict[str, Any],  # pyrefly: ignore[explicit-any]
 ) -> _CommonOptionArgs:
     """Extract the shared options from a directive's raw ``options``.
 
-    The ``@beartype``-wrapped :class:`_CommonOptions` constructor also
-    validates the resulting values at runtime.
+    This is the sole place ``self.options``'s ``Any`` values are read;
+    the ``@beartype``-wrapped :class:`_CommonOptions` constructor then
+    validates them.
     """
     return _CommonOptionArgs(
         language=options["language"],
@@ -869,13 +690,13 @@ def _common_option_args(
         include_preamble="include-preamble" in options,
         preamble_only="preamble-only" in options,
         format_options={
-            name: _raw_string_option(options=options, name=name)
+            name: options[name]
             for name in _FORMAT_OPTION_GETTERS
             if name != "heterogeneous-strategy" and name in options
         },
         heterogeneous_strategy=options.get("heterogeneous-strategy"),
         default_type_options={
-            name: _raw_string_option(options=options, name=name)
+            name: options[name]
             for name in _DEFAULT_TYPE_OPTIONS
             if name in options
         },

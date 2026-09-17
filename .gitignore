@@ -13,7 +13,6 @@ eggs/
 
 # Virtual environments
 .venv/
-.typeshed-preview/
 venv/
 env/
 

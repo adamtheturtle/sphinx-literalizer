@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
-from typing import override
+from typing import Any, override
 
 from beartype import beartype
 from docutils import nodes
@@ -48,20 +48,15 @@ from ._support import (
     _make_format_validator,
     _optional_modifiers,
     _parse_record_shape_names,
-    _RawCommonOptions,
-    _validated_raw_common_options,
 )
 
 __all__ = ("_BaseLiteralizerDirective",)
 
 
 @beartype
-class _BaseLiteralizerDirective[OptionsT: _RawCommonOptions](
-    SphinxDirective, ABC
-):
+class _BaseLiteralizerDirective(SphinxDirective, ABC):
     """Shared logic for literalizer directives."""
 
-    options: OptionsT
     required_arguments = 1
     has_content = False
 
@@ -93,17 +88,19 @@ class _BaseLiteralizerDirective[OptionsT: _RawCommonOptions](
     def _run(self) -> list[nodes.Node]:
         """Produce the nodes for this directive."""
 
+    # types-docutils cannot express a directive's specific option types; see
+    # https://github.com/python/typeshed/issues/16400. The merged values are
+    # passed directly to the runtime-validating parser above.
     def _options_with_language_defaults(
         self,
-    ) -> _RawCommonOptions:
+    ) -> dict[str, Any]:  # pyrefly: ignore[explicit-any]
         """Merge configured language defaults with explicit options.
 
         The literalizer_language_defaults setting contains only shared
         format options, keyed by directive language. Values written on a
         directive override those defaults.
         """
-        raw_options = self.options
-        language_name = raw_options["language"]
+        language_name = self.options["language"]
         configured = dict[str, object](
             self.env.config.literalizer_language_defaults,
         )
@@ -132,9 +129,7 @@ class _BaseLiteralizerDirective[OptionsT: _RawCommonOptions](
             validated_defaults[option_name] = _make_format_validator(
                 option_name=option_name
             )(value)
-        return _validated_raw_common_options(
-            value={**validated_defaults, **raw_options}
-        )
+        return {**validated_defaults, **self.options}
 
     @staticmethod
     def _apply_format_options(

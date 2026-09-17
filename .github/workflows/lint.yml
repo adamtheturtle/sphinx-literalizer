@@ -26,15 +26,6 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - name: Checkout proposed typeshed stubs
-        if: github.event_name == 'pull_request' && github.head_ref == 'demo/docutils-typed-options'
-          && matrix.hook-stage == 'pre-push'
-        uses: actions/checkout@v7
-        with:
-          repository: adamtheturtle/typeshed
-          ref: docutils-generic-options
-          path: .typeshed-preview
-          persist-credentials: false
       - name: Install uv
         uses: astral-sh/setup-uv@v10.1.0
         with:
@@ -43,21 +34,6 @@ jobs:
           cache-suffix: ${{ matrix.python-version }}-${{ matrix.platform }}-${{ matrix.hook-stage
             }}
           save-cache: ${{ github.event_name != 'pull_request' }}
-
-      - name: Use proposed Docutils stub
-        if: github.event_name == 'pull_request' && github.head_ref == 'demo/docutils-typed-options'
-          && matrix.hook-stage == 'pre-push'
-        env:
-          UV_PYTHON: ${{ matrix.python-version }}
-        run: >-
-          uv sync --locked --group=dev &&
-          uv run --group=dev python -c
-          'from importlib.metadata import distribution;
-          from pathlib import Path;
-          from shutil import copyfile;
-          copyfile(
-          Path(".typeshed-preview/stubs/docutils/docutils/parsers/rst/__init__.pyi"),
-          distribution("types-docutils").locate_file("docutils-stubs/parsers/rst/__init__.pyi"))'
 
       - name: Lint
         uses: j178/prek-action@v3.0.0
@@ -68,6 +44,25 @@ jobs:
         env:
           UV_NO_CACHE: '1'
           UV_PYTHON: ${{ matrix.python-version }}
+
+      - name: Check proposed Docutils stub
+        if: github.event_name == 'pull_request' && github.head_ref == 'demo/docutils-typed-options'
+          && matrix.hook-stage == 'pre-push'
+        env:
+          UV_PYTHON: ${{ matrix.python-version }}
+        run: >-
+          uv run --group=dev python -c
+          'from importlib.metadata import distribution;
+          from os import devnull;
+          from pathlib import Path;
+          from subprocess import run;
+          from sys import executable;
+          from urllib.request import urlopen;
+          url = "https://raw.githubusercontent.com/adamtheturtle/typeshed/docutils-generic-options/stubs/docutils/docutils/parsers/rst/__init__.pyi";
+          distribution("types-docutils").locate_file("docutils-stubs/parsers/rst/__init__.pyi").write_bytes(urlopen(url,
+          timeout=30).read());
+          run([executable, "-m", "mypy", "--config-file", devnull, "--strict", "-c",
+          Path("tests/fixtures/typed_docutils_options.txt").read_text()], check=True)'
 
   completion-lint:
     needs: build

@@ -31,14 +31,12 @@ from ._support import (
     _LiteralizerOptions,
     _OptionValidator,
     _parse_record_null_substitutions,
-    _RawLiteralizerCallOptions,
-    _RawLiteralizerOptions,
     _substitute_placeholder,
 )
 
 
 @beartype
-class LiteralizerDirective(_BaseLiteralizerDirective[_RawLiteralizerOptions]):
+class LiteralizerDirective(_BaseLiteralizerDirective):
     """Directive that converts a data file to a native literal block.
 
     Usage::
@@ -113,7 +111,6 @@ class LiteralizerDirective(_BaseLiteralizerDirective[_RawLiteralizerOptions]):
     input does not fit without leaking data-shape concerns into prose.
     """
 
-    options: _RawLiteralizerOptions
     option_spec: ClassVar[dict[str, _OptionValidator] | None] = {
         **_COMMON_OPTIONS,
         "include-delimiters": directives.flag,
@@ -225,9 +222,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective[_RawLiteralizerOptions]):
 
 
 @beartype
-class LiteralizerCallDirective(
-    _BaseLiteralizerDirective[_RawLiteralizerCallOptions]
-):
+class LiteralizerCallDirective(_BaseLiteralizerDirective):
     """Directive that converts a data file to function call expressions.
 
     Usage::
@@ -293,7 +288,6 @@ class LiteralizerCallDirective(
     target language's idiom.
     """
 
-    options: _RawLiteralizerCallOptions
     option_spec: ClassVar[dict[str, _OptionValidator] | None] = {
         **_COMMON_OPTIONS,
         "target-function": directives.unchanged_required,
