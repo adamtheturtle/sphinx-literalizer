@@ -1,7 +1,7 @@
 """Validation of converted directive option shapes."""
 
 # This module exercises the private option-validation boundary directly.
-# pylint: disable=protected-access
+# pylint: disable=protected-access,wrong-spelling-in-comment
 # ruff: noqa: SLF001
 
 import pytest

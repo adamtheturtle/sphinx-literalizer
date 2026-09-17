@@ -28,6 +28,7 @@ jobs:
           persist-credentials: false
       - name: Checkout proposed typeshed stubs
         if: github.event_name == 'pull_request' && github.head_ref == 'demo/docutils-typed-options'
+          && matrix.hook-stage == 'pre-push'
         uses: actions/checkout@v7
         with:
           repository: adamtheturtle/typeshed
@@ -45,6 +46,7 @@ jobs:
 
       - name: Use proposed Docutils stub
         if: github.event_name == 'pull_request' && github.head_ref == 'demo/docutils-typed-options'
+          && matrix.hook-stage == 'pre-push'
         env:
           UV_PYTHON: ${{ matrix.python-version }}
         run: >-
