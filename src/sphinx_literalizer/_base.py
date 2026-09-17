@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
-from typing import Any, override
+from typing import override
 
 from beartype import beartype
 from docutils import nodes
@@ -48,15 +48,19 @@ from ._support import (
     _make_format_validator,
     _optional_modifiers,
     _parse_record_shape_names,
+    _RawBaseOptions,
 )
 
 __all__ = ("_BaseLiteralizerDirective",)
 
 
 @beartype
-class _BaseLiteralizerDirective(SphinxDirective, ABC):
+class _BaseLiteralizerDirective[OptionsT: _RawBaseOptions](
+    SphinxDirective, ABC
+):
     """Shared logic for literalizer directives."""
 
+    options: OptionsT
     required_arguments = 1
     has_content = False
 
@@ -88,12 +92,9 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
     def _run(self) -> list[nodes.Node]:
         """Produce the nodes for this directive."""
 
-    # types-docutils cannot express a directive's specific option types; see
-    # https://github.com/python/typeshed/issues/16400. The merged values are
-    # passed directly to the runtime-validating parser above.
     def _options_with_language_defaults(
         self,
-    ) -> dict[str, Any]:  # pyrefly: ignore[explicit-any]
+    ) -> dict[str, object]:
         """Merge configured language defaults with explicit options.
 
         The literalizer_language_defaults setting contains only shared

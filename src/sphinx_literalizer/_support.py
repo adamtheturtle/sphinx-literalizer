@@ -7,7 +7,7 @@ from collections.abc import Callable, Generator, Iterable, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import cache
-from typing import Any, TypeGuard
+from typing import Required, TypeGuard
 
 from beartype import beartype
 from beartype.door import TypeHint
@@ -39,6 +39,9 @@ __all__ = (
     "_LiteralizerCallOptions",
     "_LiteralizerOptions",
     "_OptionValidator",
+    "_RawBaseOptions",
+    "_RawLiteralizerCallOptions",
+    "_RawLiteralizerOptions",
     "_all_formats",
     "_common_option_args",
     "_enum_member",
@@ -55,6 +58,42 @@ __all__ = (
 )
 
 type _OptionValidator = Callable[[str], object]
+
+
+class _RawBaseOptions(TypedDict):
+    """The option needed by the shared directive implementation."""
+
+    language: str
+
+
+_RawLiteralizerOptions = TypedDict(
+    "_RawLiteralizerOptions",
+    {
+        "language": Required[str],
+        "include-delimiters": None,
+        "both-variable-forms": None,
+        "record-null-substitutions": str,
+    },
+    total=False,
+)
+
+_RawLiteralizerCallOptions = TypedDict(
+    "_RawLiteralizerCallOptions",
+    {
+        "language": Required[str],
+        "target-function": str,
+        "constructor-class": str,
+        "parameter-names": str,
+        "per-element": None,
+        "call-transform": str,
+        "zip-file": str,
+        "zip-input-format": str,
+        "comment-file": str,
+        "consumable-refs": str,
+        "omit-code": None,
+    },
+    total=False,
+)
 
 
 @beartype
@@ -569,10 +608,10 @@ def _literalize_errors_as_directive_errors() -> Generator[None]:
 class _CommonOptions:
     """Typed view of the directive options shared by both directives.
 
-    Built once from ``self.options`` (``dict[str, Any]``) at the start of
+    Built once from ``self.options`` at the start of
     ``run()``.  Because the constructor is ``@beartype``-wrapped, every
     field is validated at this single boundary, so the rest of the module
-    operates on fully-typed fields instead of ``Any``.
+    operates on fully-typed fields.
 
     ``format_options`` and ``default_type_options`` hold the options that
     are applied by iterating :data:`_FORMAT_OPTION_GETTERS` /
@@ -669,50 +708,92 @@ class _CommonOptionArgs(TypedDict, closed=True):
 
 
 @beartype
+def _raw_string_value(value: object, /) -> str:
+    """Check a value converted by a string ``option_spec`` entry."""
+    if not isinstance(value, str):
+        msg = "Expected a converted string directive option."
+        raise TypeError(msg)
+    return value
+
+
+@beartype
+def _optional_raw_string_value(value: object, /) -> str | None:
+    """Check an optional converted string directive option."""
+    if value is None:
+        return None
+    return _raw_string_value(value)
+
+
+@beartype
+def _raw_integer_value(value: object, /) -> int:
+    """Check a value converted by an integer ``option_spec`` entry."""
+    if not isinstance(value, int):
+        msg = "Expected a converted integer directive option."
+        raise TypeError(msg)
+    return value
+
+
+@beartype
+def _optional_raw_integer_value(value: object, /) -> int | None:
+    """Check an optional converted integer directive option."""
+    if value is None:
+        return None
+    return _raw_integer_value(value)
+
+
+@beartype
 def _common_option_args(
-    # types-docutils cannot express a directive's specific option types; see
-    # https://github.com/python/typeshed/issues/16400. This function
-    # immediately validates the entries it consumes.
-    options: dict[str, Any],  # pyrefly: ignore[explicit-any]
+    options: Mapping[str, object],
 ) -> _CommonOptionArgs:
     """Extract the shared options from a directive's raw ``options``.
 
-    This is the sole place ``self.options``'s ``Any`` values are read;
-    the ``@beartype``-wrapped :class:`_CommonOptions` constructor then
-    validates them.
+    The ``@beartype``-wrapped :class:`_CommonOptions` constructor
+    validates the extracted values at runtime.
     """
     return _CommonOptionArgs(
-        language=options["language"],
-        input_format=options.get("input-format"),
-        pre_indent_level=options.get("pre-indent-level", 0),
-        indent=options.get("indent"),
-        indent_char=options.get("indent-char"),
+        language=_raw_string_value(options["language"]),
+        input_format=_optional_raw_string_value(options.get("input-format")),
+        pre_indent_level=_raw_integer_value(
+            options.get("pre-indent-level", 0)
+        ),
+        indent=_optional_raw_integer_value(options.get("indent")),
+        indent_char=_optional_raw_string_value(options.get("indent-char")),
         include_preamble="include-preamble" in options,
         preamble_only="preamble-only" in options,
         format_options={
-            name: options[name]
+            name: _raw_string_value(options[name])
             for name in _FORMAT_OPTION_GETTERS
             if name != "heterogeneous-strategy" and name in options
         },
-        heterogeneous_strategy=options.get("heterogeneous-strategy"),
+        heterogeneous_strategy=_optional_raw_string_value(
+            options.get("heterogeneous-strategy")
+        ),
         default_type_options={
-            name: options[name]
+            name: _raw_string_value(options[name])
             for name in _DEFAULT_TYPE_OPTIONS
             if name in options
         },
-        module_name=options.get("module-name"),
-        multiline_raw_string_delimiter_base=options.get(
-            "multiline-raw-string-delimiter-base"
+        module_name=_optional_raw_string_value(options.get("module-name")),
+        multiline_raw_string_delimiter_base=_optional_raw_string_value(
+            options.get("multiline-raw-string-delimiter-base")
         ),
-        record_struct_name_prefix=options.get("record-struct-name-prefix"),
-        record_shape_names=options.get("record-shape-names"),
-        heterogeneous_value_name=options.get("heterogeneous-value-name"),
+        record_struct_name_prefix=_optional_raw_string_value(
+            options.get("record-struct-name-prefix")
+        ),
+        record_shape_names=_optional_raw_string_value(
+            options.get("record-shape-names")
+        ),
+        heterogeneous_value_name=_optional_raw_string_value(
+            options.get("heterogeneous-value-name")
+        ),
         skip_if_unrepresentable="skip-if-unrepresentable" in options,
         wrap_in_file="wrap-in-file" in options,
-        ref_case=options.get("ref-case"),
-        ref_key=options.get("ref-key", "$ref"),
-        collection_layout=options.get("collection-layout", "compact"),
-        variable_name=options.get("variable-name"),
+        ref_case=_optional_raw_string_value(options.get("ref-case")),
+        ref_key=_raw_string_value(options.get("ref-key", "$ref")),
+        collection_layout=_raw_string_value(
+            options.get("collection-layout", "compact")
+        ),
+        variable_name=_optional_raw_string_value(options.get("variable-name")),
         existing_variable="existing-variable" in options,
-        modifiers=options.get("modifiers"),
+        modifiers=_optional_raw_string_value(options.get("modifiers")),
     )

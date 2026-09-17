@@ -5,8 +5,55 @@ from collections.abc import Callable
 from pathlib import Path
 from textwrap import dedent
 
+import pytest
 from docutils import nodes
 from sphinx.testing.util import SphinxTestApp
+
+from sphinx_literalizer._directives import LiteralizerDirective
+
+
+@pytest.mark.parametrize(
+    argnames="case",
+    argvalues=[
+        ("input-format", 1, "string"),
+        ("pre-indent-level", "invalid", "integer"),
+    ],
+)
+def test_invalid_converted_option_value(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    case: tuple[str, object, str],
+) -> None:
+    """A misbehaving converter cannot pass an untyped option onward."""
+    option_name, converted_value, expected_type = case
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    _ = (source_directory / "data.json").write_text(data="[1]")
+    _ = (source_directory / "index.rst").write_text(
+        data=(
+            "Test\n====\n\n.. literalizer:: data.json\n"
+            "   :language: python\n"
+            f"   :{option_name}: value\n"
+        )
+    )
+    option_spec = LiteralizerDirective.option_spec
+    assert option_spec is not None
+    monkeypatch.setitem(
+        dic=option_spec, name=option_name, value=lambda _: converted_value
+    )
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    with pytest.raises(
+        expected_exception=TypeError,
+        match=f"Expected a converted {expected_type}",
+    ):
+        app.build()
+    app.cleanup()
 
 
 def test_source_attribute_is_absolute(

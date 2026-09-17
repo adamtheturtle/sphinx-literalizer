@@ -31,12 +31,14 @@ from ._support import (
     _LiteralizerOptions,
     _OptionValidator,
     _parse_record_null_substitutions,
+    _RawLiteralizerCallOptions,
+    _RawLiteralizerOptions,
     _substitute_placeholder,
 )
 
 
 @beartype
-class LiteralizerDirective(_BaseLiteralizerDirective):
+class LiteralizerDirective(_BaseLiteralizerDirective[_RawLiteralizerOptions]):
     """Directive that converts a data file to a native literal block.
 
     Usage::
@@ -222,7 +224,9 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
 
 
 @beartype
-class LiteralizerCallDirective(_BaseLiteralizerDirective):
+class LiteralizerCallDirective(
+    _BaseLiteralizerDirective[_RawLiteralizerCallOptions]
+):
     """Directive that converts a data file to function call expressions.
 
     Usage::
