@@ -66,7 +66,7 @@ dev = [
     "pytest-beartype-tests==2026.8.16",
     "pytest-cov==7.1.0",
     "pytest-xdist==3.8.0",
-    "ruff==0.16.7",
+    "ruff==0.16.8",
     "shellcheck-py==0.11.0.1",
     "shfmt-py==4.2.0",
     "snapper-fmt==0.11.5",
