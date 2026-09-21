@@ -35,7 +35,7 @@ dynamic = [
 dependencies = [
     "beartype==0.22.9",
     "docutils",
-    "literalizer==2026.9.4",
+    "literalizer==2026.9.16",
     "sphinx>=7.0",
     "typing-extensions",
 ]
