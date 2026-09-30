@@ -33,7 +33,7 @@ dynamic = [
     "version",
 ]
 dependencies = [
-    "beartype==0.22.9",
+    "beartype==0.23.0rc2",
     "docutils",
     "literalizer==2026.9.16",
     "sphinx>=7.0",
@@ -63,7 +63,7 @@ dev = [
     "pyright==1.1.414",
     "pyroma==5.0.1",
     "pytest==9.1.1",
-    "pytest-beartype-tests==2026.8.16",
+    "pytest-beartype==0.3.0",
     "pytest-cov==7.1.0",
     "pytest-xdist==3.8.0",
     "ruff==0.16.9",
@@ -429,9 +429,12 @@ analysis.strict-equality-semantics = true
 analysis.strict-generic-narrowing = true
 
 [tool.pytest]
-ini_options.addopts = "-n auto"
-ini_options.xfail_strict = true
-ini_options.log_cli = true
+addopts = [ "-n", "auto" ]
+beartype_packages = [ "sphinx_literalizer" ]
+beartype_test_fixtures = true
+beartype_tests = true
+log_cli = true
+xfail_strict = true
 
 [tool.coverage]
 run.branch = true
