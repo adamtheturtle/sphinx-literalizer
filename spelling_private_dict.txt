@@ -10,6 +10,7 @@ Jsonnet
 Lua
 MATLAB
 Mojo
+MyST
 NaN
 Nim
 Nim's
@@ -27,6 +28,7 @@ Roc
 SML
 SystemVerilog
 Tcl
+Towncrier
 Vec
 Wren
 Zig
