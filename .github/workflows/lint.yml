@@ -4,8 +4,7 @@ name: Lint
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+  pull_request: {}
   schedule:
     - cron: 0 1 * * *
   workflow_dispatch: {}
