@@ -35,11 +35,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Assemble and validate release
+      - name: Assemble and format release notes
         env:
           RELEASE: ${{ steps.calver.outputs.release }}
           UV_PYTHON: '3.13'
-        run: bash ci/prepare-release.sh "$RELEASE"
+        run: bash ci/assemble-release-notes.sh "$RELEASE"
 
       - uses: stefanzweifel/git-auto-commit-action@v7
         id: commit

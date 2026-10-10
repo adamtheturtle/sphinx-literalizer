@@ -10,9 +10,10 @@ Outcomes
 Perform a Release
 ~~~~~~~~~~~~~~~~~
 
-CI rehearses release preparation with a numbered news fragment, including when no release notes are pending.
-The release workflow assembles and formats the release notes, then runs all lint stages and tests before committing, tagging, or publishing.
-The GitHub release description uses the same validated Markdown file as the documentation.
+On each pull request, CI assembles release notes with a numbered news fragment and runs all lint stages on the resulting tree.
+The required CI check also covers the test matrix.
+The release workflow uses the same assembly and formatting script before committing, tagging, and publishing.
+The GitHub release description uses the same Markdown file as the documentation.
 
 #. `Install GitHub CLI`_.
 

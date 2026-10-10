@@ -53,7 +53,17 @@ jobs:
           # Keep issue-link formatting covered even with no pending fragments.
           printf '\n%s\n' 'Validate JSON and Sphinx configuration boundaries explicitly instead of relying on casts and ignored type errors.' >> newsfragments/491.change.md
           git add -- newsfragments/491.change.md
-          bash ci/prepare-release.sh 9999.01.01
+          bash ci/assemble-release-notes.sh 9999.01.01
+          # Include the generated file in the repository's lint checks.
+          git add -- docs/source/changelog newsfragments
+      - name: Validate the assembled release tree
+        env:
+          UV_PYTHON: '3.13'
+        run: |
+          for stage in pre-commit pre-push manual; do
+            uv run --group=dev prek run --all-files --hook-stage "$stage"
+          done
+          cmp docs/source/changelog/9999.01.01.md release-notes.md
 
   completion-ci:
     needs: [build, release-preview]
