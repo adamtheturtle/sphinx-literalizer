@@ -34,7 +34,7 @@ dynamic = [
     "version",
 ]
 dependencies = [
-    "beartype==0.23.0",
+    "beartype==0.23.1",
     "docutils",
     "literalizer==2026.9.16",
     "sphinx>=7.0",
