@@ -623,6 +623,7 @@ class _LiteralizerOptions(_CommonOptions):
 class _LiteralizerCallOptions(_CommonOptions):
     """Typed options for the ``literalizer-call`` directive."""
 
+    input_root_key: str | None
     target_name: str
     constructor_call: bool
     parameter_names: str
