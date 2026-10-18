@@ -662,7 +662,7 @@ the directive renders the language-idiomatic no-argument construction:
 
 ``:input-root-key:`` (optional)
    Select the mapping entry containing the input for calls.
-   This supports nested rows in JSON, JSON5, YAML, and TOML without preprocessing the file.
+   This supports nested rows in JSON, JSON5, YAML, and TOML without editing the file first.
    For example, a TOML file containing ``calls = [["Ada"], ["Grace"]]`` can use ``:input-root-key: calls`` with ``:per-element:``.
    A missing key or a root that is not a mapping reports a directive error.
 
