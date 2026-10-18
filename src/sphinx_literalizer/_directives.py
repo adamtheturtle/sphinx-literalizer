@@ -263,6 +263,13 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
            :per-element:
            :variable-name: widget
 
+    ``:input-root-key:`` selects call input from a mapping entry before
+    rendering, using Literalizer's parser so comments and source metadata
+    are retained.  This supports TOML tables such as
+    ``calls = [["Ada"], ["Grace"]]`` with ``:input-root-key: calls``.
+    With ``:per-element:``, each selected row becomes a call; without it,
+    the selected value supplies the arguments to one call.
+
     ``:call-transform:`` substitutes these placeholders in the template:
     ``$call`` (and the ``$0`` alias) for the rendered call expression,
     ``$index`` for the zero-based call position, and ``$zipped`` for the
@@ -290,6 +297,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
     option_spec: ClassVar[dict[str, _OptionValidator] | None] = {
         **_COMMON_OPTIONS,
+        "input-root-key": directives.unchanged_required,
         "target-function": directives.unchanged_required,
         "constructor-class": directives.unchanged_required,
         "parameter-names": directives.unchanged,
@@ -408,6 +416,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             target_name = target_function
         return _LiteralizerCallOptions(
             **_common_option_args(options=options),
+            input_root_key=self.options.get("input-root-key"),
             target_name=target_name,
             constructor_call=constructor_class is not None,
             parameter_names=self.options.get("parameter-names", ""),
@@ -487,6 +496,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             format_constructor = language_spec.format_constructor_target
             return literalize_call(
                 source=source,
+                input_root_key=options.input_root_key,
                 input_format=input_format,
                 language=language_spec,
                 target_function=(

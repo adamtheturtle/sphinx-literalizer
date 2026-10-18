@@ -660,6 +660,12 @@ the directive renders the language-idiomatic no-argument construction:
    For positional-call languages (like Go) these are unused in the output but still determine how many values to expect per row.
    An empty (or omitted) value means the call takes *no* arguments, which -- combined with ``:per-element:`` over a single-element source and ``:variable-name:`` -- renders a no-argument constructor bound to a variable (see the example below).
 
+``:input-root-key:`` (optional)
+   Select the mapping entry containing the input for calls.
+   This supports nested rows in JSON, JSON5, YAML, and TOML without preprocessing the file.
+   For example, a TOML file containing ``calls = [["Ada"], ["Grace"]]`` can use ``:input-root-key: calls`` with ``:per-element:``.
+   A missing key or a root that is not a mapping reports a directive error.
+
 ``:per-element:`` (optional flag)
    When set, each top-level list element becomes a separate function call.
    Without this flag, the whole literalized value is passed as a single argument.
