@@ -35,6 +35,40 @@ Then use the ``literalizer`` directive in your ``.rst`` files:
 This reads the data file and renders its contents as a native Python literal in a code block.
 Input format is auto-detected from the file extension (``.json``, ``.yaml``/``.yml``, ``.toml``, ``.json5``), or can be set explicitly with ``:input-format:``.
 
+Shared preambles
+~~~~~~~~~~~~~~~~
+
+Use ``literalizer-group`` when several generated inputs belong to the same snippet:
+
+.. code-block:: rst
+
+   .. literalizer-group:: cpp
+
+      .. literalizer:: service_logs.yaml
+         :language: cpp
+         :variable-name: serviceLogs
+         :include-preamble:
+
+      .. literalizer:: service_to_machines.yaml
+         :language: cpp
+         :variable-name: serviceToMachines
+         :heterogeneous-strategy: tuple
+         :include-preamble:
+
+The group emits the requested preambles before all its code fragments, removing identical entries in first-seen order.
+For example, shared C++ headers appear once at the top instead of between declarations.
+The argument is the Pygments language used by every nested code block.
+Both ``literalizer`` and ``literalizer-call`` are supported, along with ordinary code directives using that language.
+Keep ``:include-preamble:`` or ``:preamble-only:`` on inputs whose preambles are required; grouping does not enable either option implicitly.
+The fragments remain separate code blocks; an extension such as ``sphinx-combine`` can combine them into one copyable block.
+
+Each group is independent, so unrelated examples retain their own preambles.
+Groups accept only code directives and cannot be nested.
+Generated helper declarations remain intact: identical multiline entries are removed as whole entries, without removing repeated braces or fields inside them.
+Different non-empty generated helper blocks are rejected because independently inferred types may conflict.
+Use separate groups for these inputs; general helper-name and schema reconciliation is tracked in `Literalizer issue 5900 <https://github.com/adamtheturtle/literalizer/issues/5900>`__.
+Grouping only gathers file-scope preambles; it does not combine complete wrapped files or reconcile definitions embedded in the generated code.
+
 Directive options
 ~~~~~~~~~~~~~~~~~
 

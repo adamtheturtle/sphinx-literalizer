@@ -30,6 +30,7 @@ from literalizer.exceptions import (
 from sphinx.errors import ExtensionError
 from sphinx.util.docutils import SphinxDirective
 
+from ._group import _GeneratedFragment
 from ._support import (
     _AUTO_STRATEGY,
     _DEFAULT_TYPE_OPTIONS,
@@ -370,6 +371,8 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
         text: str,
         data_path: Path,
         language_cls: LanguageCls,
+        *,
+        fragment: _GeneratedFragment,
     ) -> list[nodes.Node]:
         """Create a literal_block node."""
         node = nodes.literal_block(
@@ -383,6 +386,9 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
             if pygments_name is not None and pygments_name != ""
             else "text"
         )
+        # Keep generated entries intact for an enclosing literalizer-group.
+        # Ordinary directives retain their existing text and behaviour.
+        node["literalizer_fragment"] = fragment
         self.add_name(node=node)
         return [node]
 

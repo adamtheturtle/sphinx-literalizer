@@ -1,5 +1,6 @@
 """Shared helpers for extension integration tests."""
 
+import shutil
 from pathlib import Path
 
 from sphinx.testing.util import SphinxTestApp
@@ -33,3 +34,14 @@ def assert_directive_error(
     )
     reported = strip_colors(app.warning.getvalue()).splitlines()
     assert reported == [expected]
+
+
+def find_cpp_compiler() -> str:
+    """Return an available C++ compiler."""
+    compiler = shutil.which(cmd="clang++")
+    if compiler is None:
+        compiler = shutil.which(cmd="g++")
+    if compiler is None:
+        msg = "A C++ compiler is required for this test."
+        raise RuntimeError(msg)
+    return compiler

@@ -13,7 +13,7 @@ import pytest
 from docutils import nodes
 from sphinx.testing.util import SphinxTestApp
 
-from tests.test_helpers import assert_directive_error
+from tests.test_helpers import assert_directive_error, find_cpp_compiler
 
 
 def test_heterogeneous_strategy_record_go(
@@ -483,17 +483,6 @@ def test_cpp14_named_carrier_preamble_only(
     app.cleanup()
 
 
-def _find_cpp_compiler() -> str:
-    """Return an available C++ compiler."""
-    compiler = shutil.which(cmd="clang++")
-    if compiler is None:
-        compiler = shutil.which(cmd="g++")
-    if compiler is None:
-        msg = "A C++ compiler is required for this test."
-        raise RuntimeError(msg)
-    return compiler
-
-
 def test_cpp_compiler_is_required(monkeypatch: pytest.MonkeyPatch) -> None:
     """A missing C++ compiler fails instead of skipping the composition
     test.
@@ -505,7 +494,7 @@ def test_cpp_compiler_is_required(monkeypatch: pytest.MonkeyPatch) -> None:
         expected_exception=RuntimeError,
         match="A C\\+\\+ compiler is required",
     ):
-        _ = _find_cpp_compiler()
+        _ = find_cpp_compiler()
 
 
 def test_literalizer_call_named_carrier_preamble_only(
@@ -514,7 +503,7 @@ def test_literalizer_call_named_carrier_preamble_only(
     tmp_path: Path,
 ) -> None:
     """Literalizer-call composes a named carrier with later C++14 code."""
-    compiler = _find_cpp_compiler()
+    compiler = find_cpp_compiler()
 
     source_directory = tmp_path / "source"
     source_directory.mkdir()

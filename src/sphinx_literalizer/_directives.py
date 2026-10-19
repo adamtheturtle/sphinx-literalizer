@@ -22,6 +22,7 @@ from literalizer.exceptions import (
 )
 
 from ._base import _BaseLiteralizerDirective
+from ._group import _GeneratedFragment
 from ._support import (
     _COMMON_OPTIONS,
     _common_option_args,
@@ -218,6 +219,19 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
             text=text,
             data_path=data_path,
             language_cls=language_cls,
+            fragment=_GeneratedFragment(
+                preamble=(
+                    result.preamble
+                    if include_preamble or preamble_only
+                    else ()
+                ),
+                data_dependent_preamble=(
+                    result.data_dependent_preamble
+                    if include_preamble or preamble_only
+                    else ()
+                ),
+                code="" if preamble_only else result.code,
+            ),
         )
 
 
@@ -555,4 +569,17 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             text=text,
             data_path=data_path,
             language_cls=language_cls,
+            fragment=_GeneratedFragment(
+                preamble=(
+                    result.preamble
+                    if include_preamble or preamble_only
+                    else ()
+                ),
+                data_dependent_preamble=(
+                    result.data_dependent_preamble
+                    if include_preamble or preamble_only
+                    else ()
+                ),
+                code="" if omit_code or preamble_only else code,
+            ),
         )
