@@ -60,10 +60,10 @@ For example, shared C++ headers appear once at the top instead of between declar
 The argument is the Pygments language used by every nested code block.
 Both ``literalizer`` and ``literalizer-call`` are supported, along with ordinary code directives using that language.
 Keep ``:include-preamble:`` or ``:preamble-only:`` on inputs whose preambles are required; grouping does not enable either option implicitly.
-The fragments remain separate code blocks; an extension such as ``sphinx-combine`` can combine them into one copyable block.
+The fragments remain separate code blocks; an extension such as ``sphinx-combine`` can combine them into one block with a shared copy button.
 
 Each group is independent, so unrelated examples retain their own preambles.
-Groups accept only code directives and cannot be nested.
+Groups accept only code directives and empty ``|`` line separators, and cannot be nested.
 Generated helper declarations remain intact: identical multiline entries are removed as whole entries, without removing repeated braces or fields inside them.
 Different non-empty generated helper blocks are rejected because independently inferred types may conflict.
 Use separate groups for these inputs; general helper-name and schema reconciliation is tracked in `Literalizer issue 5900 <https://github.com/adamtheturtle/literalizer/issues/5900>`__.

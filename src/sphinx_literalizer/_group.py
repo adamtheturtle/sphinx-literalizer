@@ -24,8 +24,8 @@ class LiteralizerGroupDirective(SphinxDirective):
     """Hoist requested preambles before a group of code fragments.
 
     The argument is the Pygments language of the nested code blocks.
-    Identical generated entries are deduplicated as whole entries, never
-    as individual lines inside a helper declaration.
+    Repeated generated entries are removed as whole entries, never as
+    individual lines inside a helper declaration.
     """
 
     required_arguments = 1
@@ -41,25 +41,17 @@ class LiteralizerGroupDirective(SphinxDirective):
             node=container,
         )
         language = self.arguments[0]
+        if any(
+            isinstance(child, nodes.system_message)
+            for child in container.children
+        ):
+            return list(container.children)
+        blocks = self._validate_blocks(
+            children=container.children, language=language
+        )
         preamble: dict[str, None] = {}
         helper_blocks: set[tuple[str, ...]] = set()
-        blocks: list[nodes.literal_block] = []
-        for child in container.children:
-            if not isinstance(child, nodes.literal_block):
-                if isinstance(child, nodes.system_message):
-                    return list(container.children)
-                msg = "literalizer-group accepts only code directives."
-                raise self.error(message=msg)
-            if child.get(key="literalizer_group", failobj=False):
-                msg = "literalizer-group cannot be nested."
-                raise self.error(message=msg)
-            if child.get(key="language", failobj="text") != language:
-                msg = (
-                    "Every code block in literalizer-group must use "
-                    f"language '{language}'."
-                )
-                raise self.error(message=msg)
-            blocks.append(child)
+        for child in blocks:
             fragment = child.get(key="literalizer_fragment")
             if not isinstance(fragment, _GeneratedFragment):
                 continue
@@ -85,10 +77,34 @@ class LiteralizerGroupDirective(SphinxDirective):
         result.extend(self._strip_preambles(blocks=blocks))
         return result
 
+    def _validate_blocks(
+        self, *, children: list[nodes.Node], language: str
+    ) -> list[nodes.Element]:
+        """Require code in one language, allowing blank line
+        separators.
+        """
+        blocks: list[nodes.Element] = []
+        for child in children:
+            if isinstance(child, nodes.line_block) and child.astext() == "":
+                blocks.append(child)
+                continue
+            if not isinstance(child, nodes.literal_block):
+                msg = "literalizer-group accepts only code directives."
+                raise self.error(message=msg)
+            if child.get(key="literalizer_group", failobj=False):
+                msg = "literalizer-group cannot be nested."
+                raise self.error(message=msg)
+            if child.get(key="language", failobj="text") != language:
+                msg = (
+                    "Every code block in literalizer-group must use "
+                    f"language '{language}'."
+                )
+                raise self.error(message=msg)
+            blocks.append(child)
+        return blocks
+
     @staticmethod
-    def _strip_preambles(
-        *, blocks: list[nodes.literal_block]
-    ) -> list[nodes.Node]:
+    def _strip_preambles(*, blocks: list[nodes.Element]) -> list[nodes.Node]:
         """Retain source information while replacing grouped block
         text.
         """

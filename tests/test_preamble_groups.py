@@ -60,11 +60,15 @@ def test_cpp_group_compiles(
         content="""\
         .. literalizer-group:: cpp
 
+           |
+
            .. literalizer:: logs.json
               :language: cpp
               :variable-name: serviceLogs
               :include-preamble:
               :language-version: cpp14
+
+           |
 
            .. literalizer:: machines.json
               :language: cpp
@@ -160,7 +164,7 @@ def test_independent_examples_keep_their_preambles(
     tmp_path: Path,
     grouped: bool,
 ) -> None:
-    """Deduplication never leaks between groups or ordinary directives."""
+    """Removing repeated entries affects only the enclosing group."""
     fragment = """\
         .. literalizer:: logs.json
            :language: cpp
