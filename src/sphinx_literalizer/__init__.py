@@ -11,11 +11,13 @@ from sphinx.application import Sphinx
 from sphinx.util.typing import ExtensionMetadata
 
 from ._directives import LiteralizerCallDirective, LiteralizerDirective
+from ._group import LiteralizerGroupDirective
 from ._support import _DEFAULT_HETEROGENEOUS_STRATEGY_PRECEDENCE
 
 __all__ = (
     "LiteralizerCallDirective",
     "LiteralizerDirective",
+    "LiteralizerGroupDirective",
     "setup",
 )
 
@@ -24,6 +26,7 @@ __all__ = (
 def setup(app: Sphinx) -> ExtensionMetadata:
     """Register the extension with Sphinx."""
     app.add_directive(name="literalizer", cls=LiteralizerDirective)
+    app.add_directive(name="literalizer-group", cls=LiteralizerGroupDirective)
     app.add_directive(
         name="literalizer-call",
         cls=LiteralizerCallDirective,
