@@ -111,7 +111,8 @@ def test_cpp_group_compiles(
         ],
         check=True,
         capture_output=True,
-        timeout=30,
+        # Allow for slow C++ compilation on Windows runners.
+        timeout=120,
     )
     _ = subprocess.run(  # noqa: S603
         args=[str(object=binary)],
