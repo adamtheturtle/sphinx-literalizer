@@ -94,7 +94,8 @@ Some inputs cannot be represented in some languages even with ``auto`` -- for in
 By default this fails the build, which is correct when every language must render every input.
 
 When a single canonical input is rendered across several languages (typically a Jinja loop over a language list), failing the whole build forces the data-shape knowledge -- "skip Rust for this one" -- into the template or prose.
-The ``:skip-if-unrepresentable:`` flag (on both directives) keeps that knowledge in the directive: when the input cannot be represented in the target language, including after ``auto`` exhausts its precedence, the directive emits no node instead of raising.
+The ``:skip-if-unrepresentable:`` flag on either directive omits output for inputs that cannot be represented in the target language.
+This also applies when ``auto`` exhausts its precedence without finding a suitable strategy.
 
 .. code-block:: rst
 
@@ -380,7 +381,7 @@ Languages not listed support only ``error`` (set explicitly) and ``auto`` (which
      - Mojo
      - A ``Variant`` alias plus wrapped values.
 
-Selecting a strategy a language does not support is an error rather than a silent fallback, so a typo such as ``:heterogeneous-strategy: tagged_enum`` on a Go directive fails loudly.
+Selecting a strategy a language does not support is an error rather than a silent fallback, so a typo such as ``:heterogeneous-strategy: tagged_enum`` on a Go directive raises an error.
 
 This matrix tracks the upstream `literalizer`_ release pinned by |project|; new languages and strategies are announced in the :doc:`changelog`.
 
