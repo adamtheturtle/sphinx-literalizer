@@ -1,82 +1,54 @@
 ---
-name: Release
+name: Windows ARM release validation
 
 on: workflow_dispatch
 
+permissions:
+  contents: read
+
 jobs:
-  build:
-    name: Publish a release
-    runs-on: ubuntu-latest
-
-    environment: release
-
-    permissions:
-      id-token: write
-      contents: write
-
+  test:
+    runs-on: windows-11-arm
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - '3.12'
+          - '3.13'
+          - '3.14'
+          - '3.15'
     steps:
       - uses: actions/checkout@v7
         with:
-          token: ${{ secrets.RELEASE_PAT }}
-          fetch-depth: 0
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v10.3.3
-        with:
-          enable-cache: true
-          cache-dependency-glob: '**/pyproject.toml'
-
-      - name: Calver calculate version
-        uses: StephaneBour/actions-calver@master
-        id: calver
-        with:
-          date_format: '%Y.%m.%d'
-          release: false
+          ref: 156ab7e0c85ab3a8f51c6ca29c9a497b93a06c41
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v10.3.3
+      - name: Run tests using x64 Python
+        run: uv run --group=dev pytest -n 2 --cov --cov-config=pyproject.toml .
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Assemble native Markdown release notes
+          UV_PYTHON: cpython-${{ matrix.python-version }}-windows-x86_64
+  lint:
+    runs-on: windows-11-arm
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        hook-stage:
+          - pre-commit
+          - pre-push
+          - manual
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: 156ab7e0c85ab3a8f51c6ca29c9a497b93a06c41
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v10.3.3
+      - uses: j178/prek-action@v3.1.0
+        with:
+          prek-version: 0.4.11
+          extra-args: >-
+            --all-files --hook-stage ${{ matrix.hook-stage }} --verbose
         env:
-          RELEASE: ${{ steps.calver.outputs.release }}
-        run: |
-          uv run --group=release towncrier build --yes --version "$RELEASE"
-          uv run --group=dev snapper --native --max-width 0 --in-place "docs/source/changelog/$RELEASE.md"
-          cp "docs/source/changelog/$RELEASE.md" release-notes.md
-
-      - uses: stefanzweifel/git-auto-commit-action@v7
-        id: commit
-        with:
-          commit_message: Bump CHANGELOG
-          file_pattern: CHANGELOG.md docs/source/changelog newsfragments
-          skip_dirty_check: true
-
-      - name: Bump version and push tag
-        id: tag_version
-        uses: mathieudutour/github-tag-action@v7
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          custom_tag: ${{ steps.calver.outputs.release }}
-          tag_prefix: ''
-          commit_sha: ${{ steps.commit.outputs.commit_hash }}
-
-      - name: Create a GitHub release
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ steps.tag_version.outputs.new_tag }}
-          makeLatest: true
-          name: Release ${{ steps.tag_version.outputs.new_tag }}
-          bodyFile: release-notes.md
-
-      - name: Build a binary wheel and a source tarball
-        env:
-          NEW_TAG: ${{ steps.tag_version.outputs.new_tag }}
-        run: |
-          git fetch --tags
-          git checkout "$NEW_TAG"
-          uv build --sdist --wheel --out-dir dist/
-          uv run --group=release check-wheel-contents dist/*.whl
-
-      - name: Publish distribution 📦 to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          verbose: true
+          UV_NO_CACHE: '1'
+          UV_PYTHON: cpython-3.13-windows-x86_64
