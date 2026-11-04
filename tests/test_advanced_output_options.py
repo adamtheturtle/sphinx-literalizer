@@ -542,9 +542,10 @@ def test_record_map_value_typing_narrow_is_the_default(
 
     assert preamble == (
         "use std::collections::HashMap;\n"
-        "struct Row {\n"
-        "    name: &'static str,\n"
-        "    attributes: HashMap<&'static str, &'static str>,\n"
+        "#[derive(Clone)]\n"
+        "pub struct Row {\n"
+        "    pub name: &'static str,\n"
+        "    pub attributes: HashMap<&'static str, &'static str>,\n"
         "}"
     )
 
@@ -573,23 +574,27 @@ def test_record_map_value_typing_wide(
 
     assert uniform_preamble == (
         "use std::collections::HashMap;\n"
-        "enum Value {\n"
+        "#[derive(Clone)]\n"
+        "pub enum Value {\n"
         "    Str(&'static str),\n"
         "}\n"
-        "struct Row {\n"
-        "    name: &'static str,\n"
-        "    attributes: HashMap<&'static str, Value>,\n"
+        "#[derive(Clone)]\n"
+        "pub struct Row {\n"
+        "    pub name: &'static str,\n"
+        "    pub attributes: HashMap<&'static str, Value>,\n"
         "}"
     )
     assert mixed_preamble == (
         "use std::collections::HashMap;\n"
-        "enum Value {\n"
+        "#[derive(Clone)]\n"
+        "pub enum Value {\n"
         "    Str(&'static str),\n"
         "    I32(i32),\n"
         "}\n"
-        "struct Row {\n"
-        "    name: &'static str,\n"
-        "    attributes: HashMap<&'static str, Value>,\n"
+        "#[derive(Clone)]\n"
+        "pub struct Row {\n"
+        "    pub name: &'static str,\n"
+        "    pub attributes: HashMap<&'static str, Value>,\n"
         "}"
     )
 

@@ -57,7 +57,13 @@ class LiteralizerGroupDirective(SphinxDirective):
                 continue
             for entry in fragment.preamble:
                 preamble[entry] = None
-            helpers = fragment.data_dependent_preamble
+            # C++ selects headers from each input's inferred types. These
+            # imports can differ without introducing conflicting helpers.
+            helpers = tuple(
+                entry
+                for entry in fragment.data_dependent_preamble
+                if not (language == "cpp" and entry.startswith("#include "))
+            )
             if len(helpers) > 0:
                 helper_blocks.add(helpers)
         if len(helper_blocks) > 1:
