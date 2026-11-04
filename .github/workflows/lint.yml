@@ -16,7 +16,10 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.13']
-        platform: [ubuntu-latest, windows-latest]
+        # Release branches use ARM runner capacity.
+        platform:
+          - ${{ startsWith(github.head_ref, 'release/') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+          - ${{ startsWith(github.head_ref, 'release/') && 'windows-11-arm' || 'windows-latest' }}
         hook-stage: [pre-commit, pre-push, manual]
 
     runs-on: ${{ matrix.platform }}
@@ -42,11 +45,11 @@ jobs:
             --all-files --hook-stage ${{ matrix.hook-stage }} --verbose
         env:
           UV_NO_CACHE: '1'
-          UV_PYTHON: ${{ matrix.python-version }}
+          UV_PYTHON: ${{ matrix.platform == 'windows-11-arm' && format('cpython-{0}-windows-x86_64', matrix.python-version) || matrix.python-version }}
 
   completion-lint:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ${{ startsWith(github.head_ref, 'release/') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     if: ${{ !cancelled() }}
     steps:
       - name: Check matrix job status

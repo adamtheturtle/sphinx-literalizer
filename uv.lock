@@ -880,12 +880,21 @@ wheels = [
 ]
 
 [[package]]
-name = "json5"
-version = "0.17.3"
+name = "json5-document"
+version = "2026.10.15.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/16/1f/58a4d7ee466f81bc3c7337036380fc6d49de3afb7855d74f8121b1e89b32/json5-0.17.3.tar.gz", hash = "sha256:8d0278ad34ebaa9c3af76d9519274811830224a2d1cd5af156dbd067f461b8a4", size = 54234, upload-time = "2026-10-09T21:19:28.335Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7c/e4/ed48d6868fb633cea8eb2422926f4b0a7600d996e7a9ad8ad317af4c22db/json5_document-2026.10.15.1.tar.gz", hash = "sha256:4775b2013c744a412c18ce9b40969deeb6b2e7df514f8c7d5f374673a9ba4922", size = 35806, upload-time = "2026-10-15T17:09:59.942Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ae/39/e689b616c4279a821d5842a8a85c1874540f8d58e35028df93f2182120c2/json5-0.17.3-py3-none-any.whl", hash = "sha256:2c8b22a893c35cd6a3c5ccbf1dd1c7d02c25dc1b5897fea658f9bf08c2e05f9a", size = 34809, upload-time = "2026-10-09T21:19:27.357Z" },
+    { url = "https://files.pythonhosted.org/packages/52/55/184c9140ff95aa0e4a065d85266db9098427efe174979fb108e7af3cb8a9/json5_document-2026.10.15.1-py3-none-any.whl", hash = "sha256:24168c7fbe44c4bc55f940c756299f8fa622f4f25d96d54c3ee748aad407bbda", size = 10325, upload-time = "2026-10-15T17:09:58.757Z" },
+]
+
+[[package]]
+name = "jsonc-document"
+version = "2026.10.15"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/71/8c/bb4eee8cf2e918706c56b0cd3cac51b812f3202408427aefc3219a0f6705/jsonc_document-2026.10.15.tar.gz", hash = "sha256:fbe17fa2ae2b5f5058f07e6480b6530f656927e0ec492c009bc5af875e7e07f7", size = 41370, upload-time = "2026-10-15T20:44:00.356Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/17/f0/8b69461a383f5f31cc44eda98b1c91f8817101e921c51da05b9b461c909e/jsonc_document-2026.10.15-py3-none-any.whl", hash = "sha256:99d9eb17b923125790e53821e5576bc9924318513060018b1794e287c9a7a3de", size = 9696, upload-time = "2026-10-15T20:43:58.844Z" },
 ]
 
 [[package]]
@@ -991,20 +1000,20 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.9.16"
+version = "2026.11.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
-    { name = "json5" },
+    { name = "json5-document" },
+    { name = "jsonc-document" },
     { name = "pyhumps" },
     { name = "ruamel-yaml" },
-    { name = "ruamel-yaml-clib", marker = "platform_python_implementation == 'CPython'" },
+    { name = "ruamel-yaml-clib", marker = "platform_python_implementation == 'CPython' and sys_platform != 'emscripten'" },
     { name = "tomlkit" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/39/f8/6fdbb45349e2b543b7c1406f80727f439b44522b76d38d070c2498153764/literalizer-2026.9.16.tar.gz", hash = "sha256:311a6e6fbc8ff48ef751a16e85a0a7052a25784bb45056aaa5a94d7b7b4c53ca", size = 4604995, upload-time = "2026-09-16T01:55:14.546Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8e/0b/d6c4b011e7fd5798029675f81e404c894e527d49f92eeddfb9ed5c475fa1/literalizer-2026.9.16-py3-none-any.whl", hash = "sha256:ed4d117ad8d06fff18a4479b640cfa2a4987f9015f79adedcb71daca10806c97", size = 1036721, upload-time = "2026-09-16T01:55:12.648Z" },
+    { url = "https://files.pythonhosted.org/packages/67/a9/b6d31ac675015164368ecedb1324d9c2241b53bef31d954bc7c0b043cb64/literalizer-2026.11.4-py3-none-any.whl", hash = "sha256:138446f9e7838d7a5ef164a60c77a68a0301ca65026a2cb1642adfc95f3a08f5", size = 1114643, upload-time = "2026-11-04T00:28:44.83Z" },
 ]
 
 [[package]]
@@ -2365,7 +2374,7 @@ release = [
 requires-dist = [
     { name = "beartype", specifier = "==0.23.1" },
     { name = "docutils" },
-    { name = "literalizer", specifier = "==2026.9.16" },
+    { name = "literalizer", specifier = "==2026.11.4" },
     { name = "sphinx", specifier = ">=7.0" },
     { name = "typing-extensions" },
 ]

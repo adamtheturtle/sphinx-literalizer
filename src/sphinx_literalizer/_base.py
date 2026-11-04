@@ -388,7 +388,15 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
         )
         # Keep generated entries intact for an enclosing literalizer-group.
         # Ordinary directives retain their existing text and behaviour.
-        node["literalizer_fragment"] = fragment
+        # Store plain strings in Sphinx's cached document trees. Literalizer
+        # can return text whose constructor also requires type metadata.
+        node["literalizer_fragment"] = _GeneratedFragment(
+            preamble=tuple(str(object=entry) for entry in fragment.preamble),
+            data_dependent_preamble=tuple(
+                str(object=entry) for entry in fragment.data_dependent_preamble
+            ),
+            code=str(object=fragment.code),
+        )
         self.add_name(node=node)
         return [node]
 

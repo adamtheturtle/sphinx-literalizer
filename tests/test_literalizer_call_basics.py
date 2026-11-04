@@ -113,7 +113,8 @@ def test_literalizer_call_heterogeneous_per_element_preamble(
     doctree = app.env.get_doctree(docname="index")
     (literal_block,) = doctree.findall(condition=nodes.literal_block)
     assert literal_block.astext() == (
-        "enum Value {\n"
+        "#[derive(Clone)]\n"
+        "pub enum Value {\n"
         "    I32(i32),\n"
         "    Str(&'static str),\n"
         "    Bool(bool),\n"

@@ -77,19 +77,19 @@ def test_heterogeneous_strategy_record_go(
             (
                 "using System.Collections.Generic;\n"
                 "record Record0(string Name, "
-                "Dictionary<string, object> Input, "
-                "Dictionary<string, object> Expected);\n"
+                "Dictionary<string, object?> Input, "
+                "Dictionary<string, object?> Expected);\n"
                 "\n"
                 "new[] {\n"
                 '    new Record0("test_1", '
-                'new Dictionary<string, object> {["type"] = "create", '
+                'new Dictionary<string, object?> {["type"] = "create", '
                 '["pr_id"] = "pr_1", ["draft"] = true}, '
-                'new Dictionary<string, object> {["pr_id"] = "pr_1", '
+                'new Dictionary<string, object?> {["pr_id"] = "pr_1", '
                 '["status"] = "draft"}),\n'
                 '    new Record0("test_2", '
-                'new Dictionary<string, object> {["type"] = "publish", '
+                'new Dictionary<string, object?> {["type"] = "publish", '
                 '["pr_id"] = "pr_1"}, '
-                "new Dictionary<string, object> "
+                "new Dictionary<string, object?> "
                 '{["error"] = "invalid_operation"})\n'
                 "}"
             ),
@@ -97,10 +97,9 @@ def test_heterogeneous_strategy_record_go(
         (
             "cpp",
             (
-                "#include <initializer_list>\n"
-                "#include <string>\n"
-                "#include <map>\n"
                 "#include <vector>\n"
+                "#include <map>\n"
+                "#include <string>\n"
                 "#include <variant>\n"
                 "using LiteralizerRecordValue = "
                 "std::variant<std::string, bool>;\n"
@@ -194,14 +193,16 @@ def test_heterogeneous_strategy_record_go(
             "rust",
             (
                 "use std::collections::HashMap;\n"
-                "enum Value {\n"
+                "#[derive(Clone)]\n"
+                "pub enum Value {\n"
                 "    Str(&'static str),\n"
                 "    Bool(bool),\n"
                 "}\n"
-                "struct Record0 {\n"
-                "    name: &'static str,\n"
-                "    input: HashMap<&'static str, Value>,\n"
-                "    expected: HashMap<&'static str, Value>,\n"
+                "#[derive(Clone)]\n"
+                "pub struct Record0 {\n"
+                "    pub name: &'static str,\n"
+                "    pub input: HashMap<&'static str, Value>,\n"
+                "    pub expected: HashMap<&'static str, Value>,\n"
                 "}\n"
                 "\n"
                 "vec![\n"

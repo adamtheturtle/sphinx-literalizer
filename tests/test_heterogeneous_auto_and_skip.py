@@ -262,7 +262,8 @@ def test_heterogeneous_strategy_auto_precedence_config_rust(
     doctree = app.env.get_doctree(docname="index")
     (literal_block,) = doctree.findall(condition=nodes.literal_block)
     assert literal_block.astext() == (
-        "enum Value {\n"
+        "#[derive(Clone)]\n"
+        "pub enum Value {\n"
         "    I32(i32),\n"
         "    Str(&'static str),\n"
         "}\n"
