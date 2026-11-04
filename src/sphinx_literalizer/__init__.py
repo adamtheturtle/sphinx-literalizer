@@ -1,7 +1,7 @@
 """Sphinx extension for literalizer.
 
-Provides the ``literalizer`` and ``literalizer-call`` directives, which
-read data files and render them as native language code blocks.
+Provides literal, call, and native invocation directives, which read data
+files and render combined native language code blocks.
 """
 
 from importlib.metadata import version
@@ -12,12 +12,14 @@ from sphinx.util.typing import ExtensionMetadata
 
 from ._directives import LiteralizerCallDirective, LiteralizerDirective
 from ._group import LiteralizerGroupDirective
+from ._native import LiteralizerInvocationDirective
 from ._support import _DEFAULT_HETEROGENEOUS_STRATEGY_PRECEDENCE
 
 __all__ = (
     "LiteralizerCallDirective",
     "LiteralizerDirective",
     "LiteralizerGroupDirective",
+    "LiteralizerInvocationDirective",
     "setup",
 )
 
@@ -26,6 +28,9 @@ __all__ = (
 def setup(app: Sphinx) -> ExtensionMetadata:
     """Register the extension with Sphinx."""
     app.add_directive(name="literalizer", cls=LiteralizerDirective)
+    app.add_directive(
+        name="literalizer-invocation", cls=LiteralizerInvocationDirective
+    )
     app.add_directive(name="literalizer-group", cls=LiteralizerGroupDirective)
     app.add_directive(
         name="literalizer-call",
