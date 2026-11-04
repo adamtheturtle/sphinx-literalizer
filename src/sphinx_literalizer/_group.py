@@ -1,13 +1,135 @@
 """Explicit, document-local grouping of generated preambles."""
 
-from dataclasses import dataclass
-from typing import override
+from contextvars import ContextVar
+from dataclasses import dataclass, fields, replace
+from typing import ClassVar, override
 
 from beartype import beartype
 from docutils import nodes
+from docutils.parsers.rst import directives
+from literalizer import IdentifierCase, Language, ValueInput
 from sphinx.util.docutils import SphinxDirective
 
-__all__ = ("LiteralizerGroupDirective", "_GeneratedFragment")
+from ._support import _DirectiveError, _OptionValidator
+
+__all__ = (
+    "_CURRENT_REFERENCES",
+    "LiteralizerGroupDirective",
+    "_GeneratedFragment",
+)
+
+
+@dataclass(frozen=True)
+class _ReferenceBinding:
+    """An actual declaration and the options that produced it."""
+
+    name: str
+    value: ValueInput
+    language: Language
+
+
+@dataclass
+class _ReferenceScope:
+    """Binding knowledge confined to one explicitly opted-in group."""
+
+    bindings: dict[str, _ReferenceBinding]
+
+    def add(
+        self,
+        *,
+        reference: str,
+        name: str,
+        value: ValueInput,
+        language: Language,
+    ) -> None:
+        """Register one declaration, rejecting ambiguous names."""
+        if reference in self.bindings or any(
+            binding.name == name for binding in self.bindings.values()
+        ):
+            msg = f"Duplicate shared reference declaration '{reference}'."
+            raise _DirectiveError(message=msg)
+        self.bindings[reference] = _ReferenceBinding(
+            name=name,
+            value=value,
+            language=language,
+        )
+
+    def values(self) -> dict[str, ValueInput]:
+        """Return original source values keyed by raw reference name."""
+        return {name: binding.value for name, binding in self.bindings.items()}
+
+    def prepare_language(self, language: Language, /) -> Language:
+        """Retain a common representation selected for prior bindings.
+
+        A reference-only call may succeed with the language's natural
+        strategy even though its declaration required a different one.
+        Reuse actual declaration metadata when automatic selection is
+        requested; validate all other constructor options afterwards.
+        """
+        bindings = tuple(self.bindings.values())
+        if len(bindings) == 0 or any(
+            type(binding.language) is not type(language)
+            for binding in bindings
+        ):
+            return language
+        strategies = {
+            binding.language.heterogeneous_strategy for binding in bindings
+        }
+        if len(strategies) != 1:
+            msg = (
+                "Shared declarations require one explicit common "
+                "heterogeneous strategy."
+            )
+            raise _DirectiveError(message=msg)
+        return replace(
+            language,
+            heterogeneous_strategy=bindings[0].language.heterogeneous_strategy,
+        )
+
+    def validate(
+        self,
+        *,
+        language: Language,
+        ref_case: IdentifierCase | None,
+    ) -> None:
+        """Require the call to describe the actual emitted bindings.
+
+        Constructor options are compared before any rendering caches.
+        Call style affects invocation syntax rather than storage.
+        Other differences are conservatively rejected: callers can use
+        separate groups when they need different representations.
+        """
+        for reference, binding in self.bindings.items():
+            name = (
+                reference
+                if ref_case is None
+                else ref_case.convert(name=reference)
+            )
+            if name != binding.name:
+                msg = (
+                    f"Shared reference '{reference}' resolves to '{name}', "
+                    f"but its declaration is named '{binding.name}'. "
+                    "Use :reference-name: and matching :ref-case: options."
+                )
+                raise _DirectiveError(message=msg)
+            if type(language) is not type(binding.language) or any(
+                vars(language)[item.name] != vars(binding.language)[item.name]
+                for item in fields(class_or_instance=language)
+                if item.init and item.name != "call_style"
+            ):
+                msg = (
+                    f"Shared reference '{reference}' uses different language "
+                    "representation options. Use matching options on its "
+                    "declaration and calls, including an explicit "
+                    "heterogeneous strategy when auto selects different forms."
+                )
+                raise _DirectiveError(message=msg)
+
+
+_CURRENT_REFERENCES: ContextVar[_ReferenceScope | None] = ContextVar(
+    "literalizer_group_references",
+    default=None,
+)
 
 
 @dataclass(frozen=True)
@@ -26,20 +148,39 @@ class LiteralizerGroupDirective(SphinxDirective):
     The argument is the Pygments language of the nested code blocks.
     Repeated generated entries are removed as whole entries, never as
     individual lines inside a helper declaration.
+
+    ``:share-references:`` additionally supplies earlier generated
+    declarations' source values to calls in this group. No names are
+    inferred from handwritten code or shared with other groups.
     """
 
     required_arguments = 1
     has_content = True
+    option_spec: ClassVar[dict[str, _OptionValidator] | None] = {
+        "share-references": directives.flag,
+    }
 
     @override
     def run(self) -> list[nodes.Node]:
         """Parse the children and gather their generated preambles."""
+        if _CURRENT_REFERENCES.get() is not None:
+            msg = "literalizer-group cannot be nested."
+            raise self.error(message=msg)
         container = nodes.container()
-        _ = self.state.nested_parse(
-            block=self.content,
-            input_offset=self.content_offset,
-            node=container,
+        scope = (
+            _ReferenceScope(bindings={})
+            if "share-references" in self.options
+            else None
         )
+        token = _CURRENT_REFERENCES.set(scope)
+        try:
+            _ = self.state.nested_parse(
+                block=self.content,
+                input_offset=self.content_offset,
+                node=container,
+            )
+        finally:
+            _CURRENT_REFERENCES.reset(token)
         language = self.arguments[0]
         if any(
             isinstance(child, nodes.system_message)

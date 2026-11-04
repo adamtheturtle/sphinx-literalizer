@@ -147,6 +147,7 @@ class LiteralizerInvocationDirective(_BaseLiteralizerDirective):
             language_name=options.language,
             language_cls=language_cls,
             render=render,
+            prepare_language=lambda spec: spec,
             options=options,
         )
         if rendered is None:

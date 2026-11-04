@@ -487,3 +487,10 @@ whitelines = 1
 [tool.no_defaults]
 private_only = true
 per_file_enforcement."tests/**" = "all"
+
+[tool.mypy_strict_kwargs]
+# ContextVar's name is positional-only in CPython.
+ignore_names = [ "_contextvars.ContextVar", "contextvars.ContextVar" ]
+
+[tool.strict_kwargs]
+ignore_names = [ "_contextvars.ContextVar", "contextvars.ContextVar" ]

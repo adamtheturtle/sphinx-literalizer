@@ -14,6 +14,8 @@ from literalizer import (
     InputFormat,
     Language,
     LiteralizeResult,
+    NewVariable,
+    VariableForm,
     literalize,
     literalize_call,
 )
@@ -22,7 +24,7 @@ from literalizer.exceptions import (
 )
 
 from ._base import _BaseLiteralizerDirective
-from ._group import _GeneratedFragment
+from ._group import _CURRENT_REFERENCES, _GeneratedFragment
 from ._support import (
     _COMMON_OPTIONS,
     _common_option_args,
@@ -54,6 +56,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
            :date-format: python
            :datetime-format: python
            :variable-name: my_var
+           :reference-name: my_var
            :existing-variable:
            :both-variable-forms:
            :sequence-format: list
@@ -120,6 +123,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         "both-variable-forms": directives.flag,
         "modifiers": directives.unchanged,
         "record-null-substitutions": directives.unchanged_required,
+        "reference-name": directives.unchanged_required,
     }
 
     def _parse_options(self) -> _LiteralizerOptions:
@@ -127,6 +131,7 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
         options = self._options_with_language_defaults()
         return _LiteralizerOptions(
             **_common_option_args(options=options),
+            reference_name=self.options.get("reference-name"),
             include_delimiters="include-delimiters" in self.options,
             both_variable_forms="both-variable-forms" in self.options,
             record_null_substitutions=(
@@ -197,11 +202,18 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
             language_name=language_name,
             language_cls=language_cls,
             render=_do,
+            prepare_language=lambda spec: spec,
             options=options,
         )
         if rendered is None:
             return []
-        result, _ = rendered
+        result, language_spec = rendered
+        self._record_reference(
+            options=options,
+            variable_form=variable_form,
+            result=result,
+            language=language_spec,
+        )
         parts: list[str] = []
         if (include_preamble or preamble_only) and len(result.preamble) > 0:
             parts.append("\n".join(result.preamble))
@@ -233,6 +245,47 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
                 code="" if preamble_only else result.code,
             ),
         )
+
+    @staticmethod
+    def _record_reference(
+        *,
+        options: _LiteralizerOptions,
+        variable_form: VariableForm | None,
+        result: LiteralizeResult,
+        language: Language,
+    ) -> None:
+        """Record an emitted declaration in its opted-in group."""
+        scope = _CURRENT_REFERENCES.get()
+        if options.reference_name is not None and scope is None:
+            msg = ":reference-name: requires a group with :share-references:."
+            raise _DirectiveError(message=msg)
+        if (
+            scope is not None
+            and variable_form is not None
+            and not options.preamble_only
+        ):
+            if (
+                not isinstance(variable_form, NewVariable)
+                or options.record_null_substitutions is not None
+            ):
+                msg = (
+                    "Shared references require new variable declarations "
+                    "without record-null substitutions."
+                )
+                raise _DirectiveError(message=msg)
+            scope.add(
+                reference=(
+                    variable_form.name
+                    if options.reference_name is None
+                    else options.reference_name
+                ),
+                name=variable_form.name,
+                value=result.source_data,
+                language=language,
+            )
+        elif options.reference_name is not None:
+            msg = ":reference-name: requires an emitted variable declaration."
+            raise _DirectiveError(message=msg)
 
 
 @beartype
@@ -471,7 +524,6 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             ]
         else:
             parameter_names = []
-        per_element = options.per_element
         wrap_in_file = options.wrap_in_file
 
         call_transform = self._build_call_transform(options=options)
@@ -484,15 +536,15 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             both_variable_forms=False,
         )
 
-        consumable_refs_value = options.consumable_refs
-        if consumable_refs_value is None:
-            consumable_refs = frozenset[str]()
-        else:
-            consumable_refs = frozenset(
-                r.strip()
-                for r in consumable_refs_value.split(sep=",")
-                if r.strip() != ""
-            )
+        consumable_refs = frozenset(
+            ref.strip()
+            for ref in (
+                ""
+                if options.consumable_refs is None
+                else options.consumable_refs
+            ).split(sep=",")
+            if ref.strip() != ""
+        )
 
         zip_source, zip_input_format = self._resolve_zip_source(
             options=options,
@@ -507,6 +559,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
 
         def _do(language_spec: Language) -> LiteralizeResult:
             """Render the calls for *source* with the built language."""
+            scope = _CURRENT_REFERENCES.get()
             format_constructor = language_spec.format_constructor_target
             return literalize_call(
                 source=source,
@@ -523,20 +576,28 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
                 zip_source=zip_source,
                 zip_input_format=zip_input_format,
                 comment_source=comment_source,
-                per_element=per_element,
+                per_element=options.per_element,
                 wrap_in_file=wrap_in_file,
                 ref_case=ref_case,
                 consumable_refs=consumable_refs,
                 ref_key=ref_key,
+                ref_values=None if scope is None else scope.values(),
                 collection_layout=collection_layout,
                 variable_form=variable_form,
             )
 
         try:
+            scope = _CURRENT_REFERENCES.get()
             rendered = self._render_with_strategy(
                 language_name=language_name,
                 language_cls=language_cls,
                 render=_do,
+                prepare_language=(
+                    scope.prepare_language
+                    if scope is not None
+                    and options.heterogeneous_strategy in {None, "auto"}
+                    else lambda spec: spec
+                ),
                 options=options,
             )
         except ParameterCountMismatchError as exc:
@@ -549,6 +610,10 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         if rendered is None:
             return []
         result, language_spec = rendered
+
+        scope = _CURRENT_REFERENCES.get()
+        if scope is not None:
+            scope.validate(language=language_spec, ref_case=ref_case)
 
         code = result.code
         if pre_indent_level > 0:
