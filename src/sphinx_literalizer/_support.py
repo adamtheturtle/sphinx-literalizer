@@ -613,6 +613,7 @@ class _CommonOptions:
 class _LiteralizerOptions(_CommonOptions):
     """Typed options for the ``literalizer`` directive."""
 
+    reference_name: str | None
     include_delimiters: bool
     both_variable_forms: bool
     record_null_substitutions: Mapping[str, _JSONValue] | None

@@ -518,6 +518,7 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
         language_name: str,
         language_cls: LanguageCls,
         render: Callable[[Language], LiteralizeResult],
+        prepare_language: Callable[[Language], Language],
         options: _CommonOptions,
     ) -> tuple[LiteralizeResult, Language] | None:
         """Build the language and render, honoring ``auto`` and
@@ -558,11 +559,13 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
 
         def _build(strategy_value: str | None) -> Language:
             """Build the language for one attempt's strategy."""
-            return self._build_language(
-                language_name=language_name,
-                language_cls=language_cls,
-                options=options,
-                heterogeneous_strategy_value=strategy_value,
+            return prepare_language(
+                self._build_language(
+                    language_name=language_name,
+                    language_cls=language_cls,
+                    options=options,
+                    heterogeneous_strategy_value=strategy_value,
+                )
             )
 
         with _literalize_errors_as_directive_errors():

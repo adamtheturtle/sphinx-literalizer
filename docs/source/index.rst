@@ -67,7 +67,59 @@ Groups accept only code directives and empty ``|`` line separators, and cannot b
 Generated helper declarations remain intact: identical multiline entries are removed as whole entries, without removing repeated braces or fields inside them.
 Different non-empty generated helper blocks are rejected because independently inferred types may conflict.
 Use separate groups for these inputs; general helper-name and schema reconciliation is tracked in `Literalizer issue 5900 <https://github.com/adamtheturtle/literalizer/issues/5900>`__.
-Grouping only gathers file-scope preambles; it does not combine complete wrapped files or reconcile definitions embedded in the generated code.
+Grouping does not combine complete wrapped files or reconcile definitions embedded in the generated code.
+
+Sharing reference values
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Add ``:share-references:`` to an explicit group when later calls reference variables declared earlier in that group:
+
+.. code-block:: rst
+
+   .. literalizer-group:: rust
+      :share-references:
+
+      .. literalizer:: keyword.yaml
+         :language: rust
+         :variable-name: keyword
+
+      .. literalizer-call:: calls.yaml
+         :language: rust
+         :target-function: search
+         :parameter-names: keyword
+         :ref-key: $ref
+         :per-element:
+
+For ``keyword.yaml`` containing ``tech`` and ``calls.yaml`` containing ``- [{$ref: keyword}]``, this renders ``let keyword = "tech";`` followed by ``search(keyword);``.
+The declaration's parsed source value is passed through Literalizer's ``ref_values`` API, without reading or interpreting generated source.
+Rust copies native scalar bindings directly while cloning owned containers when needed to preserve later uses.
+``:consumable-refs:`` still permits consuming a reference used exactly once in the call input.
+
+The default reference name is the declaration's ``:variable-name:``.
+If that displayed identifier has already been cased, add ``:reference-name:`` with the raw name used by reference markers:
+
+.. code-block:: rst
+
+   .. literalizer:: keyword.yaml
+      :language: python
+      :variable-name: SearchKeyword
+      :reference-name: search_keyword
+
+Use a matching ``:ref-case: pascal`` on the later call in the same opted-in group.
+``:reference-name:`` requires an emitted new variable declaration within such a group.
+Assignments, combined declaration/assignment forms, and record-null substitutions are rejected because the original source value would not describe a new binding reliably.
+
+Shared bindings and calls must use matching effective language constructor options, except call style.
+An automatically selected call strategy inherits the common strategy used for the actual declarations, since a reference-only call cannot discover their representation from inline arguments.
+Representation differences are rejected conservatively rather than guessing how a container was declared.
+If the declarations use different heterogeneous strategies, use the same explicit supported strategy throughout the group, or use separate groups.
+Duplicate raw or displayed binding names are errors.
+
+Only preceding declarations in the current group contribute values.
+Names outside the group, forward references, and variables supplied by handwritten code retain Literalizer's existing unknown-reference behavior.
+For Rust, that conservative behavior may include cloning a reference that the extension cannot classify.
+Reference scopes are reset after the group even when parsing fails, and never carry into other examples or documents.
+The original declaration files remain Sphinx dependencies, so changing a value rebuilds its dependent calls.
 
 Directive options
 ~~~~~~~~~~~~~~~~~
