@@ -184,7 +184,7 @@ def test_reference_scope_is_explicit_and_incremental(
     assert data_file in app.env.dependencies["index"]
     _ = data_file.write_text(data='["tech"]')
     # Sphinx compares dependency modification times to the preceding read timestamp.
-    # Sphinx records microseconds; filesystem nanoseconds keep the
+    # Sphinx records microseconds; file system nanoseconds keep the
     # conversion exact and within the Windows timestamp range.
     timestamp = app.env.all_docs["index"] * 1_000 + 2_000_000_000
     os.utime(path=data_file, ns=(timestamp, timestamp))
