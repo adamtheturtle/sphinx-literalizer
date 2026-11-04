@@ -884,7 +884,7 @@ No Objective-C-specific Jinja macro or ``:call-transform:`` is required.
 For construction, use ``{"constructor": "NotificationThrottler"}`` as the recipe, a ``[[]]`` data file, and ``:variable-name: throttler``.
 This declares ``NotificationThrottler *throttler = [[NotificationThrottler alloc] init];``.
 ``:existing-variable:`` instead reassigns the existing variable.
-Initializers with arguments can set ``initializer`` and ``parameter-types`` in the recipe.
+To pass constructor arguments, set ``initializer`` and ``parameter-types`` in the recipe.
 
 The directive also accepts ``:input-format:``, ``:zip-input-format:``, ``:indent:``, ``:indent-char:``, ``:preamble-only:``, and ``:skip-if-unrepresentable:``.
 Every data, recipe, and companion file is resolved relative to its document and registered as a Sphinx dependency.

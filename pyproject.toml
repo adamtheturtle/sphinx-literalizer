@@ -36,8 +36,7 @@ dynamic = [
 dependencies = [
     "beartype==0.23.1",
     "docutils",
-    # Draft dependency for literalizer#6698; replace with a release before merge.
-    "literalizer @ git+https://github.com/adamtheturtle/literalizer.git@aff8aa5285436326d290a97a255e3a8bc4117126",
+    "literalizer==2026.11.4.2",
     "sphinx>=7.0",
     "typing-extensions",
 ]
