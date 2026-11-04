@@ -888,3 +888,60 @@ Reference
    contributing
 
 .. _literalizer: https://github.com/adamtheturtle/literalizer
+
+``literalizer-invocation`` directive
+------------------------------------
+
+Use ``literalizer-invocation`` for an explicitly typed native call recipe.
+It delegates receivers, selectors, constructor syntax, scalar/object conversion, and result bindings to Literalizer.
+Objective-C is the first supported backend; existing ``literalizer-call`` behavior is unchanged.
+
+.. code-block:: rst
+
+   .. literalizer-invocation:: calls.yaml
+      :language: objective-c
+      :invocation-file: check-notifications.json
+      :zip-file: expected.yaml
+      :per-element:
+      :pre-indent-level: 2
+      :include-preamble:
+
+``calls.yaml`` contains argument rows, for example ``[[user_1, 100.0], [user_2, 101.0]]``.
+``expected.yaml`` contains one expected value per row, for example ``[[true, first], [false, second]]``.
+The JSON recipe supplies the native signature and nested check:
+
+.. code-block:: json
+
+   {
+     "function": "checkTestCase",
+     "parameter-types": ["bool", "NSArray"],
+     "return-type": "void",
+     "arguments": [
+       {
+         "receiver": {"reference": "throttler", "type": "NotificationThrottler"},
+         "selector": "shouldSendNotification:notificationTimestamp:",
+         "parameter-types": ["NSString", "float"],
+         "return-type": "bool",
+         "arguments": [{"input": 0}, {"input": 1}]
+       },
+       {"zipped": true}
+     ]
+   }
+
+The timestamp is a scalar ``double`` rather than a boxed number.
+The existing receiver ``throttler`` is used unchanged.
+The expected array is rendered as a complete literal argument, including its delimiters, and the complete statement terminator is generated with the call.
+No Objective-C-specific Jinja macro or ``:call-transform:`` is required.
+
+For construction, use ``{"constructor": "NotificationThrottler"}`` as the recipe, a ``[[]]`` data file, and ``:variable-name: throttler``.
+This declares ``NotificationThrottler *throttler = [[NotificationThrottler alloc] init];``.
+``:existing-variable:`` instead reassigns the existing variable.
+To pass constructor arguments, set ``initializer`` and ``parameter-types`` in the recipe.
+
+The directive also accepts ``:input-format:``, ``:zip-input-format:``, ``:indent:``, ``:indent-char:``, ``:preamble-only:``, and ``:skip-if-unrepresentable:``.
+Every data, recipe, and companion file is resolved relative to its document and registered as a Sphinx dependency.
+Diagnostics identify the directive and data file; native contract failures include the source-row index.
+
+Place native fragments in the caller's executable scope and supply the actual external class/function declarations.
+``literalizer-group`` composes these fragments with ordinary code blocks and hoists requested preambles once.
+The group does not invent class implementations or move runtime object initialization to file scope.
