@@ -39,14 +39,32 @@ jobs:
         env:
           UV_PYTHON: ${{ matrix.platform == 'windows-11-arm' && format('cpython-{0}-windows-x86_64', matrix.python-version) || matrix.python-version }}
 
+  native-objective-c:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+          cache-dependency-glob: '**/pyproject.toml'
+          cache-suffix: native-objective-c
+          save-cache: ${{ github.event_name != 'pull_request' }}
+      - name: Test rendered Objective-C programs
+        run: uv run --group=dev pytest -n 0 integration/check_objective_c.py
+        env:
+          UV_PYTHON: '3.14'
+
   completion-ci:
-    needs: build
+    needs: [build, native-objective-c]
     runs-on: ${{ startsWith(github.head_ref, 'release/') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     if: ${{ !cancelled() }}
     steps:
       - name: Check matrix job status
         run: |-
-          if ! ${{ needs.build.result == 'success' }}; then
+          if ! ${{ needs.build.result == 'success' && needs.native-objective-c.result == 'success' }}; then
             echo "One or more matrix jobs failed"
             exit 1
           fi
