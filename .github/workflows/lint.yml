@@ -16,7 +16,10 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.13']
-        platform: [ubuntu-latest, windows-latest]
+        # Release branches use a second Linux runner pool.
+        platform:
+          - ${{ startsWith(github.head_ref, 'release/') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+          - windows-latest
         hook-stage: [pre-commit, pre-push, manual]
 
     runs-on: ${{ matrix.platform }}
@@ -46,7 +49,7 @@ jobs:
 
   completion-lint:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ${{ startsWith(github.head_ref, 'release/') && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     if: ${{ !cancelled() }}
     steps:
       - name: Check matrix job status
