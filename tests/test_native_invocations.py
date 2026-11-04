@@ -56,10 +56,11 @@ def test_native_group_and_dependencies(
 def test_native_errors_identify_document_and_data(
     *, make_app: Callable[..., SphinxTestApp], tmp_path: Path, recipe: object
 ) -> None:
-    """Author mistakes become located diagnostics, not tracebacks."""
+    """Author mistakes retain document and data-file locations."""
     app = build_native_app(make_app=make_app, tmp_path=tmp_path, recipe=recipe)
     warning = app.warning.getvalue()
-    assert "guide/native.rst:" in warning
+    document = tmp_path / "source/guide/native.rst"
+    assert f"{document}:" in warning
     assert "calls.json" in warning
     assert "Native" in warning or "native" in warning
     app.cleanup()
@@ -193,12 +194,8 @@ def test_native_unrepresentable_literal_can_be_skipped(
         recipe_source=json.dumps(obj=recipe),
     )
     assert app.warning.getvalue() == ""
-    assert (
-        list(
-            app.env.get_doctree(docname="index").findall(
-                condition=nodes.literal_block
-            )
-        )
-        == []
+    blocks = app.env.get_doctree(docname="index").findall(
+        condition=nodes.literal_block
     )
+    assert next(blocks, None) is None
     app.cleanup()

@@ -1,7 +1,7 @@
 """Sphinx extension for literalizer.
 
 Provides literal, call, and native invocation directives, which read data
-files and render composable native language code blocks.
+files and render combined native language code blocks.
 """
 
 from importlib.metadata import version

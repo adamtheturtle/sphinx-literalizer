@@ -27,6 +27,23 @@ from ._support import (
 )
 
 
+def _native_binding(
+    options: _CommonOptions, /
+) -> NewVariable | ExistingVariable | None:
+    """Resolve a native result binding from the common directive
+    options.
+    """
+    if options.variable_name is None:
+        if options.existing_variable:
+            raise _DirectiveError(
+                message="':existing-variable:' requires ':variable-name:'"
+            )
+        return None
+    if options.existing_variable:
+        return ExistingVariable(name=options.variable_name)
+    return NewVariable(name=options.variable_name, modifiers=frozenset())
+
+
 class LiteralizerInvocationDirective(_BaseLiteralizerDirective):
     """Render source rows with a structured, typed invocation recipe."""
 
@@ -93,19 +110,7 @@ class LiteralizerInvocationDirective(_BaseLiteralizerDirective):
                 message="Native invocation recipe must be a JSON object"
             )
         language_cls = _language_types()[options.language]
-        variable_form: NewVariable | ExistingVariable | None = None
-        if options.variable_name is not None:
-            variable_form = (
-                ExistingVariable(name=options.variable_name)
-                if options.existing_variable
-                else NewVariable(
-                    name=options.variable_name, modifiers=frozenset()
-                )
-            )
-        elif options.existing_variable:
-            raise _DirectiveError(
-                message="':existing-variable:' requires ':variable-name:'"
-            )
+        variable_form = _native_binding(options)
         zip_source = None
         zip_format = None
         zip_name = self.options.get("zip-file")
