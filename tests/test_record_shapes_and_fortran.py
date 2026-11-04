@@ -192,8 +192,6 @@ def test_record_shape_names_cpp14_external_record(
     (literal_block,) = doctree.findall(condition=nodes.literal_block)
     output = literal_block.astext()
     assert output == (
-        "#include <initializer_list>\n"
-        "#include <string>\n"
         "#include <vector>\n"
         "\n"
         "std::vector<Task>{\n"

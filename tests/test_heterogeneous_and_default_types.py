@@ -164,7 +164,8 @@ def test_heterogeneous_strategy_tagged_enum(
     (literal_block,) = doctree.findall(condition=nodes.literal_block)
     expected = dedent(
         text="""\
-        enum Value {
+        #[derive(Clone)]
+        pub enum Value {
             I32(i32),
             Str(&'static str),
         }
