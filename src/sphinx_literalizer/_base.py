@@ -18,6 +18,7 @@ from literalizer import (
     LanguageCls,
     LiteralizeResult,
     NewVariable,
+    SourceFormat,
     VariableForm,
 )
 from literalizer.exceptions import (
@@ -33,6 +34,7 @@ from sphinx.util.docutils import SphinxDirective
 from ._group import _GeneratedFragment
 from ._support import (
     _AUTO_STRATEGY,
+    _COMMON_OPTIONS,
     _DEFAULT_TYPE_OPTIONS,
     _EXTENSION_TO_INPUT_FORMAT,
     _FORMAT_OPTION_GETTERS,
@@ -46,7 +48,6 @@ from ._support import (
     _language_types,
     _literalize_errors_as_directive_errors,
     _lookup_format,
-    _make_format_validator,
     _optional_modifiers,
     _parse_record_shape_names,
 )
@@ -113,9 +114,21 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
             )
             raise ExtensionError(message=msg)
 
-        validated_defaults: dict[str, str] = {}
+        validated_defaults: dict[str, object] = {}
         for option_name, value in defaults.items():
-            if option_name not in _FORMAT_OPTION_GETTERS:
+            if (
+                option_name not in _FORMAT_OPTION_GETTERS
+                and option_name
+                not in {
+                    "source-format",
+                    "indent",
+                    "indent-char",
+                    "pre-indent-level",
+                    "initial-column",
+                    "continuation-column",
+                    "column-limit",
+                }
+            ):
                 msg = (
                     "'literalizer_language_defaults' only supports shared "
                     f"format options; '{option_name}' is not one."
@@ -127,9 +140,9 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
                     f"strings; '{option_name}' is not."
                 )
                 raise ExtensionError(message=msg)
-            validated_defaults[option_name] = _make_format_validator(
-                option_name=option_name
-            )(value)
+            validated_defaults[option_name] = _COMMON_OPTIONS[option_name](
+                value
+            )
         return {**validated_defaults, **self.options}
 
     @staticmethod
@@ -166,6 +179,14 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
                         ),
                     },
                 )
+        if options.source_format is not None:
+            constructor = partial(
+                constructor,
+                source_format=_enum_member(
+                    cls=SourceFormat, value=options.source_format
+                ),
+            )
+
         return constructor
 
     @staticmethod

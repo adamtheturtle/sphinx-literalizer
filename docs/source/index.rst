@@ -860,7 +860,7 @@ Configuration
       ]
 
 ``literalizer_language_defaults``
-   Shared format-option defaults for both directives, grouped by the directive's ``:language:`` value.
+   Shared format and source-placement defaults for all three directive families, grouped by the directive's ``:language:`` value.
    Explicit directive options take precedence.
    For example, make all C++ directives use C++14 unless a directive selects another version::
 
@@ -870,8 +870,35 @@ Configuration
           },
       }
 
-   This setting accepts the shared language and format options, including ``language-version``, ``string-format``, and ``trailing-comma``.
+   This setting accepts the shared language and format options, including ``language-version``, ``string-format``, ``trailing-comma``, ``source-format``, ``indent``, ``indent-char``, ``pre-indent-level``, ``initial-column``, ``continuation-column``, and ``column-limit``.
    It does not set directive-specific options such as ``target-function`` or ``include-delimiters``.
+
+
+Canonical source without a formatter
+------------------------------------
+
+Use Literalizer's canonical source policy when composed Objective-C programs must
+already follow the upstream formatting profile::
+
+   literalizer_language_defaults = {
+       "objective-c": {"source-format": "canonical", "indent": "2"},
+   }
+
+The ``literalizer``, ``literalizer-call``, and ``literalizer-invocation`` directives all accept ``source-format`` and placement options.
+``pre-indent-level`` counts enclosing indentation steps.
+``initial-column`` is the absolute starting column when the fragment follows caller-owned text, and ``continuation-column`` supplies an absolute anchor for continuation lines.
+``column-limit`` defaults to 80.
+Directive options override language defaults, including ``source-format: preserve``.
+
+These options go directly to Literalizer; the extension does not reformat source.
+``literalizer-group`` retains the generated fragment layout while hoisting shared preambles.
+Author surrounding templates and comments in the same style before composing them.
+Indentation alone cannot describe an inline prefix or available line width.
+A source context without the canonical policy produces a located directive error, as do unsupported language or indentation combinations.
+
+The runtime extension requires no formatter executable or LLVM library.
+Configuration changes invalidate the Sphinx environment and rebuild generated blocks.
+Development checks compare unmodified combined output with the pinned formatter independently, then compile and execute the same program on macOS.
 
 
 Reference

@@ -54,6 +54,7 @@ docutils
 enum
 enums
 fallbacks
+formatter
 fortran
 frozenset
 getter
@@ -68,6 +69,7 @@ kwarg
 literalized
 literalizer
 literalizer's
+macOS
 mojo
 multiline
 norg

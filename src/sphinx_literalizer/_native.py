@@ -56,6 +56,10 @@ class LiteralizerInvocationDirective(_BaseLiteralizerDirective):
                 "language",
                 "input-format",
                 "pre-indent-level",
+                "source-format",
+                "initial-column",
+                "continuation-column",
+                "column-limit",
                 "indent",
                 "indent-char",
                 "include-preamble",
@@ -140,7 +144,10 @@ class LiteralizerInvocationDirective(_BaseLiteralizerDirective):
                 zip_source=zip_source,
                 zip_input_format=zip_format,
                 variable_form=variable_form,
-                pre_indent_level=options.pre_indent_level,
+                pre_indent_level=options.pre_indent_level
+                if options.source_context is None
+                else 0,
+                source_context=options.source_context,
             )
 
         rendered = self._render_with_strategy(

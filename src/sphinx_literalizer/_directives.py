@@ -188,7 +188,10 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
                 source=source,
                 input_format=input_format,
                 language=language_spec,
-                pre_indent_level=pre_indent_level,
+                pre_indent_level=pre_indent_level
+                if options.source_context is None
+                else 0,
+                source_context=options.source_context,
                 include_delimiters=include_delimiters,
                 variable_form=variable_form,
                 wrap_in_file=wrap_in_file,
@@ -563,6 +566,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             format_constructor = language_spec.format_constructor_target
             return literalize_call(
                 source=source,
+                source_context=options.source_context,
                 input_root_key=options.input_root_key,
                 input_format=input_format,
                 language=language_spec,
@@ -616,7 +620,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             scope.validate(language=language_spec, ref_case=ref_case)
 
         code = result.code
-        if pre_indent_level > 0:
+        if pre_indent_level > 0 and options.source_context is None:
             indent = language_spec.indent * pre_indent_level
             code = "\n".join(
                 indent + line if line != "" else line

@@ -17,6 +17,8 @@ from literalizer import (
     IdentifierCase,
     InputFormat,
     LanguageCls,
+    SourceContext,
+    SourceFormat,
 )
 from literalizer.exceptions import (
     LiteralizerError,
@@ -421,6 +423,12 @@ _COMMON_OPTIONS: dict[str, _OptionValidator] = {
         argument=x,
         values=("json", "json5", "yaml", "toml"),
     ),
+    "source-format": lambda x: directives.choice(
+        argument=x, values=tuple(SourceFormat)
+    ),
+    "initial-column": directives.nonnegative_int,
+    "continuation-column": directives.nonnegative_int,
+    "column-limit": directives.positive_int,
     "pre-indent-level": directives.nonnegative_int,
     "indent": directives.nonnegative_int,
     "indent-char": lambda x: directives.choice(
@@ -586,6 +594,8 @@ class _CommonOptions:
     language: str
     input_format: str | None
     pre_indent_level: int
+    source_format: str | None
+    source_context: SourceContext | None
     indent: int | None
     indent_char: str | None
     include_preamble: bool
@@ -648,6 +658,8 @@ class _CommonOptionArgs(TypedDict, closed=True):
     language: str
     input_format: str | None
     pre_indent_level: int
+    source_format: str | None
+    source_context: SourceContext | None
     indent: int | None
     indent_char: str | None
     include_preamble: bool
@@ -671,6 +683,25 @@ class _CommonOptionArgs(TypedDict, closed=True):
 
 
 @beartype
+def _source_context(options: dict[str, Any]) -> SourceContext | None:  # pyrefly: ignore[explicit-any]
+    """Pass source placement to the producer without laying out source
+    here.
+    """
+    if options.get("source-format") != "canonical" and not any(
+        name in options
+        for name in ("initial-column", "continuation-column", "column-limit")
+    ):
+        return None
+    with _literalize_errors_as_directive_errors():
+        return SourceContext(
+            indent_level=options.get("pre-indent-level", 0),
+            initial_column=options.get("initial-column", 0),
+            continuation_column=options.get("continuation-column"),
+            column_limit=options.get("column-limit", 80),
+        )
+
+
+@beartype
 def _common_option_args(
     # types-docutils cannot express a directive's specific option types; see
     # https://github.com/python/typeshed/issues/16400. This function
@@ -687,6 +718,8 @@ def _common_option_args(
         language=options["language"],
         input_format=options.get("input-format"),
         pre_indent_level=options.get("pre-indent-level", 0),
+        source_format=options.get("source-format"),
+        source_context=_source_context(options=options),
         indent=options.get("indent"),
         indent_char=options.get("indent-char"),
         include_preamble="include-preamble" in options,
