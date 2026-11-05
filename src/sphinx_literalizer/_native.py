@@ -18,6 +18,8 @@ from ._base import _BaseLiteralizerDirective
 from ._group import _GeneratedFragment
 from ._support import (
     _COMMON_OPTIONS,
+    _EMITTER_OPTIONS,
+    _FORMAT_OPTION_GETTERS,
     _common_option_args,
     _CommonOptions,
     _DirectiveError,
@@ -47,12 +49,16 @@ def _native_binding(
 class LiteralizerInvocationDirective(_BaseLiteralizerDirective):
     """Render source rows with a structured, typed invocation recipe."""
 
+    supports_initial_column: ClassVar[bool] = True
+
     option_spec: ClassVar[dict[str, _OptionValidator] | None] = {
         **{
             name: validator
             for name, validator in _COMMON_OPTIONS.items()
             if name
             in {
+                *_FORMAT_OPTION_GETTERS,
+                *_EMITTER_OPTIONS,
                 "language",
                 "input-format",
                 "pre-indent-level",
@@ -61,6 +67,7 @@ class LiteralizerInvocationDirective(_BaseLiteralizerDirective):
                 "include-preamble",
                 "preamble-only",
                 "skip-if-unrepresentable",
+                "initial-column",
             }
         },
         "invocation-file": directives.unchanged_required,
@@ -141,6 +148,7 @@ class LiteralizerInvocationDirective(_BaseLiteralizerDirective):
                 zip_input_format=zip_format,
                 variable_form=variable_form,
                 pre_indent_level=options.pre_indent_level,
+                initial_column=options.initial_column,
             )
 
         rendered = self._render_with_strategy(
