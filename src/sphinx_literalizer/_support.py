@@ -630,6 +630,7 @@ class _LiteralizerCallOptions(_CommonOptions):
     parameter_names: str
     per_element: bool
     call_transform: str | None
+    print_result: bool
     zip_file: str | None
     zip_input_format: str | None
     comment_file: str | None

@@ -370,6 +370,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         "parameter-names": directives.unchanged,
         "per-element": directives.flag,
         "call-transform": directives.unchanged_required,
+        "print-result": directives.flag,
         "zip-file": directives.unchanged_required,
         "zip-input-format": lambda x: directives.choice(
             argument=x,
@@ -489,6 +490,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             parameter_names=self.options.get("parameter-names", ""),
             per_element="per-element" in self.options,
             call_transform=self.options.get("call-transform"),
+            print_result="print-result" in self.options,
             zip_file=self.options.get("zip-file"),
             zip_input_format=self.options.get("zip-input-format"),
             comment_file=self.options.get("comment-file"),
@@ -573,6 +575,7 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
                 ),
                 parameter_names=parameter_names,
                 call_transform=call_transform,
+                print_result=options.print_result,
                 zip_source=zip_source,
                 zip_input_format=zip_input_format,
                 comment_source=comment_source,

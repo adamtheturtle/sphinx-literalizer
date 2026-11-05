@@ -760,6 +760,24 @@ the directive renders the language-idiomatic no-argument construction:
    Omit the generated call expressions.
    Combine this with ``:include-preamble:`` to render only imports or other preamble lines, which is useful when a later ``literalizer-call`` block needs preamble lines at the top of a combined snippet.
 
+``:print-result:`` (optional)
+   Print each call's result using Literalizer's language-owned printing
+   operation. Use ``:include-preamble:`` to include required imports, such as
+   C++'s ``<iostream>`` or Go's ``fmt``. ``literalizer-group`` composes these
+   dependencies with other generated preambles.
+
+   Printing currently supports Python, Java, C++, C#, Go, JavaScript, TypeScript,
+   Kotlin, Ruby, Scala, and Rust. The external function must return a value
+   accepted by that language's printing operation; its return type is not
+   inferred from argument data. Formatting follows the native operation,
+   including Rust debug formatting, and ends with a newline. This does not
+   promise identical formatting across languages or serialize arbitrary
+   objects. Keep custom transforms when a guide requires special formatting.
+
+   Cannot be combined with ``:call-transform:``, ``:variable-name:``, or
+   ``:zip-file:``. Replace a standard print transform with this flag and remove
+   handwritten printing imports once they have no other consumers.
+
 ``:call-transform:`` (optional)
    A template applied to each generated call.
    These placeholders are substituted: ``$call`` (and the ``$0`` alias) for the rendered call expression, ``$index`` for the zero-based call position, and ``$zipped`` for the matching ``:zip-file:`` element rendered as a native literal (empty when no ``:zip-file:`` is given).

@@ -1000,8 +1000,8 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.11.4.2"
-source = { registry = "https://pypi.org/simple" }
+version = "2026.11.4.2.post77+gd57d9ef94"
+source = { git = "https://github.com/adamtheturtle/literalizer?rev=d57d9ef946b1b078ce160ba33f9cb82b37677088#d57d9ef946b1b078ce160ba33f9cb82b37677088" }
 dependencies = [
     { name = "beartype" },
     { name = "json5-document" },
@@ -1011,10 +1011,6 @@ dependencies = [
     { name = "ruamel-yaml-clib", marker = "platform_python_implementation == 'CPython' and sys_platform != 'emscripten'" },
     { name = "tomlkit" },
     { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ea/34/63299d1f1875ef596a0d0df3e14b0d0ba792315496504d1876e6325e732d/literalizer-2026.11.4.2.tar.gz", hash = "sha256:11672659bed68310df3f94c75e4dc7c647e08496864320908dc27210ccd46d7e", size = 11517898, upload-time = "2026-11-04T19:59:52.682Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/12/68/ee64df0ba8d8fa4606341bd8ef29ece3bd900166ae5935c94c639bd2bf28/literalizer-2026.11.4.2-py3-none-any.whl", hash = "sha256:842cdc013370503cd4de37986b946bb6444060ded3c9bc95bb427dcd62469edf", size = 1125662, upload-time = "2026-11-04T19:59:50.558Z" },
 ]
 
 [[package]]
@@ -2375,7 +2371,7 @@ release = [
 requires-dist = [
     { name = "beartype", specifier = "==0.23.1" },
     { name = "docutils" },
-    { name = "literalizer", specifier = "==2026.11.4.2" },
+    { name = "literalizer", git = "https://github.com/adamtheturtle/literalizer?rev=d57d9ef946b1b078ce160ba33f9cb82b37677088" },
     { name = "sphinx", specifier = ">=7.0" },
     { name = "typing-extensions" },
 ]
