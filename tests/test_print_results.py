@@ -45,6 +45,7 @@ def _code(app: SphinxTestApp) -> str:
     argvalues=[
         ("python", "print(calculate(7))"),
         ("java", "System.out.println(calculate(7));"),
+        ("typescript", "console.log(calculate(7));"),
         ("cpp", "std::cout << calculate(7) << '\\n';"),
         ("go", "fmt.Println(calculate(7))"),
         ("csharp", "System.Console.WriteLine(calculate(7));"),
@@ -72,6 +73,8 @@ def test_print_result_directive(
     )
     assert app.warning.getvalue() == ""
     assert expected in _code(app=app)
+    if language == "typescript":
+        assert '/// <reference lib="dom" />' in _code(app=app)
     app.cleanup()
 
 

@@ -774,6 +774,9 @@ the directive renders the language-idiomatic no-argument construction:
    promise identical formatting across languages or serialize arbitrary
    objects. Keep custom transforms when a guide requires special formatting.
 
+   TypeScript requests the DOM library declarations for its host-provided
+   ``console`` API; emit that preamble at file scope before statements.
+
    Cannot be combined with ``:call-transform:``, ``:variable-name:``, or
    ``:zip-file:``. Replace a standard print transform with this flag and remove
    handwritten printing imports once they have no other consumers.

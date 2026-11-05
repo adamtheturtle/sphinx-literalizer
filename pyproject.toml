@@ -37,7 +37,7 @@ dependencies = [
     "beartype==0.23.1",
     "docutils",
     # Use an immutable feature commit until the upstream print-result release.
-    "literalizer @ git+https://github.com/adamtheturtle/literalizer@d57d9ef946b1b078ce160ba33f9cb82b37677088",
+    "literalizer @ git+https://github.com/adamtheturtle/literalizer@96abcde1499b9cea9b90562f9be5432f3ffb6bf4",
     "sphinx>=7.0",
     "typing-extensions",
 ]
