@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
-from typing import Any, override
+from typing import Any, ClassVar, override
 
 from beartype import beartype
 from docutils import nodes
@@ -33,7 +33,9 @@ from sphinx.util.docutils import SphinxDirective
 from ._group import _GeneratedFragment
 from ._support import (
     _AUTO_STRATEGY,
+    _COMMON_OPTIONS,
     _DEFAULT_TYPE_OPTIONS,
+    _EMITTER_OPTIONS,
     _EXTENSION_TO_INPUT_FORMAT,
     _FORMAT_OPTION_GETTERS,
     _HETEROGENEOUS_VALUE_NAME_PARAMETERS,
@@ -46,7 +48,6 @@ from ._support import (
     _language_types,
     _literalize_errors_as_directive_errors,
     _lookup_format,
-    _make_format_validator,
     _optional_modifiers,
     _parse_record_shape_names,
 )
@@ -60,6 +61,7 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
 
     required_arguments = 1
     has_content = False
+    supports_initial_column: ClassVar[bool] = False
 
     @override
     def run(self) -> list[nodes.Node]:
@@ -113,9 +115,18 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
             )
             raise ExtensionError(message=msg)
 
-        validated_defaults: dict[str, str] = {}
+        validated_defaults: dict[str, object] = {}
+        shared_options = {
+            *_FORMAT_OPTION_GETTERS,
+            *_EMITTER_OPTIONS,
+            "indent",
+            "indent-char",
+            "pre-indent-level",
+            "collection-layout",
+            "initial-column",
+        }
         for option_name, value in defaults.items():
-            if option_name not in _FORMAT_OPTION_GETTERS:
+            if option_name not in shared_options:
                 msg = (
                     "'literalizer_language_defaults' only supports shared "
                     f"format options; '{option_name}' is not one."
@@ -127,9 +138,13 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
                     f"strings; '{option_name}' is not."
                 )
                 raise ExtensionError(message=msg)
-            validated_defaults[option_name] = _make_format_validator(
-                option_name=option_name
-            )(value)
+            try:
+                validator = _COMMON_OPTIONS[option_name]
+                validated_defaults[option_name] = validator(value)
+            except ValueError as exc:
+                raise ExtensionError(
+                    message=f"Invalid language default '{option_name}': {exc}"
+                ) from exc
         return {**validated_defaults, **self.options}
 
     @staticmethod
@@ -228,6 +243,23 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
         the language with a different strategy per attempt.
         """
         constructor = partial(language_cls)
+        if options.initial_column and not self.supports_initial_column:
+            raise _DirectiveError(
+                message=(
+                    "':initial-column:' requires a "
+                    "literalizer-invocation directive."
+                )
+            )
+        for option_name, value in options.emitter_options.items():
+            param_name = option_name.replace("-", "_")
+            if param_name not in language_cls.__dataclass_fields__:
+                raise _DirectiveError(
+                    message=(
+                        f"Language '{language_name}' does not support "
+                        f"'{option_name}'."
+                    )
+                )
+            constructor = partial(constructor, **{param_name: value})
 
         indent_count = options.indent
         indent_char_name = options.indent_char

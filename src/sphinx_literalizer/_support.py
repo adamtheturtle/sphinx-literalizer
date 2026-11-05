@@ -31,6 +31,7 @@ __all__ = (
     "_COMMON_OPTIONS",
     "_DEFAULT_HETEROGENEOUS_STRATEGY_PRECEDENCE",
     "_DEFAULT_TYPE_OPTIONS",
+    "_EMITTER_OPTIONS",
     "_EXTENSION_TO_INPUT_FORMAT",
     "_FORMAT_OPTION_GETTERS",
     "_HETEROGENEOUS_VALUE_NAME_PARAMETERS",
@@ -127,6 +128,17 @@ def _language_owned_enum_members(
 
 
 @beartype
+def _field_enum_members(
+    *, lang_cls: LanguageCls, name: str
+) -> tuple[enum.Enum, ...]:
+    """Read an optional enum option from its constructor field default."""
+    for field in lang_cls.__dataclass_fields__.values():
+        if field.name == name and isinstance(field.default, enum.Enum):
+            return tuple(type(field.default))
+    return ()
+
+
+@beartype
 @cache
 def _language_types() -> dict[str, LanguageCls]:
     """Map directive language keys to their language classes."""
@@ -183,6 +195,12 @@ _FORMAT_OPTION_GETTERS: dict[
     "union-format": lambda cls: _language_owned_enum_members(
         lang_cls=cls,
         name="UnionFormats",
+    ),
+    "native-argument-layout": lambda cls: _field_enum_members(
+        lang_cls=cls, name="native_argument_layout"
+    ),
+    "native-collection-layout": lambda cls: _field_enum_members(
+        lang_cls=cls, name="native_collection_layout"
     ),
 }
 
@@ -412,7 +430,26 @@ def _heterogeneous_strategy_validator(x: str) -> str:
     )
 
 
+@beartype
+def _boolean_option(value: str) -> bool:
+    """Accept explicit booleans so a directive can override a default."""
+    return (
+        directives.choice(argument=value, values=("true", "false")) == "true"
+    )
+
+
+_EMITTER_OPTIONS: dict[str, _OptionValidator] = {
+    "indent-file-body": _boolean_option,
+    "expand-call-stubs": _boolean_option,
+    "native-align-selectors": _boolean_option,
+    "native-continuation-indent": directives.nonnegative_int,
+    "native-column-limit": directives.positive_int,
+}
+
+
 _COMMON_OPTIONS: dict[str, _OptionValidator] = {
+    **_EMITTER_OPTIONS,
+    "initial-column": directives.nonnegative_int,
     "language": lambda x: directives.choice(
         argument=x,
         values=tuple(_language_types()),
@@ -591,6 +628,8 @@ class _CommonOptions:
     include_preamble: bool
     preamble_only: bool
     format_options: Mapping[str, str]
+    emitter_options: Mapping[str, object]
+    initial_column: int
     heterogeneous_strategy: str | None
     default_type_options: Mapping[str, str]
     module_name: str | None
@@ -653,6 +692,8 @@ class _CommonOptionArgs(TypedDict, closed=True):
     include_preamble: bool
     preamble_only: bool
     format_options: Mapping[str, str]
+    emitter_options: Mapping[str, object]
+    initial_column: int
     heterogeneous_strategy: str | None
     default_type_options: Mapping[str, str]
     module_name: str | None
@@ -696,6 +737,10 @@ def _common_option_args(
             for name in _FORMAT_OPTION_GETTERS
             if name != "heterogeneous-strategy" and name in options
         },
+        emitter_options={
+            name: options[name] for name in _EMITTER_OPTIONS if name in options
+        },
+        initial_column=options.get("initial-column", 0),
         heterogeneous_strategy=options.get("heterogeneous-strategy"),
         default_type_options={
             name: options[name]

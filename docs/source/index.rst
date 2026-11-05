@@ -860,7 +860,7 @@ Configuration
       ]
 
 ``literalizer_language_defaults``
-   Shared format-option defaults for both directives, grouped by the directive's ``:language:`` value.
+   Shared format and layout defaults for the directives, grouped by the directive's ``:language:`` value.
    Explicit directive options take precedence.
    For example, make all C++ directives use C++14 unless a directive selects another version::
 
@@ -870,7 +870,8 @@ Configuration
           },
       }
 
-   This setting accepts the shared language and format options, including ``language-version``, ``string-format``, and ``trailing-comma``.
+   This setting accepts the shared language and format options, including ``language-version``, ``string-format``, and ``trailing-comma``, along with ``indent``, ``indent-char``, ``pre-indent-level``, ``collection-layout``, and the emitter options described below.
+   All configured values are strings and pass through the same validators as directive options.
    It does not set directive-specific options such as ``target-function`` or ``include-delimiters``.
 
 
@@ -945,3 +946,52 @@ Diagnostics identify the directive and data file; native contract failures inclu
 Place native fragments in the caller's executable scope and supply the actual external class/function declarations.
 ``literalizer-group`` composes these fragments with ordinary code blocks and hoists requested preambles once.
 The group does not invent class implementations or move runtime object initialization to file scope.
+
+Objective-C emitter options
+----------------------------
+
+Choose individual layout settings on a directive or in ``literalizer_language_defaults``.
+They are passed directly to the Literalizer emitter that owns each piece of syntax.
+Existing output defaults are preserved when these options are omitted.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - Option
+     - Effect
+   * - ``dict-entry-style: spaced``
+     - Emit dictionary entries such as ``@"name" : @"Ada"``. ``default`` retains ``@"name": @"Ada"``.
+   * - ``native-argument-layout: inline|multiline|auto``
+     - Keep native arguments inline, put arguments on separate lines, or wrap using the selected column limit. This acts recursively on typed invocation recipes.
+   * - ``native-align-selectors: true|false``
+     - Align multiline message selector colons, or use fixed continuation indentation.
+   * - ``native-continuation-indent: N``
+     - Number of existing ``indent`` units for fixed native continuations; nonnegative.
+   * - ``native-column-limit: N``
+     - Positive width used by automatic native wrapping, including scope and result-binding prefixes.
+   * - ``native-collection-layout: compact|multiline``
+     - Apply the existing compact-nested or recursive multiline collection rules to literal native operands, independently of ``collection-layout`` on data directives.
+   * - ``initial-column: N``
+     - Account for a caller-owned prefix before a native invocation fragment. This is additional to ``pre-indent-level`` and is supported only by ``literalizer-invocation``.
+   * - ``indent-file-body: true|false``
+     - Indent the statements in a generated file's ``main`` and autorelease pool when ``wrap-in-file`` is selected.
+   * - ``expand-call-stubs: true|false``
+     - Emit each statement in generated call helper bodies on its own line, using ``indent``.
+
+For example::
+
+   literalizer_language_defaults = {
+       "objective-c": {
+           "indent": "2",
+           "dict-entry-style": "spaced",
+           "native-argument-layout": "auto",
+           "native-column-limit": "80",
+           "indent-file-body": "true",
+           "expand-call-stubs": "true",
+       },
+   }
+
+Boolean options require an explicit ``true`` or ``false`` so a directive can override an enabled default.
+Options unsupported by the selected language produce a located directive error.
+No formatter is required during the build, including when composing generated and handwritten fragments with ``sphinx-combine``.
