@@ -141,7 +141,7 @@ def test_native_initial_column_and_overrides(
     (block,) = app.env.get_doctree(docname="index").findall(
         condition=nodes.literal_block
     )
-    if initial_column:
+    if initial_column != 0:
         assert (
             block.astext() == 'consume(@"first",\n' + " " * 28 + '@"second");'
         )

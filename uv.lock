@@ -1025,8 +1025,8 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.11.4.2.post95+g4abd0ca84"
-source = { git = "https://github.com/adamtheturtle/literalizer.git?rev=4abd0ca84feeb418e9640047454c6775ca03e855#4abd0ca84feeb418e9640047454c6775ca03e855" }
+version = "2026.11.4.2.post97+gd1d28288f"
+source = { git = "https://github.com/adamtheturtle/literalizer.git?rev=d1d28288fbcb7c132376a62d22d4b5e22781ec51#d1d28288fbcb7c132376a62d22d4b5e22781ec51" }
 dependencies = [
     { name = "beartype" },
     { name = "json5-document" },
@@ -2411,7 +2411,7 @@ release = [
 requires-dist = [
     { name = "beartype", specifier = "==0.23.1" },
     { name = "docutils" },
-    { name = "literalizer", git = "https://github.com/adamtheturtle/literalizer.git?rev=4abd0ca84feeb418e9640047454c6775ca03e855" },
+    { name = "literalizer", git = "https://github.com/adamtheturtle/literalizer.git?rev=d1d28288fbcb7c132376a62d22d4b5e22781ec51" },
     { name = "sphinx", specifier = ">=7.0" },
     { name = "typing-extensions" },
 ]

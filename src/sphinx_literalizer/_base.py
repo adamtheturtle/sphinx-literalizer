@@ -191,7 +191,7 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
         options: _CommonOptions,
     ) -> partial[Language]:
         """Pass scalar options only to a backend that declares them."""
-        if options.initial_column and not self.supports_initial_column:
+        if options.initial_column != 0 and not self.supports_initial_column:
             raise _DirectiveError(
                 message=(
                     "':initial-column:' requires a "
