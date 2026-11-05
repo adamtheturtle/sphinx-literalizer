@@ -11,7 +11,7 @@ from literalizer import (
     Language,
     LiteralizeResult,
     NewVariable,
-    literalize_native_calls,
+    literalize_invocations,
 )
 
 from ._base import _BaseLiteralizerDirective
@@ -138,7 +138,7 @@ class LiteralizerInvocationDirective(_BaseLiteralizerDirective):
 
         def render(language: Language) -> LiteralizeResult:
             """Render one complete native expression per source row."""
-            return literalize_native_calls(
+            return literalize_invocations(
                 source=source,
                 input_format=input_format,
                 language=language,
