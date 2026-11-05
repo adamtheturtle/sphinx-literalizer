@@ -893,7 +893,7 @@ Reference
 ``literalizer-invocation`` directive
 ------------------------------------
 
-Use ``literalizer-invocation`` for an explicitly typed native call recipe.
+Use ``literalizer-invocation`` for a shared invocation recipe or an explicitly typed native call recipe.
 It delegates receivers, selectors, constructor syntax, scalar/object conversion, and result bindings to Literalizer.
 Objective-C is the first supported backend; existing ``literalizer-call`` behavior is unchanged.
 
@@ -998,3 +998,57 @@ For example::
 Boolean options require an explicit ``true`` or ``false`` so a directive can override an enabled default.
 Options unsupported by the selected language produce a located directive error.
 The build emits source directly, including when combining generated and handwritten fragments with ``sphinx-combine``.
+
+Shared recipes across languages
+-------------------------------
+
+``literalizer-invocation`` also accepts Literalizer's shared recipe format.
+One file can describe a generic default, per-language name overrides, and
+an explicit Objective-C native signature::
+
+    {
+      "default": {
+        "target-function": "counter.accept",
+        "parameter-names": ["user", "timestamp"],
+        "result-function": "check_result"
+      },
+      "languages": {
+        "javascript": {"result-function": "checkResult"},
+        "objective-c": {"native": {
+          "function": "checkResult",
+          "parameter-types": ["bool", "NSArray"],
+          "return-type": "void",
+          "arguments": [
+            {
+              "receiver": {"reference": "counter", "type": "Counter"},
+              "selector": "accept:timestamp:",
+              "parameter-types": ["NSString", "float"],
+              "return-type": "bool",
+              "arguments": [{"input": 0}, {"input": 1}]
+            },
+            {"zipped": true}
+          ]
+        }}
+      }
+    }
+
+Use the same directive for each target language; only ``:language:`` varies::
+
+    .. literalizer-invocation:: calls.json
+       :language: python
+       :invocation-file: shared-call.json
+       :zip-file: expected.json
+       :per-element:
+       :call-style: positional
+
+Move language dispatch and repeated ``:call-transform:`` wrappers out of Jinja branches and into the recipe metadata.
+The extension delegates selection and rendering to Literalizer.
+Generic overrides amend the default; a ``native`` override replaces it.
+Language keys are Pygments IDs; misspelled keys produce located errors.
+``result-function`` calls an external positional checker with the actual and zipped expected values, without a target-language source template.
+The inner call retains the configured ``:call-style:``.
+``constructor-class`` may replace ``target-function`` for constructor recipes; ``:variable-name:`` and ``:existing-variable:`` retain backend binding rules.
+``:pre-indent-level:`` places fragments in the caller's scope.
+Generic recipes require zero ``:initial-column:``.
+Existing bare native recipes continue to work unchanged.
+The data, expected values, and recipe are all tracked as Sphinx dependencies.
