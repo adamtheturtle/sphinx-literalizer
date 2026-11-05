@@ -21,7 +21,7 @@ def test_composed_options_without_external_commands(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Raw combined output uses precise options with no formatter access."""
+    """Raw combined output uses precise options with no external commands."""
     app = make_options_app(make_app=make_app, tmp_path=tmp_path)
     with monkeypatch.context() as context:
         context.setenv(name="PATH", value="")

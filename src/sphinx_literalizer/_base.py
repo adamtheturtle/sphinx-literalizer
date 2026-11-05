@@ -183,6 +183,34 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
                 )
         return constructor
 
+    def _apply_emitter_options(
+        self,
+        language_name: str,
+        constructor: partial[Language],
+        *,
+        options: _CommonOptions,
+    ) -> partial[Language]:
+        """Pass scalar options only to a backend that declares them."""
+        if options.initial_column and not self.supports_initial_column:
+            raise _DirectiveError(
+                message=(
+                    "':initial-column:' requires a "
+                    "literalizer-invocation directive."
+                )
+            )
+        language_cls = _language_types()[language_name]
+        for option_name, value in options.emitter_options.items():
+            param_name = option_name.replace("-", "_")
+            if param_name not in language_cls.__dataclass_fields__:
+                raise _DirectiveError(
+                    message=(
+                        f"Language '{language_name}' does not support "
+                        f"'{option_name}'."
+                    )
+                )
+            constructor = partial(constructor, **{param_name: value})
+        return constructor
+
     @staticmethod
     def _apply_default_type_options(
         language_name: str,
@@ -243,23 +271,11 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
         the language with a different strategy per attempt.
         """
         constructor = partial(language_cls)
-        if options.initial_column and not self.supports_initial_column:
-            raise _DirectiveError(
-                message=(
-                    "':initial-column:' requires a "
-                    "literalizer-invocation directive."
-                )
-            )
-        for option_name, value in options.emitter_options.items():
-            param_name = option_name.replace("-", "_")
-            if param_name not in language_cls.__dataclass_fields__:
-                raise _DirectiveError(
-                    message=(
-                        f"Language '{language_name}' does not support "
-                        f"'{option_name}'."
-                    )
-                )
-            constructor = partial(constructor, **{param_name: value})
+        constructor = self._apply_emitter_options(
+            language_name=language_name,
+            constructor=constructor,
+            options=options,
+        )
 
         indent_count = options.indent
         indent_char_name = options.indent_char
