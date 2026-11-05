@@ -961,9 +961,11 @@ Existing output defaults are preserved when these options are omitted.
    * - Option
      - Effect
    * - ``dict-entry-style: spaced``
-     - Emit dictionary entries such as ``@"name" : @"Ada"``. ``default`` retains ``@"name": @"Ada"``.
+     - Emit dictionary entries such as ``@"name" : @"Ada"``.
+       ``default`` retains ``@"name": @"Ada"``.
    * - ``native-argument-layout: inline|multiline|auto``
-     - Keep native arguments inline, put arguments on separate lines, or wrap using the selected column limit. This acts recursively on typed invocation recipes.
+     - Keep native arguments inline, put arguments on separate lines, or wrap using the selected column limit.
+       This acts recursively on typed invocation recipes.
    * - ``native-align-selectors: true|false``
      - Align multiline message selector colons, or use fixed continuation indentation.
    * - ``native-continuation-indent: N``
@@ -973,7 +975,8 @@ Existing output defaults are preserved when these options are omitted.
    * - ``native-collection-layout: compact|multiline``
      - Apply the existing compact-nested or recursive multiline collection rules to literal native operands, independently of ``collection-layout`` on data directives.
    * - ``initial-column: N``
-     - Account for a caller-owned prefix before a native invocation fragment. This is additional to ``pre-indent-level`` and is supported only by ``literalizer-invocation``.
+     - Account for a caller-owned prefix before a native invocation fragment.
+       This is additional to ``pre-indent-level`` and is supported only by ``literalizer-invocation``.
    * - ``indent-file-body: true|false``
      - Indent the statements in a generated file's ``main`` and autorelease pool when ``wrap-in-file`` is selected.
    * - ``expand-call-stubs: true|false``

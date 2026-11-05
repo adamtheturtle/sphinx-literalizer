@@ -21,7 +21,9 @@ def test_composed_options_without_external_commands(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Raw combined output uses precise options with no external commands."""
+    """Raw combined output uses precise options with no external
+    commands.
+    """
     app = make_options_app(make_app=make_app, tmp_path=tmp_path)
     with monkeypatch.context() as context:
         context.setenv(name="PATH", value="")
@@ -84,7 +86,9 @@ def test_explicit_options_override_defaults(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
 ) -> None:
-    """False booleans and inline arguments override true/multiline defaults."""
+    """False booleans and inline arguments override true/multiline
+    defaults.
+    """
     app = _option_app(
         make_app=make_app,
         tmp_path=tmp_path,
