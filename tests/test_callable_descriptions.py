@@ -38,7 +38,7 @@ def _build(
         encoding="utf-8",
     )
     _ = (nested / "page.rst").write_text(
-        data="Methods\n=======\n\n.. jinja::\n\n   .. code-block:: text\n\n      "
+        data="Methods\n=======\n\n.. jinja:: naming\n\n   .. code-block:: text\n\n      "
         + template
         + "\n",
         encoding="utf-8",
@@ -50,6 +50,7 @@ def _build(
         confoverrides={
             "extensions": extensions,
             "jinja2_filters": {"existing": str.upper},
+            "jinja2_contexts": {"naming": {"renamers": {"upper": str.upper}}},
             "suppress_warnings": ["config.cache"],
         },
     )
@@ -96,7 +97,7 @@ def test_jinja_filter_and_incremental_dependency(
         ),
         encoding="utf-8",
     )
-    timestamp = app.env.all_docs["nested/page"] + 2
+    timestamp = path.stat().st_mtime + 2
     os.utime(path=path, times=(timestamp, timestamp))
     app.build()
     assert (
@@ -165,3 +166,42 @@ def test_filter_collision(
                 "jinja2_filters": {"literalizer_callable": str.upper},
             },
         )
+
+
+def test_configured_renamers(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """Templates reuse existing filters as callable naming policies."""
+    app = _build(
+        make_app=make_app,
+        tmp_path=tmp_path,
+        extensions=["sphinx_literalizer", "sphinx_jinja2"],
+        content=json.dumps(
+            obj={
+                "accept": {
+                    "default": {
+                        "name": "accept_value",
+                        "parameter-names": ["item_name"],
+                    },
+                    "languages": {
+                        "objective-c": {
+                            "selector": "acceptURL:",
+                            "parameter-names": ["URL"],
+                        },
+                    },
+                },
+            },
+        ).encode(encoding="utf-8"),
+        template='{% set rename = renamers["upper"] %}'
+        '{{ "recipes.json" | literalizer_callable("accept", "python", '
+        "name_renamer=rename, parameter_renamer=rename) }} "
+        '{{ "recipes.json" | literalizer_callable("accept", "objective-c", '
+        "name_renamer=rename, parameter_renamer=rename) }}",
+    )
+    assert app.warning.getvalue() == ""
+    assert (
+        "ACCEPT_VALUE(ITEM_NAME) acceptURL:"
+        in app.env.get_doctree(docname="nested/page").astext()
+    )

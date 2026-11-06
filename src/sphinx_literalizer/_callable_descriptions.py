@@ -1,6 +1,8 @@
 """Insert file-backed callable descriptions into Jinja text blocks."""
 
 import json
+from collections.abc import Callable
+from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 
@@ -15,9 +17,9 @@ from ._support import _is_string_object_dict, _language_types
 
 
 @beartype
-def _describe(
-    source_file: str, name: str, language: str, *, env: BuildEnvironment
-) -> str:
+def _load_description(
+    source_file: str, name: str, env: BuildEnvironment
+) -> dict[str, object]:
     """Read question metadata relative to the current document."""
     _, absolute = env.relfn2path(filename=source_file)
     env.note_dependency(filename=absolute)
@@ -44,20 +46,48 @@ def _describe(
             "must be a string-keyed mapping"
         )
         raise ConfigError(msg)
-    languages = _language_types()
-    if language not in languages:
-        msg = f"Unknown callable description language: {language!r}"
-        raise ConfigError(msg)
-    try:
-        return describe_callable(
-            language=languages[language](), description=description
+    return description
+
+
+@dataclass
+class _CallableDescriptionFilter:
+    """Retain the build environment without capturing the application."""
+
+    env: BuildEnvironment
+
+    @beartype
+    def __call__(
+        self,
+        source_file: str,
+        name: str,
+        language: str,
+        *,
+        name_renamer: Callable[[str], str] | None,
+        parameter_renamer: Callable[[str], str] | None,
+    ) -> str:
+        """Apply caller-owned naming conventions to file-backed
+        metadata.
+        """
+        description = _load_description(
+            source_file=source_file, name=name, env=self.env
         )
-    except LiteralizerError as error:
-        msg = (
-            f"Invalid callable description {name!r} "
-            f"in {source_file!r}: {error}"
-        )
-        raise ConfigError(msg) from error
+        languages = _language_types()
+        if language not in languages:
+            msg = f"Unknown callable description language: {language!r}"
+            raise ConfigError(msg)
+        try:
+            return describe_callable(
+                language=languages[language](),
+                description=description,
+                name_renamer=name_renamer,
+                parameter_renamer=parameter_renamer,
+            )
+        except LiteralizerError as error:
+            msg = (
+                f"Invalid callable description {name!r} "
+                f"in {source_file!r}: {error}"
+            )
+            raise ConfigError(msg) from error
 
 
 @beartype
@@ -70,5 +100,9 @@ def register_callable_filter(app: Sphinx) -> None:
     if "literalizer_callable" in filters:
         msg = "Jinja filter 'literalizer_callable' is already defined"
         raise ConfigError(msg)
-    filters["literalizer_callable"] = partial(_describe, env=app.env)
+    filters["literalizer_callable"] = partial(
+        _CallableDescriptionFilter(env=app.env),
+        name_renamer=None,
+        parameter_renamer=None,
+    )
     config.jinja2_filters = filters
