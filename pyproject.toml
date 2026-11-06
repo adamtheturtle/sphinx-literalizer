@@ -88,7 +88,7 @@ dev = [
     "sphinxcontrib-towncrier==0.5.0a0",
     "strict-kwargs==2026.10.9",
     "towncrier==26.9.0",
-    "ty==0.0.95",
+    "ty==0.0.96",
     "types-docutils==0.23.0.20261030",
     "vale==3.26.0.1",
     "vulture==2.16",
