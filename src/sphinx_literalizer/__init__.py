@@ -10,6 +10,7 @@ from beartype import beartype
 from sphinx.application import Sphinx
 from sphinx.util.typing import ExtensionMetadata
 
+from ._callable_descriptions import register_callable_filter
 from ._directives import LiteralizerCallDirective, LiteralizerDirective
 from ._group import LiteralizerGroupDirective
 from ._native import LiteralizerInvocationDirective
@@ -27,6 +28,7 @@ __all__ = (
 @beartype
 def setup(app: Sphinx) -> ExtensionMetadata:
     """Register the extension with Sphinx."""
+    _ = app.connect(event="builder-inited", callback=register_callable_filter)
     app.add_directive(name="literalizer", cls=LiteralizerDirective)
     app.add_directive(
         name="literalizer-invocation", cls=LiteralizerInvocationDirective

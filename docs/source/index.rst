@@ -882,6 +882,7 @@ Reference
    :maxdepth: 3
 
    heterogeneous-strategies
+   callable-descriptions
    api-reference
    release-process
    unreleased
