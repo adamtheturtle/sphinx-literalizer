@@ -1,7 +1,9 @@
-"""Jinja descriptions share Literalizer metadata without syntax
-branches.
+"""Jinja descriptions keep question metadata in dependency-tracked
+files.
 """
 
+import json
+import os
 from collections.abc import Callable
 from pathlib import Path
 
@@ -15,6 +17,7 @@ _RECIPE: dict[str, object] = {
         "languages": {"objective-c": {"selector": "accept:"}},
     },
 }
+_TEMPLATE = '{{ "recipes.json" | literalizer_callable("accept", "python") }}'
 
 
 def _build(
@@ -22,27 +25,32 @@ def _build(
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
     extensions: list[str],
-    extra: dict[str, object],
+    content: bytes | None,
     template: str,
 ) -> SphinxTestApp:
-    """Build a text block using the real sphinx-jinja2 extension."""
+    """Build a nested document using the real sphinx-jinja2 extension."""
     source = tmp_path / "source"
-    source.mkdir()
+    nested = source / "nested"
+    nested.mkdir(parents=True)
     (source / "conf.py").touch()
     _ = (source / "index.rst").write_text(
-        data="Reference\n=========\n\n.. jinja::\n\n   .. code-block:: text\n\n      "
+        data="Reference\n=========\n\n.. toctree::\n\n   nested/page\n",
+        encoding="utf-8",
+    )
+    _ = (nested / "page.rst").write_text(
+        data="Methods\n=======\n\n.. jinja::\n\n   .. code-block:: text\n\n      "
         + template
         + "\n",
         encoding="utf-8",
     )
+    if content is not None:
+        _ = (nested / "recipes.json").write_bytes(data=content)
     app = make_app(
         srcdir=source,
         confoverrides={
             "extensions": extensions,
-            "literalizer_callable_descriptions": _RECIPE,
             "jinja2_filters": {"existing": str.upper},
             "suppress_warnings": ["config.cache"],
-            **extra,
         },
     )
     app.build()
@@ -56,86 +64,104 @@ def _build(
         ["sphinx_jinja2", "sphinx_literalizer"],
     ],
 )
-def test_jinja_filter(
+def test_jinja_filter_and_incremental_dependency(
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
     extensions: list[str],
 ) -> None:
-    """Both extension orders preserve existing filters and exact text."""
+    """File changes rebuild nested documents without config or prose edits."""
     app = _build(
         make_app=make_app,
         tmp_path=tmp_path,
         extensions=extensions,
-        extra={},
-        template='{{ "hello" | existing }} {{ "accept" | literalizer_callable("python") }} {{ "accept" | literalizer_callable("objective-c") }}',
+        content=json.dumps(obj=_RECIPE).encode(encoding="utf-8"),
+        template='{{ "hello" | existing }} '
+        + _TEMPLATE
+        + ' {{ "recipes.json" | literalizer_callable("accept", "objective-c") }}',
     )
     assert app.warning.getvalue() == ""
     assert (
         "HELLO accept(value) accept:"
-        in app.env.get_doctree(docname="index").astext()
+        in app.env.get_doctree(docname="nested/page").astext()
     )
+    assert any(
+        Path(str(object=dependency)).as_posix().endswith("nested/recipes.json")
+        for dependency in app.env.dependencies["nested/page"]
+    )
+    path = tmp_path / "source/nested/recipes.json"
+    _ = path.write_text(
+        data=json.dumps(
+            obj={"accept": {"name": "take", "parameter-names": ["value"]}}
+        ),
+        encoding="utf-8",
+    )
+    timestamp = app.env.all_docs["nested/page"] + 2
+    os.utime(path=path, times=(timestamp, timestamp))
+    app.build()
+    assert (
+        "HELLO take(value) take(value)"
+        in app.env.get_doctree(docname="nested/page").astext()
+    )
+    assert app.warning.getvalue() == ""
 
 
 @pytest.mark.parametrize(
-    argnames=("extra", "template", "message"),
+    argnames=("content", "template", "message"),
     argvalues=[
+        (None, _TEMPLATE, "Cannot read callable descriptions"),
+        (b"\xff", _TEMPLATE, "Cannot read callable descriptions"),
+        (b"{", _TEMPLATE, "Cannot read callable descriptions"),
+        (b"[]", _TEMPLATE, "string-keyed mapping"),
+        (b"{}", _TEMPLATE, "Unknown callable description"),
+        (b'{"accept":"bad"}', _TEMPLATE, "string-keyed mapping"),
         (
-            {},
-            '{{ "missing" | literalizer_callable("python") }}',
-            "Unknown callable description",
-        ),
-        ({}, '{{ "accept" | literalizer_callable("unknown") }}', "language"),
-        (
-            {"literalizer_callable_descriptions": {"accept": "bad"}},
-            '{{ "accept" | literalizer_callable("python") }}',
-            "mapping",
-        ),
-        (
-            {
-                "literalizer_callable_descriptions": {
-                    "accept": {"name": "accept"}
-                }
-            },
-            '{{ "accept" | literalizer_callable("python") }}',
+            b'{"accept":{"name":"accept"}}',
+            _TEMPLATE,
             "Invalid callable description",
         ),
         (
-            {"literalizer_callable_descriptions": {1: "bad"}},
-            "Hello",
-            "string-keyed mapping",
-        ),
-        (
-            {"jinja2_filters": {"literalizer_callable": str.upper}},
-            "Hello",
-            "already defined",
+            json.dumps(obj=_RECIPE).encode(encoding="utf-8"),
+            '{{ "recipes.json" | literalizer_callable("accept", "unknown") }}',
+            "language",
         ),
     ],
 )
-def test_invalid_configuration(
+def test_invalid_metadata(
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
-    extra: dict[str, object],
+    content: bytes | None,
     template: str,
     message: str,
 ) -> None:
-    """Configuration errors identify the description or conflicting filter."""
-    if template == "Hello":
-        with pytest.raises(expected_exception=ConfigError, match=message):
-            _ = _build(
-                make_app=make_app,
-                tmp_path=tmp_path,
-                extensions=["sphinx_literalizer", "sphinx_jinja2"],
-                extra=extra,
-                template=template,
-            )
-    else:
-        app = _build(
-            make_app=make_app,
-            tmp_path=tmp_path,
-            extensions=["sphinx_literalizer", "sphinx_jinja2"],
-            extra=extra,
-            template=template,
+    """Read and schema errors identify the file or description."""
+    app = _build(
+        make_app=make_app,
+        tmp_path=tmp_path,
+        extensions=["sphinx_literalizer", "sphinx_jinja2"],
+        content=content,
+        template=template,
+    )
+    assert message in app.warning.getvalue()
+
+
+def test_filter_collision(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """An existing filter is never silently replaced."""
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "conf.py").touch()
+    with pytest.raises(
+        expected_exception=ConfigError, match="already defined"
+    ):
+        _ = make_app(
+            srcdir=source,
+            confoverrides={
+                "extensions": ["sphinx_literalizer", "sphinx_jinja2"],
+                "jinja2_filters": {"literalizer_callable": str.upper},
+            },
         )
-        assert message in app.warning.getvalue()

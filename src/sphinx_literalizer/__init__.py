@@ -28,13 +28,7 @@ __all__ = (
 @beartype
 def setup(app: Sphinx) -> ExtensionMetadata:
     """Register the extension with Sphinx."""
-    app.add_config_value(
-        name="literalizer_callable_descriptions",
-        default={},
-        rebuild="env",
-        types=frozenset({dict}),
-    )
-    app.connect(event="config-inited", callback=register_callable_filter)
+    _ = app.connect(event="builder-inited", callback=register_callable_filter)
     app.add_directive(name="literalizer", cls=LiteralizerDirective)
     app.add_directive(
         name="literalizer-invocation", cls=LiteralizerInvocationDirective

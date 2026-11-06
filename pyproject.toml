@@ -375,7 +375,6 @@ ignore_names = [
     "language",
     "linkcheck_ignore",
     "linkcheck_retries",
-    "literalizer_callable_descriptions",
     "master_doc",
     "nitpicky",
     "option_spec",
