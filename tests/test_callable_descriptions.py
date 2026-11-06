@@ -1,9 +1,5 @@
-"""Jinja descriptions keep question metadata in dependency-tracked
-files.
-"""
+"""Callable signatures are direct Jinja parameters in guide prose."""
 
-import json
-import os
 from collections.abc import Callable
 from pathlib import Path
 
@@ -11,40 +7,24 @@ import pytest
 from sphinx.errors import ConfigError
 from sphinx.testing.util import SphinxTestApp
 
-_RECIPE: dict[str, object] = {
-    "accept": {
-        "default": {"name": "accept", "parameter-names": ["value"]},
-        "languages": {"objective-c": {"selector": "accept:"}},
-    },
-}
-_TEMPLATE = '{{ "recipes.json" | literalizer_callable("accept", "python") }}'
-
 
 def _build(
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
     extensions: list[str],
-    content: bytes | None,
     template: str,
 ) -> SphinxTestApp:
-    """Build a nested document using the real sphinx-jinja2 extension."""
+    """Render filter arguments through the real Jinja extension."""
     source = tmp_path / "source"
-    nested = source / "nested"
-    nested.mkdir(parents=True)
+    source.mkdir()
     (source / "conf.py").touch()
     _ = (source / "index.rst").write_text(
-        data="Reference\n=========\n\n.. toctree::\n\n   nested/page\n",
-        encoding="utf-8",
-    )
-    _ = (nested / "page.rst").write_text(
         data="Methods\n=======\n\n.. jinja:: naming\n\n   .. code-block:: text\n\n      "
         + template
         + "\n",
         encoding="utf-8",
     )
-    if content is not None:
-        _ = (nested / "recipes.json").write_bytes(data=content)
     app = make_app(
         srcdir=source,
         confoverrides={
@@ -65,83 +45,67 @@ def _build(
         ["sphinx_jinja2", "sphinx_literalizer"],
     ],
 )
-def test_jinja_filter_and_incremental_dependency(
+def test_direct_parameters(
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
     extensions: list[str],
 ) -> None:
-    """File changes rebuild nested documents without config or prose edits."""
+    """Direct signatures preserve existing filters and extension order."""
     app = _build(
         make_app=make_app,
         tmp_path=tmp_path,
         extensions=extensions,
-        content=json.dumps(obj=_RECIPE).encode(encoding="utf-8"),
         template='{{ "hello" | existing }} '
-        + _TEMPLATE
-        + ' {{ "recipes.json" | literalizer_callable("accept", "objective-c") }}',
+        '{{ "accept" | literalizer_callable("python", ["value"], '
+        'return_annotation="bool", space_before_paren=true, '
+        "space_after_paren=true) }} "
+        '{{ "accept" | literalizer_callable("objective-c", ["value"], '
+        'selector="accept:") }}',
     )
     assert app.warning.getvalue() == ""
     assert (
-        "HELLO accept(value) accept:"
-        in app.env.get_doctree(docname="nested/page").astext()
+        "HELLO accept ( value) -> bool accept:"
+        in app.env.get_doctree(docname="index").astext()
     )
-    assert any(
-        Path(str(object=dependency)).as_posix().endswith("nested/recipes.json")
-        for dependency in app.env.dependencies["nested/page"]
-    )
-    path = tmp_path / "source/nested/recipes.json"
-    _ = path.write_text(
-        data=json.dumps(
-            obj={"accept": {"name": "take", "parameter-names": ["value"]}}
-        ),
-        encoding="utf-8",
-    )
-    timestamp = path.stat().st_mtime + 2
-    os.utime(path=path, times=(timestamp, timestamp))
-    app.build()
-    assert (
-        "HELLO take(value) take(value)"
-        in app.env.get_doctree(docname="nested/page").astext()
-    )
-    assert app.warning.getvalue() == ""
 
 
 @pytest.mark.parametrize(
-    argnames=("content", "template", "message"),
+    argnames=("template", "message"),
     argvalues=[
-        (None, _TEMPLATE, "Cannot read callable descriptions"),
-        (b"\xff", _TEMPLATE, "Cannot read callable descriptions"),
-        (b"{", _TEMPLATE, "Cannot read callable descriptions"),
-        (b"[]", _TEMPLATE, "string-keyed mapping"),
-        (b"{}", _TEMPLATE, "Unknown callable description"),
-        (b'{"accept":"bad"}', _TEMPLATE, "string-keyed mapping"),
         (
-            b'{"accept":{"name":"accept"}}',
-            _TEMPLATE,
+            '{{ "accept" | literalizer_callable("python", ["value"], typo=true) }}',
             "Invalid callable description",
         ),
         (
-            json.dumps(obj=_RECIPE).encode(encoding="utf-8"),
-            '{{ "recipes.json" | literalizer_callable("accept", "unknown") }}',
-            "language",
+            '{{ "bad name" | literalizer_callable("python", ["value"]) }}',
+            "Invalid callable description",
+        ),
+        (
+            '{{ "accept" | literalizer_callable("unknown", ["value"]) }}',
+            "Unknown callable description language",
+        ),
+        (
+            (
+                '{{ "accept" | literalizer_callable("python", ["value"], '
+                'overrides={"unknown": {"selector": "accept:"}}) }}'
+            ),
+            "Unknown invocation languages",
         ),
     ],
 )
-def test_invalid_metadata(
+def test_invalid_parameters(
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
-    content: bytes | None,
     template: str,
     message: str,
 ) -> None:
-    """Read and schema errors identify the file or description."""
+    """Parameter errors surface as useful Jinja build warnings."""
     app = _build(
         make_app=make_app,
         tmp_path=tmp_path,
         extensions=["sphinx_literalizer", "sphinx_jinja2"],
-        content=content,
         template=template,
     )
     assert message in app.warning.getvalue()
@@ -168,40 +132,31 @@ def test_filter_collision(
         )
 
 
-def test_configured_renamers(
+@pytest.mark.parametrize(
+    argnames=("language", "expected"),
+    argvalues=[
+        ("python", "ACCEPT_VALUE(ITEM_NAME)"),
+        ("objective-c", "acceptURL:"),
+    ],
+)
+def test_configured_renamers_and_overrides(
     *,
     make_app: Callable[..., SphinxTestApp],
     tmp_path: Path,
+    language: str,
+    expected: str,
 ) -> None:
-    """Templates reuse existing filters as callable naming policies."""
+    """Explicit native metadata takes precedence over naming callbacks."""
     app = _build(
         make_app=make_app,
         tmp_path=tmp_path,
         extensions=["sphinx_literalizer", "sphinx_jinja2"],
-        content=json.dumps(
-            obj={
-                "accept": {
-                    "default": {
-                        "name": "accept_value",
-                        "parameter-names": ["item_name"],
-                    },
-                    "languages": {
-                        "objective-c": {
-                            "selector": "acceptURL:",
-                            "parameter-names": ["URL"],
-                        },
-                    },
-                },
-            },
-        ).encode(encoding="utf-8"),
-        template='{% set rename = renamers["upper"] %}'
-        '{{ "recipes.json" | literalizer_callable("accept", "python", '
-        "name_renamer=rename, parameter_renamer=rename) }} "
-        '{{ "recipes.json" | literalizer_callable("accept", "objective-c", '
-        "name_renamer=rename, parameter_renamer=rename) }}",
+        template='{{ "accept_value" | literalizer_callable("'
+        + language
+        + '", ["item_name"], name_renamer=renamers["upper"], '
+        'parameter_renamer=renamers["upper"], '
+        'overrides={"objective-c": {"selector": "acceptURL:", '
+        '"parameter-names": ["requestURL"]}}) }}',
     )
     assert app.warning.getvalue() == ""
-    assert (
-        "ACCEPT_VALUE(ITEM_NAME) acceptURL:"
-        in app.env.get_doctree(docname="nested/page").astext()
-    )
+    assert expected in app.env.get_doctree(docname="index").astext()
