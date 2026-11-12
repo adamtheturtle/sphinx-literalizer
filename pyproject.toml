@@ -427,6 +427,7 @@ project-excludes = [
     "build",
 ]
 search_path = [ ".", "src" ]
+coverage.includes = [ "src/**" ]
 disable-project-excludes-heuristics = true
 enabled-ignores = [ "pyrefly" ]
 preset = "all"
