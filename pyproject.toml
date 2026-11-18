@@ -50,6 +50,7 @@ dev = [
     "clang-format==23.1.5",
     "deptry==0.25.1",
     "doc8==2.0.0",
+    "doc8-inline-markup==2026.11.18.3",
     "doccmd==2026.9.16.1",
     "furo==2025.12.19",
     "interrogate==1.7.0",
