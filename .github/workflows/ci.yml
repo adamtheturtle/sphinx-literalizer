@@ -38,6 +38,18 @@ jobs:
         uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec  # stable
         with:
           toolchain: 1.99.0
+      - name: Select the Clang bundled with Visual Studio
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # Match the compiler to the Visual Studio C++ standard library.
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $clang = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Llvm.Clang -find "VC\Tools\Llvm\$env:RUNNER_ARCH\bin\clang++.exe"
+          if (-not $clang) {
+            throw "Visual Studio Clang was not found for $env:RUNNER_ARCH."
+          }
+          & $clang --version
+          Split-Path -Parent $clang >> $env:GITHUB_PATH
       - name: Run tests
         run: uv run --group=dev pytest -s -vvv --cov --cov-config=pyproject.toml .
         env:
