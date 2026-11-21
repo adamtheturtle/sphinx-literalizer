@@ -3,8 +3,8 @@
 Heterogeneous strategies
 ========================
 
-A *heterogeneous* collection is a list or mapping whose scalar values do not all share a single language-level type -- for example a JSON array ``[1, "hello"]``, which mixes an integer and a string.
-Dynamically typed source data routinely contains such collections, but many target languages have no single literal that can hold them.
+A *heterogeneous* collection is a list or mapping whose scalar values have different types in the target language -- for example a JSON array ``[1, "hello"]``, which mixes an integer and a string.
+Dynamically typed source data routinely contains such collections, but many target languages lack a literal for them.
 
 The ``:heterogeneous-strategy:`` option (on both the ``literalizer`` and ``literalizer-call`` directives -- see :doc:`index`) selects how |project| renders these collections.
 This page explains what each strategy emits, when each is appropriate, and which languages expose which strategies.
@@ -13,10 +13,10 @@ The default: ``auto``
 ---------------------
 
 ``:heterogeneous-strategy:`` defaults to ``auto``.
-``auto`` renders the input with its natural representation first -- so homogeneous and genuinely map-shaped data keep their native form, byte-identical to naming no strategy at all -- and only falls back to a representational strategy when the natural rendering fails because the data is heterogeneous.
+``auto`` renders the input with its natural representation first -- so homogeneous data and plain maps keep their native form, byte-identical to the output with the strategy omitted -- and only falls back to a representational strategy when the natural rendering fails because the data is heterogeneous.
 Genuinely unrepresentable input still raises after the fallbacks are exhausted, so the "fail loud" safety is preserved exactly where it matters.
 
-``auto`` makes a representation choice implicitly: ``record`` vs ``tuple`` vs ``tagged_enum`` changes the shape of the generated API.
+``auto`` makes a representation choice implicitly: ``record`` vs ``tuple`` vs ``tagged_enum`` changes the types in the generated API.
 An author who wants a specific representation for pedagogical or clarity reasons should set ``:heterogeneous-strategy:`` explicitly rather than rely on the default.
 To keep a mixed-scalar collection a hard build failure instead, set ``:heterogeneous-strategy: error`` explicitly:
 
@@ -34,22 +34,22 @@ Choosing a strategy
 
 ``auto`` (the default)
    Let |project| choose.
-   The input is rendered with its natural representation first, so homogeneous and genuinely map-shaped data keep their native form, and a strategy is only applied if that natural rendering fails because the data is heterogeneous.
+   The input is rendered with its natural representation first, so homogeneous data and plain maps keep their native form, and a strategy is only applied if that natural rendering fails because the data is heterogeneous.
    See `Letting the directive choose: auto`_ below.
 
 ``error``
    Keep strict typing.
-   Appropriate when mixed-scalar collections in the source data are a mistake you want surfaced rather than rendered.
+   Appropriate when mixed-scalar collections in the source data should produce an error.
    This was the default before |project| defaulted ``:heterogeneous-strategy:`` to ``auto``; it must now be set explicitly.
 
 ``tagged_enum`` / ``object_variant`` / ``union_type`` / ``interface`` / ``variant``
-   Wrap each value in a generated sum type so a *list* (or list-shaped mapping) of mixed scalars round-trips.
+   Wrap each value in a generated sum type so a *list* (or mapping treated as a list) of mixed scalars round-trips.
    Appropriate when the collection is genuinely a sequence of "one of several scalar types".
    These differ only in the host language's idiom for a tagged union; the modeling is the same.
 
 ``record``
    Render a *mapping* whose values mix scalars and containers as a generated ``struct`` declaration plus a matching struct literal.
-   Appropriate when the mapping is record-shaped (non-empty, string keys) -- each key becomes a typed field, so values may legitimately differ per field.
+   Appropriate for a non-empty mapping with string keys -- each key becomes a typed field, so values may legitimately differ per field.
 
 ``tuple``
    Render a fixed-length list of mixed scalars as the language's native tuple.
@@ -62,11 +62,13 @@ Letting the directive choose: ``auto``
 --------------------------------------
 
 A realistic project rarely has one strategy that fits every input.
-A record-shaped dict needs ``record``; a genuinely map-shaped dict must stay a map; a list of mixed scalars needs a sum type or ``tuple``.
+Use ``record`` for dictionaries with record fields.
+Use a map for plain mappings.
+For a list of mixed scalars, use a sum type or ``tuple``.
 ``:heterogeneous-strategy: auto`` removes that per-input decision.
 
 ``auto`` renders the input with its **natural representation first**.
-If that succeeds -- as it does for homogeneous data and for genuinely map-shaped mappings -- the native output is used unchanged, so ``auto`` never promotes a plain map to a generated record.
+If that succeeds -- as it does for homogeneous data and for plain maps -- the native output is used unchanged, so ``auto`` never promotes a plain map to a generated record.
 Only if the natural rendering fails because the data is heterogeneous does ``auto`` retry, trying each strategy the target language supports in a configured precedence and using the first that represents the data.
 
 The precedence is the ``literalizer_heterogeneous_strategy_precedence`` configuration value (see :doc:`index`), restricted per directive to the strategies the target language exposes.
@@ -85,15 +87,15 @@ the natural Rust map rendering fails (a ``HashMap`` cannot hold mixed value type
       :language: rust
       :heterogeneous-strategy: auto
 
-The same directive with a homogeneous or map-shaped input emits the native ``HashMap`` instead, with no fallback applied.
+The same directive with a homogeneous input or a plain map emits the native ``HashMap`` instead, with no fallback applied.
 
 Skipping unrepresentable inputs
 -------------------------------
 
-Some inputs cannot be represented in some languages even with ``auto`` -- for instance a shape no strategy the language exposes can model.
+Some inputs cannot be represented in some languages even with ``auto`` -- for instance a structure unsupported by the strategies for that language.
 By default this fails the build, which is correct when every language must render every input.
 
-When a single canonical input is rendered across several languages (typically a Jinja loop over a language list), failing the whole build forces the data-shape knowledge -- "skip Rust for this one" -- into the template or prose.
+When one input is rendered across several languages (typically a Jinja loop over a language list), failing the whole build forces the data-shape knowledge -- "skip Rust for this one" -- into the template or prose.
 The ``:skip-if-unrepresentable:`` flag on either directive omits output for inputs that cannot be represented in the target language.
 This also applies when ``auto`` exhausts its precedence without finding a suitable strategy.
 
@@ -110,7 +112,7 @@ Worked examples
 ---------------
 
 Each example uses ``:include-preamble:`` so the generated declaration is shown alongside the literal.
-Without that flag only the literal (the second block) is emitted, and without ``:include-delimiters:`` the literal carries no surrounding collection delimiters.
+Without that flag only the literal (the second block) is emitted, and without ``:include-delimiters:`` the directive omits the enclosing collection delimiters.
 
 Most examples render :file:`_examples/mixed_scalars.json`:
 
@@ -216,8 +218,8 @@ For example, Rust remains standard-library-only:
 Stable fallback map typing (Rust)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default that fallback map's value type follows the data: when every widened scalar in the input shares one type, that concrete type is spelled.
-This is the tightest type the input admits, but it is derived per input file, so two files sharing one record shape can declare the field differently.
+The fallback map uses a concrete value type if the widened scalars have the same type.
+This is the tightest type the input admits, but it is derived per input file, so two files with the same record fields can declare the field differently.
 With :file:`_examples/record_map_value_typing.json`, where the two ``attributes`` maps have different keys and so are widened:
 
 .. literalinclude:: _examples/record_map_value_typing.json
@@ -294,7 +296,7 @@ the same strategy produces a standard ``std::vector<std::tuple<...>>``:
       :heterogeneous-strategy: tuple
       :include-preamble:
 
-For object-shaped input, use ``record`` and give the generated struct a domain name with ``:record-struct-name-prefix:``:
+For an input object, use ``record`` and give the generated struct a domain name with ``:record-struct-name-prefix:``:
 
 .. rest-example::
 
@@ -364,7 +366,7 @@ Languages not listed support only ``error`` (set explicitly) and ``auto`` (which
      - A generated tagged ``enum`` plus wrapped values.
    * - ``record``
      - C#, C++, Go, Java, Kotlin, Rust, Scala
-     - A generated ``struct`` / record declaration plus a matching literal, for record-shaped mappings.
+     - A generated ``struct`` / record declaration plus a matching literal, for mappings with record fields.
    * - ``tuple``
      - C++, Rust
      - The language's native fixed-length tuple.

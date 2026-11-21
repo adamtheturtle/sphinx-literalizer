@@ -26,7 +26,8 @@ Use existing naming functions from your Jinja context:
     {{ "accept_value" | literalizer_callable(language, ["item_name"], name_renamer=renamers[method_style], parameter_renamer=renamers[variable_style]) }}
 
 Explicit language overrides take precedence over naming callbacks.
-Keys in ``overrides`` match Pygments language IDs, and each override follows Literalizer's ``describe_callable`` schema, using hyphenated field names:
+Use the language identifiers from Pygments as keys in ``overrides``.
+Hyphenate field names in each override to match the schema for ``describe_callable``:
 
 .. code-block:: rst
 
