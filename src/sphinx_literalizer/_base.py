@@ -1,10 +1,10 @@
 """Shared implementation for the Sphinx directives."""
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from functools import partial
 from pathlib import Path
-from typing import Any, ClassVar, override
+from typing import ClassVar, override
 
 from beartype import beartype
 from docutils import nodes
@@ -50,6 +50,8 @@ from ._support import (
     _lookup_format,
     _optional_modifiers,
     _parse_record_shape_names,
+    config_mapping,
+    typed_option,
 )
 
 __all__ = ("_BaseLiteralizerDirective",)
@@ -91,21 +93,17 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
     def _run(self) -> list[nodes.Node]:
         """Produce the nodes for this directive."""
 
-    # types-docutils cannot express a directive's specific option types; see
-    # https://github.com/python/typeshed/issues/16400. The merged values are
-    # passed directly to the runtime-validating parser above.
-    def _options_with_language_defaults(
-        self,
-    ) -> dict[str, Any]:  # pyrefly: ignore[explicit-any]
+    def _options_with_language_defaults(self) -> dict[str, object]:
         """Merge configured language defaults with explicit options.
 
         The literalizer_language_defaults setting contains only shared
         format options, keyed by directive language. Values written on a
         directive override those defaults.
         """
-        language_name = self.options["language"]
-        configured = dict[str, object](
-            self.env.config.literalizer_language_defaults,
+        options: Mapping[str, object] = self.options
+        language_name = typed_option(options["language"], expected_type=str)
+        configured = config_mapping(
+            config=self.env.config, name="literalizer_language_defaults"
         )
         defaults = configured.get(language_name, {})
         if not _is_string_object_dict(defaults):
@@ -145,7 +143,7 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
                 raise ExtensionError(
                     message=f"Invalid language default '{option_name}': {exc}"
                 ) from exc
-        return {**validated_defaults, **self.options}
+        return {**validated_defaults, **options}
 
     @staticmethod
     def _apply_format_options(

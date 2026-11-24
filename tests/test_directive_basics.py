@@ -47,7 +47,8 @@ def test_source_attribute_is_absolute(
     doctree = app.env.get_doctree(docname="index")
     literal_blocks = list(doctree.findall(condition=nodes.literal_block))
     (literal_block,) = literal_blocks
-    source = literal_block["source"]
+    source: object = literal_block["source"]
+    assert isinstance(source, str)
     assert Path(source).is_absolute()
     app.cleanup()
 

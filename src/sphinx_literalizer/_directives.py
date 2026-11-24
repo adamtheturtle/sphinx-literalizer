@@ -35,6 +35,8 @@ from ._support import (
     _OptionValidator,
     _parse_record_null_substitutions,
     _substitute_placeholder,
+    optional_option,
+    typed_option,
 )
 
 
@@ -127,18 +129,22 @@ class LiteralizerDirective(_BaseLiteralizerDirective):
     }
 
     def _parse_options(self) -> _LiteralizerOptions:
-        """Parse ``self.options`` into the typed options dataclass."""
+        """Parse ``options`` into the typed options dataclass."""
         options = self._options_with_language_defaults()
         return _LiteralizerOptions(
             **_common_option_args(options=options),
-            reference_name=self.options.get("reference-name"),
-            include_delimiters="include-delimiters" in self.options,
-            both_variable_forms="both-variable-forms" in self.options,
+            reference_name=optional_option(
+                options.get("reference-name"), expected_type=str
+            ),
+            include_delimiters="include-delimiters" in options,
+            both_variable_forms="both-variable-forms" in options,
             record_null_substitutions=(
                 None
-                if "record-null-substitutions" not in self.options
+                if "record-null-substitutions" not in options
                 else _parse_record_null_substitutions(
-                    value=self.options["record-null-substitutions"],
+                    value=typed_option(
+                        options["record-null-substitutions"], expected_type=str
+                    ),
                 )
             ),
         )
@@ -461,10 +467,14 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
         return comment_path.read_text(encoding="utf-8").splitlines()
 
     def _parse_options(self) -> _LiteralizerCallOptions:
-        """Parse ``self.options`` into the typed options dataclass."""
+        """Parse ``options`` into the typed options dataclass."""
         options = self._options_with_language_defaults()
-        target_function = self.options.get("target-function")
-        constructor_class = self.options.get("constructor-class")
+        target_function = optional_option(
+            options.get("target-function"), expected_type=str
+        )
+        constructor_class = optional_option(
+            options.get("constructor-class"), expected_type=str
+        )
         if constructor_class is not None:
             if target_function is not None:
                 msg = (
@@ -483,17 +493,31 @@ class LiteralizerCallDirective(_BaseLiteralizerDirective):
             target_name = target_function
         return _LiteralizerCallOptions(
             **_common_option_args(options=options),
-            input_root_key=self.options.get("input-root-key"),
+            input_root_key=optional_option(
+                options.get("input-root-key"), expected_type=str
+            ),
             target_name=target_name,
             constructor_call=constructor_class is not None,
-            parameter_names=self.options.get("parameter-names", ""),
-            per_element="per-element" in self.options,
-            call_transform=self.options.get("call-transform"),
-            zip_file=self.options.get("zip-file"),
-            zip_input_format=self.options.get("zip-input-format"),
-            comment_file=self.options.get("comment-file"),
-            consumable_refs=self.options.get("consumable-refs"),
-            omit_code="omit-code" in self.options,
+            parameter_names=typed_option(
+                options.get("parameter-names", ""), expected_type=str
+            ),
+            per_element="per-element" in options,
+            call_transform=optional_option(
+                options.get("call-transform"), expected_type=str
+            ),
+            zip_file=optional_option(
+                options.get("zip-file"), expected_type=str
+            ),
+            zip_input_format=optional_option(
+                options.get("zip-input-format"), expected_type=str
+            ),
+            comment_file=optional_option(
+                options.get("comment-file"), expected_type=str
+            ),
+            consumable_refs=optional_option(
+                options.get("consumable-refs"), expected_type=str
+            ),
+            omit_code="omit-code" in options,
         )
 
     @override

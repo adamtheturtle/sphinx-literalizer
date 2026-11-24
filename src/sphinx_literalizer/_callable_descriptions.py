@@ -10,7 +10,7 @@ from sphinx.application import Sphinx
 from sphinx.errors import ConfigError
 from typing_extensions import TypedDict
 
-from ._support import _language_types
+from ._support import _language_types, config_mapping
 
 
 class _CallableOptions(TypedDict, total=False, closed=True):
@@ -69,7 +69,8 @@ def register_callable_filter(app: Sphinx) -> None:
     if "sphinx_jinja2" not in app.extensions:
         return
     config = app.config
-    filters = dict(config.jinja2_filters)
+    name = "jinja2_filters"
+    filters = dict(config_mapping(config=config, name=name))
     if "literalizer_callable" in filters:
         msg = "Jinja filter 'literalizer_callable' is already defined"
         raise ConfigError(msg)
