@@ -428,6 +428,7 @@ project-excludes = [
     "build",
 ]
 search_path = [ ".", "src" ]
+errors.non-exhaustive-match = "error"
 disable-project-excludes-heuristics = true
 enabled-ignores = [ "pyrefly" ]
 preset = "all"
