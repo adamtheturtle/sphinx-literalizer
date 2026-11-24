@@ -193,7 +193,7 @@ class LiteralizerGroupDirective(SphinxDirective):
         preamble: dict[str, None] = {}
         helper_blocks: set[tuple[str, ...]] = set()
         for child in blocks:
-            fragment = child.get(key="literalizer_fragment")
+            fragment: object = child.get(key="literalizer_fragment")
             if not isinstance(fragment, _GeneratedFragment):
                 continue
             for entry in fragment.preamble:
@@ -257,7 +257,7 @@ class LiteralizerGroupDirective(SphinxDirective):
         """
         result: list[nodes.Node] = []
         for child in blocks:
-            fragment = child.get(key="literalizer_fragment")
+            fragment: object = child.get(key="literalizer_fragment")
             if isinstance(fragment, _GeneratedFragment):
                 code = fragment.code
                 child.rawsource = code

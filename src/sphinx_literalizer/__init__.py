@@ -14,7 +14,10 @@ from ._callable_descriptions import register_callable_filter
 from ._directives import LiteralizerCallDirective, LiteralizerDirective
 from ._group import LiteralizerGroupDirective
 from ._native import LiteralizerInvocationDirective
-from ._support import _DEFAULT_HETEROGENEOUS_STRATEGY_PRECEDENCE
+from ._support import (
+    _DEFAULT_HETEROGENEOUS_STRATEGY_PRECEDENCE,
+    config_registrar,
+)
 
 __all__ = (
     "LiteralizerCallDirective",
@@ -38,17 +41,18 @@ def setup(app: Sphinx) -> ExtensionMetadata:
         name="literalizer-call",
         cls=LiteralizerCallDirective,
     )
-    app.add_config_value(
-        name="literalizer_heterogeneous_strategy_precedence",
-        default=list(_DEFAULT_HETEROGENEOUS_STRATEGY_PRECEDENCE),
-        rebuild="env",
-        types=frozenset({list, tuple}),
+    registrar = config_registrar(app)
+    registrar.add_config_value(
+        "literalizer_heterogeneous_strategy_precedence",
+        list(_DEFAULT_HETEROGENEOUS_STRATEGY_PRECEDENCE),
+        "env",
+        frozenset[type[object]]({list, tuple}),
     )
-    app.add_config_value(
-        name="literalizer_language_defaults",
-        default={},
-        rebuild="env",
-        types=frozenset({dict}),
+    registrar.add_config_value(
+        "literalizer_language_defaults",
+        {},
+        "env",
+        frozenset[type[object]]({dict}),
     )
     return {
         "version": version(distribution_name="sphinx-literalizer"),

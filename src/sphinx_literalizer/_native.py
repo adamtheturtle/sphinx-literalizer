@@ -26,6 +26,7 @@ from ._support import (
     _is_string_object_dict,
     _language_types,
     _OptionValidator,
+    optional_option,
 )
 
 
@@ -96,18 +97,17 @@ class LiteralizerInvocationDirective(_BaseLiteralizerDirective):
         """Delegate parsing, native syntax, typing, and boxing
         upstream.
         """
-        options = _CommonOptions(
-            **_common_option_args(
-                options=self._options_with_language_defaults()
-            )
+        raw_options = self._options_with_language_defaults()
+        options = _CommonOptions(**_common_option_args(options=raw_options))
+        recipe_name = optional_option(
+            raw_options.get("invocation-file"), expected_type=str
         )
-        recipe_name = self.options.get("invocation-file")
         if recipe_name is None:
             raise _DirectiveError(message="':invocation-file:' is required")
         data_path, source = self._read(self.arguments[0])
         recipe_path, recipe_source = self._read(recipe_name)
         try:
-            recipe = json.loads(s=recipe_source)
+            recipe: object = json.loads(s=recipe_source)
         except json.JSONDecodeError as exc:
             raise _DirectiveError(
                 message=f"{recipe_path}:{exc.lineno}:{exc.colno}: {exc.msg}"
@@ -120,12 +120,16 @@ class LiteralizerInvocationDirective(_BaseLiteralizerDirective):
         variable_form = _native_binding(options)
         zip_source = None
         zip_format = None
-        zip_name = self.options.get("zip-file")
+        zip_name = optional_option(
+            raw_options.get("zip-file"), expected_type=str
+        )
         if zip_name is not None:
             zip_path, zip_source = self._read(zip_name)
             zip_format = self._resolve_format(
                 data_path=zip_path,
-                explicit=self.options.get("zip-input-format"),
+                explicit=optional_option(
+                    raw_options.get("zip-input-format"), expected_type=str
+                ),
                 option_name="zip-input-format",
             )
         elif "zip-input-format" in self.options:

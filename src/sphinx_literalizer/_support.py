@@ -3,11 +3,11 @@
 import enum
 import json
 import re
-from collections.abc import Callable, Generator, Iterable, Mapping
+from collections.abc import Callable, Collection, Generator, Iterable, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import cache
-from typing import Any, TypeGuard
+from typing import Literal, Protocol, TypeGuard, runtime_checkable
 
 from beartype import beartype
 from beartype.door import TypeHint
@@ -24,6 +24,8 @@ from literalizer.exceptions import (
     ParseError,
 )
 from literalizer.languages import ALL_LANGUAGES
+from sphinx.config import Config
+from sphinx.errors import ExtensionError
 from typing_extensions import TypedDict
 
 __all__ = (
@@ -78,10 +80,43 @@ class _DirectiveError(Exception):
         super().__init__(message)
 
 
+@runtime_checkable
+class _ConfigRegistrar(Protocol):
+    """The Sphinx setup interface for registering extension settings."""
+
+    def add_config_value(
+        self,
+        _name: str,
+        _default: object,
+        _rebuild: Literal["env"],
+        _types: Collection[type[object]],
+        /,
+    ) -> None:
+        """Register a setting that can affect the build environment."""
+        ...
+
+
+def config_registrar(app: object, /) -> _ConfigRegistrar:
+    """Check that the application can register extension settings."""
+    if not isinstance(app, _ConfigRegistrar):
+        msg = "Expected an application that can register Sphinx settings"
+        raise TypeError(msg)
+    return app
+
+
 @beartype
 def _is_string_object_dict(value: object, /) -> TypeGuard[dict[str, object]]:
     """Return whether a value is a dictionary with string keys."""
     return TypeHint(hint=dict[str, object]).is_bearable(obj=value)
+
+
+@beartype
+def config_mapping(*, config: Config, name: str) -> dict[str, object]:
+    """Read a string-keyed mapping from Sphinx's dynamic settings."""
+    value: object = config[name]
+    if not _is_string_object_dict(value):
+        raise ExtensionError(message=f"{name!r} must be a dictionary.")
+    return value
 
 
 type _JSONValue = (
@@ -711,55 +746,92 @@ class _CommonOptionArgs(TypedDict, closed=True):
     modifiers: str | None
 
 
-@beartype
-def _common_option_args(
-    # types-docutils cannot express a directive's specific option types; see
-    # https://github.com/python/typeshed/issues/16400. This function
-    # immediately validates the entries it consumes.
-    options: dict[str, Any],  # pyrefly: ignore[explicit-any]
-) -> _CommonOptionArgs:
-    """Extract the shared options from a directive's raw ``options``.
+def typed_option[T](value: object, /, *, expected_type: type[T]) -> T:
+    """Validate the output of a Docutils option converter."""
+    if not isinstance(value, expected_type):
+        raise _DirectiveError(
+            message=f"Expected a {expected_type.__name__} option"
+        )
+    return value
 
-    This is the sole place ``self.options``'s ``Any`` values are read;
-    the ``@beartype``-wrapped :class:`_CommonOptions` constructor then
-    validates them.
+
+def optional_option[T](
+    value: object, /, *, expected_type: type[T]
+) -> T | None:
+    """Validate a directive option whenever it is present."""
+    return (
+        None
+        if value is None
+        else typed_option(value, expected_type=expected_type)
+    )
+
+
+@beartype
+def _common_option_args(options: Mapping[str, object]) -> _CommonOptionArgs:
+    """Extract the shared options from a directive's raw option
+    mapping.
     """
     return _CommonOptionArgs(
-        language=options["language"],
-        input_format=options.get("input-format"),
-        pre_indent_level=options.get("pre-indent-level", 0),
-        indent=options.get("indent"),
-        indent_char=options.get("indent-char"),
+        language=typed_option(options["language"], expected_type=str),
+        input_format=optional_option(
+            options.get("input-format"), expected_type=str
+        ),
+        pre_indent_level=typed_option(
+            options.get("pre-indent-level", 0), expected_type=int
+        ),
+        indent=optional_option(options.get("indent"), expected_type=int),
+        indent_char=optional_option(
+            options.get("indent-char"), expected_type=str
+        ),
         include_preamble="include-preamble" in options,
         preamble_only="preamble-only" in options,
         format_options={
-            name: options[name]
+            name: typed_option(options[name], expected_type=str)
             for name in _FORMAT_OPTION_GETTERS
             if name != "heterogeneous-strategy" and name in options
         },
         emitter_options={
             name: options[name] for name in _EMITTER_OPTIONS if name in options
         },
-        initial_column=options.get("initial-column", 0),
-        heterogeneous_strategy=options.get("heterogeneous-strategy"),
+        initial_column=typed_option(
+            options.get("initial-column", 0), expected_type=int
+        ),
+        heterogeneous_strategy=optional_option(
+            options.get("heterogeneous-strategy"), expected_type=str
+        ),
         default_type_options={
-            name: options[name]
+            name: typed_option(options[name], expected_type=str)
             for name in _DEFAULT_TYPE_OPTIONS
             if name in options
         },
-        module_name=options.get("module-name"),
-        multiline_raw_string_delimiter_base=options.get(
-            "multiline-raw-string-delimiter-base"
+        module_name=optional_option(
+            options.get("module-name"), expected_type=str
         ),
-        record_struct_name_prefix=options.get("record-struct-name-prefix"),
-        record_shape_names=options.get("record-shape-names"),
-        heterogeneous_value_name=options.get("heterogeneous-value-name"),
+        multiline_raw_string_delimiter_base=optional_option(
+            options.get("multiline-raw-string-delimiter-base"),
+            expected_type=str,
+        ),
+        record_struct_name_prefix=optional_option(
+            options.get("record-struct-name-prefix"), expected_type=str
+        ),
+        record_shape_names=optional_option(
+            options.get("record-shape-names"), expected_type=str
+        ),
+        heterogeneous_value_name=optional_option(
+            options.get("heterogeneous-value-name"), expected_type=str
+        ),
         skip_if_unrepresentable="skip-if-unrepresentable" in options,
         wrap_in_file="wrap-in-file" in options,
-        ref_case=options.get("ref-case"),
-        ref_key=options.get("ref-key", "$ref"),
-        collection_layout=options.get("collection-layout", "compact"),
-        variable_name=options.get("variable-name"),
+        ref_case=optional_option(options.get("ref-case"), expected_type=str),
+        ref_key=typed_option(
+            options.get("ref-key", "$ref"), expected_type=str
+        ),
+        collection_layout=typed_option(
+            options.get("collection-layout", "compact"), expected_type=str
+        ),
+        variable_name=optional_option(
+            options.get("variable-name"), expected_type=str
+        ),
         existing_variable="existing-variable" in options,
-        modifiers=options.get("modifiers"),
+        modifiers=optional_option(options.get("modifiers"), expected_type=str),
     )
