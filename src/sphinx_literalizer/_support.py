@@ -747,10 +747,10 @@ class _CommonOptionArgs(TypedDict, closed=True):
 
 
 def typed_option[T](value: object, /, *, expected_type: type[T]) -> T:
-    """Validate the output of a Docutils option converter."""
+    """Validate the output of a directive option converter."""
     if not isinstance(value, expected_type):
         raise _DirectiveError(
-            message=f"Expected a {expected_type.__name__} option"
+            message=f"Expected an option of type {expected_type.__name__}"
         )
     return value
 

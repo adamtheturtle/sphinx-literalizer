@@ -75,4 +75,4 @@ def register_callable_filter(app: Sphinx) -> None:
         msg = "Jinja filter 'literalizer_callable' is already defined"
         raise ConfigError(msg)
     filters["literalizer_callable"] = _describe
-    setattr(config, name, filters)
+    config.jinja2_filters = filters
