@@ -354,6 +354,17 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
                 **{parameter_name: heterogeneous_value_name},
             )
 
+        return self._instantiate_language(
+            language_name=language_name, constructor=constructor
+        )
+
+    @staticmethod
+    def _instantiate_language(
+        *, language_name: str, constructor: partial[Language]
+    ) -> Language:
+        """Report constructor input errors at the originating
+        directive.
+        """
         try:
             with _literalize_errors_as_directive_errors():
                 try:
