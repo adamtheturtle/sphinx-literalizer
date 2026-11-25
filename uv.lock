@@ -1047,7 +1047,7 @@ wheels = [
 
 [[package]]
 name = "literalizer"
-version = "2026.11.25.1"
+version = "2026.11.25.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
@@ -1059,9 +1059,9 @@ dependencies = [
     { name = "tomlkit" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bb/ac/0ed14e450d11b092ca7c91f5e90803785f5242f217c813496eb78b0cf135/literalizer-2026.11.25.1.tar.gz", hash = "sha256:fd14bd9fd83be556330c3511371cd87c60e2c95eed45b94263f055951f7d2978", size = 16023778, upload-time = "2026-11-25T13:01:40.468Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/99/fd/2bd9b0a3dabdf93af69120e9c162e76108ae5ce5ef9b610585d1779e461c/literalizer-2026.11.25.2.tar.gz", hash = "sha256:19c3401a05f5216940cabe8e4c928d727226a3d8c9bf04c091302498ae1425ae", size = 16041241, upload-time = "2026-11-25T17:16:31.605Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f6/5d/56bf46e7bda33a0b11c006d059847008dc3357e54d5a3b1e12707cec6c8d/literalizer-2026.11.25.1-py3-none-any.whl", hash = "sha256:2fecaa5eca09603c81f35320333694a1fe988df9eb98bc0a46812f24d5bfbbf5", size = 1147173, upload-time = "2026-11-25T13:01:36.902Z" },
+    { url = "https://files.pythonhosted.org/packages/ed/48/df0ae48ce71753bce084feb5182f3941beb9f72e6fbda95f06b426cfd371/literalizer-2026.11.25.2-py3-none-any.whl", hash = "sha256:dc84ef6bd28ab28106529cd287ef81b12969fb60bf5f285422266ee9617c1b52", size = 1147943, upload-time = "2026-11-25T17:16:29.793Z" },
 ]
 
 [[package]]
@@ -2517,7 +2517,7 @@ release = [
 requires-dist = [
     { name = "beartype", specifier = "==0.23.1" },
     { name = "docutils" },
-    { name = "literalizer", specifier = "==2026.11.25.1" },
+    { name = "literalizer", specifier = "==2026.11.25.2" },
     { name = "sphinx", specifier = ">=7.0" },
     { name = "typing-extensions" },
 ]
