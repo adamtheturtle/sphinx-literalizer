@@ -354,19 +354,22 @@ class _BaseLiteralizerDirective(SphinxDirective, ABC):
                 **{parameter_name: heterogeneous_value_name},
             )
 
-        with _literalize_errors_as_directive_errors():
-            try:
-                return constructor()
-            except UnsupportedOptionError as exc:
-                # The constructor is the single authority on which
-                # options a language accepts; translate its error back
-                # into the directive's option spelling.
-                option_name = exc.option.replace("_", "-")
-                msg = (
-                    f"Language '{language_name}' does not support "
-                    f"':{option_name}:'."
-                )
-                raise _DirectiveError(message=msg) from exc
+        try:
+            with _literalize_errors_as_directive_errors():
+                try:
+                    return constructor()
+                except UnsupportedOptionError as exc:
+                    # The constructor is the single authority on which
+                    # options a language accepts; translate its error back
+                    # into the directive's option spelling.
+                    option_name = exc.option.replace("_", "-")
+                    msg = (
+                        f"Language '{language_name}' does not support "
+                        f"':{option_name}:'."
+                    )
+                    raise _DirectiveError(message=msg) from exc
+        except ValueError as exc:
+            raise _DirectiveError(message=str(object=exc)) from exc
 
     @staticmethod
     def _resolve_format(
