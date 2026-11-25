@@ -473,7 +473,25 @@ def _boolean_option(value: str) -> bool:
     )
 
 
+@beartype
+def _qualified_imports(value: str) -> tuple[tuple[str, str], ...]:
+    """Parse comma-separated PureScript module and alias pairs."""
+    imports: list[tuple[str, str]] = []
+    for entry in value.split(sep=","):
+        module, separator, alias = entry.partition("=")
+        module = module.strip()
+        alias = alias.strip()
+        if separator == "" or module == "" or alias == "":
+            msg = "Use Module=Alias for each qualified import."
+            raise ValueError(msg)
+        imports.append((module, alias))
+    return tuple(imports)
+
+
 _EMITTER_OPTIONS: dict[str, _OptionValidator] = {
+    "qualified-imports": _qualified_imports,
+    "program-name": directives.unchanged_required,
+    "null-constructor-name": directives.unchanged_required,
     "indent-file-body": _boolean_option,
     "expand-call-stubs": _boolean_option,
     "native-align-selectors": _boolean_option,
@@ -626,6 +644,9 @@ def _literalize_errors_as_directive_errors() -> Generator[None]:
                 "of the data file)"
             )
         raise _DirectiveError(message=message) from exc
+    except RecursionError as exc:
+        msg = "The input is nested too deeply to render."
+        raise _DirectiveError(message=msg) from exc
     except LiteralizerError as exc:
         message = str(object=exc)
         # ``path`` locates the offending value within the input data

@@ -345,3 +345,41 @@ def test_errors_fail_the_build_with_warnings_as_errors(
         )
     ]
     app.cleanup()
+
+
+def test_rendering_depth_reports_directive_error(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """A rendering depth limit reports the document and directive line."""
+    source_directory = tmp_path / "source"
+    source_directory.mkdir()
+    (source_directory / "conf.py").touch()
+    _ = (source_directory / "data.json").write_text(
+        data="[" * 180 + "0" + "]" * 180,
+        encoding="utf-8",
+    )
+    _ = (source_directory / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: python
+    """
+        ),
+        encoding="utf-8",
+    )
+    app = make_app(
+        srcdir=source_directory,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+    assert_directive_error(
+        app=app,
+        source_directory=source_directory,
+        line=4,
+        message="The input is nested too deeply to render.",
+    )
+    app.cleanup()

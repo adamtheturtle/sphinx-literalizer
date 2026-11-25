@@ -791,3 +791,105 @@ def test_wrap_in_file_without_variable_raises_directive_error(
             "scope"
         ),
     )
+
+
+def test_language_specific_names(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+) -> None:
+    """COBOL, Elm, and PureScript use the names from the directive options."""
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "conf.py").touch()
+    _ = (source / "values.json").write_text(data="[1, 2]", encoding="utf-8")
+    _ = (source / "null.json").write_text(data="null", encoding="utf-8")
+    _ = (source / "index.rst").write_text(
+        data=dedent(
+            text="""\
+        Test
+        ====
+
+        .. literalizer:: values.json
+           :language: cobol
+           :variable-name: values
+           :program-name: ADACHECK
+           :wrap-in-file:
+
+        .. literalizer:: null.json
+           :language: elm
+           :null-constructor-name: Missing
+
+        .. literalizer:: values.json
+           :language: purescript
+           :variable-name: values
+           :module-name: sample
+           :qualified-imports: Data.Array=Arr, Data.Map=Map
+           :wrap-in-file:
+        """
+        ),
+        encoding="utf-8",
+    )
+    app = make_app(
+        srcdir=source,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+        warningiserror=True,
+    )
+
+    app.build()
+
+    assert app.statuscode == 0
+    cobol, elm, purescript = app.env.get_doctree(docname="index").findall(
+        condition=nodes.literal_block
+    )
+    assert "PROGRAM-ID. ADACHECK." in cobol.astext()
+    assert elm.astext().endswith("Missing")
+    assert purescript.astext().startswith("module Sample where")
+    assert (
+        "import Data.Array as Arr\nimport Data.Map as Map"
+        in purescript.astext()
+    )
+
+
+@pytest.mark.parametrize(
+    argnames=("option", "expected"),
+    argvalues=[
+        ("Data.Array Arr", "Use Module=Alias for each qualified import"),
+        ("data.array=Arr", "Invalid qualified import"),
+    ],
+    ids=["missing-equals", "invalid-name"],
+)
+def test_invalid_qualified_import(
+    *,
+    make_app: Callable[..., SphinxTestApp],
+    tmp_path: Path,
+    option: str,
+    expected: str,
+) -> None:
+    """Invalid qualified imports report a directive warning."""
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "conf.py").touch()
+    _ = (source / "data.json").write_text(data="1", encoding="utf-8")
+    _ = (source / "index.rst").write_text(
+        data=dedent(
+            text=f"""\
+        Test
+        ====
+
+        .. literalizer:: data.json
+           :language: purescript
+           :qualified-imports: {option}
+        """
+        ),
+        encoding="utf-8",
+    )
+    app = make_app(
+        srcdir=source,
+        confoverrides={"extensions": ["sphinx_literalizer"]},
+    )
+
+    app.build()
+
+    assert expected in app.warning.getvalue()
+    app.cleanup()
