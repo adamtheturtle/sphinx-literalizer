@@ -1,2 +1,0 @@
-Use Literalizer 2026.11.25 for Roc V1 syntax, named YAML roots, Jsonnet local variable declarations, and named PureScript modules with qualified imports.
-Set `:program-name:` on wrapped COBOL output and `:null-constructor-name:` on Elm literals and calls.
